@@ -1,0 +1,42 @@
+# The working dir... output will be in the results subfolder of the workdir
+workdir: "WORKDIR"
+
+# temporary directory for intermediate files that are not saved
+tempdir: "TEMP_DIR"
+
+# tab delimited samples file ... should have the following 3 columns
+# sampleName	groupName	path_to_R1_fastq	path_to_R2_fastq
+samples: "WORKDIR/samples.tsv"
+
+# select references .... host + viruses(comma-separated):
+# select host: # options are hg38 or mm39
+# host:       "hg38"
+# additives:  "ERCC" # options are ERCC and BAC16Insert
+# viruses:    "NC_009333.1"
+host: "HOST"
+additives: "ADDITIVES"
+viruses: "VIRUSES"
+# select viruses and other (ERCC/BAC): options are
+# ERCC
+# BAC16Insert
+#
+# | RefSeq  Sequence | RefSeq assembly accession | Notes                                                 |
+# | ---------------- | ------------------------- | ----------------------------------------------------- |
+# | NC_007605.1      | GCF_002402265.1           | Human gammaherpesvirus 4 (Epstein-Barr virus)         |
+# | NC_000898.1      | GCF_000846365.1           | Human betaherpesvirus 6B                              |
+# | NC_001664.4      | GCF_000845685.2           | Human betaherpesvirus 6A                              |
+# | NC_001716.2      | GCF_000848125.1           | Human betaherpesvirus 7                               |
+# | NC_006273.2      | GCF_000845245.1           | Human betaherpesvirus 5                               |
+# | NC_009333.1      | GCF_000838265.1           | Human gammaherpesvirus 8                              |
+# | NC_045512.2      | GCF_009858895.2           | Severe acute respiratory syndrome-related coronavirus |
+# | MN485971.1       | xx                        | HIV from Belgium ... GTF is hand curated              |
+#
+#   | RefSeq  Sequence | RefSeq assembly accession | Notes                                                        |
+#   | ---------------- | ------------------------- | ------------------------------------------------------------ |
+#   | NC_001806.2      | GCF_000859985.2           | [Human alphaherpesvirus 1 (Herpes simplex virus type 1)](https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?mode=Info&id=10298&lvl=3&lin=f&keep=1&srchmode=1&unlock) (strain 17) |
+#
+#  | RefSeq  Sequence | RefSeq assembly accession | Notes                                                        |
+#  | ---------------- | ------------------------- | ------------------------------------------------------------ |
+#  | KT899744.1       | KT899744.1                | HSV-1 strain KOS                                             |
+#  | MH636806.1       | MH636806.1                | MHV68 (Murine herpesvirus 68 strain WUMS)                    |
+#
