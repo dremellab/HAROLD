@@ -1,11 +1,17 @@
 {
     "__default__": {
         "mem": "40g",
-        "partition": "parallel",
+        "partition": "standard",
+        "ntasks": "1",
         "threads": "2",
         "time": "4:00:00",
         "name": "{rule}.{wildcards}",
         "output": "logs/${{SLURM_JOBID}}.%j.{rule}.{wildcards}.out",
         "error": "logs/${{SLURM_JOBID}}.%j.{rule}.{wildcards}.err"
+    },
+    "create_index": {
+        "mem": "120g",
+        "threads": "16",
+        "time": "8:00:00"
     }
 }

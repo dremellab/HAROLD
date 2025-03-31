@@ -4,10 +4,10 @@ cluster: sbatch
   -p {cluster.partition}
   -t {cluster.time}
   --mem {cluster.mem}
+  --ntasks {cluster.ntasks}
   --job-name {cluster.name}
   --output {cluster.output}
   --error {cluster.error}
-  --gres {cluster.gres}
 cluster-config: "cluster.json"
 cluster-status: "cluster_status.sh"
 jobs: 99

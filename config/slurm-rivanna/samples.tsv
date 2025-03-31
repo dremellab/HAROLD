@@ -1,4 +1,4 @@
-sampleName 	groupName	path_to_R1_fastq	path_to_R2_fastq
+sampleName	groupName	path_to_R1_fastq	path_to_R2_fastq
 iSLKBAC16_3d-R1	WT_72h	/standard/dremel_lab/rawdata/testdata/HL3YNBGXG_Rep2_WT_72h_S6_R1_001.ss.fastq.gz	/standard/dremel_lab/rawdata/testdata/HL3YNBGXG_Rep2_WT_72h_S6_R2_001.ss.fastq.gz
 iSLKBAC16_3d-R2	WT_72h	/standard/dremel_lab/rawdata/testdata/HL3YNBGXG_Rep6_WT_72h_S12_R1_001.ss.fastq.gz	/standard/dremel_lab/rawdata/testdata/HL3YNBGXG_Rep6_WT_72h_S12_R2_001.ss.fastq.gz
 iSLKBAC16_3d-R3	WT_72h	/standard/dremel_lab/rawdata/testdata/HKNTGBGXG_Rep1_WT_72h_S2_R1_001.ss.fastq.gz	/standard/dremel_lab/rawdata/testdata/HKNTGBGXG_Rep1_WT_72h_S2_R2_001.ss.fastq.gz
