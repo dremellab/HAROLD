@@ -1,0 +1,10 @@
+**/.kop*
+**/.snakemake
+!.editorconfig
+!.gitignore
+!.gitattributes
+site/
+.tests/lint_workdir
+**/tmp*
+**__pycache__/**
+*.pyc
