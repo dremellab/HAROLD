@@ -49,6 +49,13 @@ fastas_gtfs_dir: "REFS_DIR"
 # cluster: "PIPELINE_HOME/resources/cluster.json"
 cluster: "WORKDIR/CLUSTER_PROFILE/cluster.json"
 
+# Cutadapt parameters
+cutadapt_min_length: 15
+cutadapt_n: 5
+cutadapt_max_n: 0.5
+cutadapt_O: 5
+cutadapt_q: 20
+
 # list out all containers to be used
 containers:
   base: "docker://nciccbr/ccbr_ubuntu_base_20.04:v7"
