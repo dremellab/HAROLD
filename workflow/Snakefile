@@ -1,11 +1,13 @@
 from os.path import join
 import sys
+import re
 import os
 import pandas as pd
 import yaml
 import uuid
 from pathlib import Path
 from snakemake.utils import min_version
+from collections import defaultdict
 
 # no truncations during print pandas data frames
 pd.set_option("display.max_rows", None)
@@ -23,4 +25,9 @@ rule all:
         join(REF_DIR, "ref.genes.genepred_w_geneid"),
         join(STAR_INDEX_DIR, "SA"),
 
+        # trimmed fastq files
+        expand(join(WORKDIR, "results", "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
+        expand(join(WORKDIR, "results", "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
+
 include: "rules/create_index.smk"
+include: "rules/preprocessing.smk"
