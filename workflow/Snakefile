@@ -42,9 +42,6 @@ rule all:
         expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam")                            ,sample=SAMPLES,regionname=HOST_VIRUSES),
         expand(join(RESULTSDIR, "{sample}", "bigwigs", "{sample}.{regionname}.bw")                          ,sample=SAMPLES,regionname=HOST_VIRUSES),
 
-        # strandedness
-        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.strandedness.txt")                            ,sample=SAMPLES),
-
         # counts matrix
         join(RESULTSDIR,"counts","counts_matrix.tsv"),
 
