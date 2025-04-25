@@ -19,5 +19,5 @@ printshellcmds: true
 use-singularity: true
 rerun-incomplete: true
 rerun-triggers: mtime
-retries: 1
+retries: 0
 keep-going: true
