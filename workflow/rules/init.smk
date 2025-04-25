@@ -72,36 +72,50 @@ if not os.path.exists(REF_DIR):
 STAR_INDEX_DIR = join(REF_DIR, "STAR_no_GTF")
 if not os.path.exists(STAR_INDEX_DIR):
     os.mkdir(STAR_INDEX_DIR)
-# strip trailing slashes if any
-for d in [
-    WORKDIR,
-    SCRIPTS_DIR,
-    RESOURCES_DIR,
-    FASTAS_GTFS_DIR,
-    STAR_INDEX_DIR,
-    REF_DIR,
-]:
-    d = d.strip("r\/")
 
-HOST = config["host"]  # hg38 or mm39
-ADDITIVES = config["additives"]  # ERCC and/or BAC16Insert
+# strip trailing slashes if any
+for varname in [
+    "WORKDIR", "SCRIPTS_DIR", "RESOURCES_DIR", "FASTAS_GTFS_DIR",
+    "STAR_INDEX_DIR", "REF_DIR", "TEMPDIR"
+]:
+    globals()[varname] = globals()[varname].rstrip(r"\/")
+
+HOST = config["host"].strip()  # hg38 or mm39
+ADDITIVES = config["additives"].strip()  # ERCC and/or BAC16Insert
 ADDITIVES = ADDITIVES.replace(" ", "")
-if ADDITIVES != "":
-    HOST_ADDITIVES = HOST + "," + ADDITIVES
-else:
-    HOST_ADDITIVES = HOST
-VIRUSES = config["viruses"]
+VIRUSES = config["viruses"].strip()
 VIRUSES = VIRUSES.replace(" ", "")
-if VIRUSES != "":
-    HOST_ADDITIVES_VIRUSES = HOST_ADDITIVES + "," + VIRUSES
-    HOST_VIRUSES = HOST + "," + VIRUSES
+if HOST != "":
+    if ADDITIVES != "":
+        HOST_ADDITIVES = HOST + "," + ADDITIVES
+    else:
+        HOST_ADDITIVES = HOST
+
+    if VIRUSES != "":
+        HOST_ADDITIVES_VIRUSES = HOST_ADDITIVES + "," + VIRUSES
+        HOST_VIRUSES = HOST + "," + VIRUSES
+    else:
+        HOST_VIRUSES = HOST
+        HOST_ADDITIVES_VIRUSES = HOST_ADDITIVES
 else:
-    HOST_VIRUSES = HOST
-    HOST_ADDITIVES_VIRUSES = HOST_ADDITIVES
+    if ADDITIVES != "":
+        HOST_ADDITIVES = ADDITIVES
+        HOST_ADDITIVES_VIRUSES = ADDITIVES
+        HOST_VIRUSES = ""
+    else:
+        HOST_ADDITIVES = ""
+        HOST_ADDITIVES_VIRUSES = ""
+        HOST_VIRUSES = ""
+    if VIRUSES != "":
+        HOST_ADDITIVES_VIRUSES = VIRUSES
+        HOST_VIRUSES = VIRUSES
+    else:
+        raise ValueError("Both host and viruses are not set. Please set at least one of them.")
 
 REPEATS_GTF = join(FASTAS_GTFS_DIR, HOST + ".repeats.gtf")
 
 HOST_ADDITIVES_VIRUSES = HOST_ADDITIVES_VIRUSES.split(",")
+HOST_VIRUSES = HOST_VIRUSES.split(",")
 FASTAS = [join(FASTAS_GTFS_DIR, f + ".fa") for f in HOST_ADDITIVES_VIRUSES]
 REGIONS = [join(FASTAS_GTFS_DIR, f + ".fa.regions") for f in HOST_ADDITIVES_VIRUSES]
 if HOST != "":
@@ -116,6 +130,7 @@ GTFS = [join(FASTAS_GTFS_DIR, f + ".gtf") for f in HOST_ADDITIVES_VIRUSES]
 FASTAS_REGIONS_GTFS = FASTAS.copy()
 FASTAS_REGIONS_GTFS.extend(REGIONS)
 FASTAS_REGIONS_GTFS.extend(GTFS)
+# EGS = join(FASTAS_GTFS_DIR, "effectiveGenomeSizes.tsv")
 
 print("FASTAS_REGIONS_GTFS: ", FASTAS_REGIONS_GTFS)
 
@@ -123,6 +138,7 @@ REF_FA = join(REF_DIR, "ref.fa")
 REF_REGIONS = join(REF_DIR, "ref.fa.regions")
 REF_REGIONS_HOST = join(REF_DIR, "ref.fa.regions.host")
 REF_REGIONS_VIRUSES = join(REF_DIR, "ref.fa.regions.viruses")
+REF_REGIONS_HOST_VIRUSES = join(REF_DIR, "ref.fa.regions.host_viruses")
 REF_GTF = join(REF_DIR, "ref.gtf")
 append_files_in_list(FASTAS, REF_FA)
 append_files_in_list(REGIONS, REF_REGIONS)
@@ -176,7 +192,9 @@ else:
 
 ###################################################################################################
 
+
 append_files_in_list(REGIONS_HOST, REF_REGIONS_HOST)
+append_files_in_list(REGIONS_HOST + REGIONS_VIRUSES, REF_REGIONS_HOST_VIRUSES)
 append_files_in_list(REGIONS_VIRUSES, REF_REGIONS_VIRUSES)
 
 if not os.path.exists(REF_GTF):
@@ -295,3 +313,6 @@ print("SAMPLESDF:\n", SAMPLESDF)
 print("SAMPLES:\n", SAMPLES)
 
 DUMMYFILE = join(RESOURCES_DIR, "dummy")
+RESULTSDIR = join(WORKDIR, "results")
+if not os.path.exists(RESULTSDIR):
+    os.mkdir(RESULTSDIR)
