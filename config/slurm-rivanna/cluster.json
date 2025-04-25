@@ -11,12 +11,37 @@
   },
   "create_index": {
     "mem": "120g",
-    "threads": "16",
+    "threads": "8",
     "time": "8:00:00"
   },
   "cutadapt": {
     "mem": "120g",
     "threads": "16",
+    "time": "8:00:00"
+  },
+  "star_align_two_pass": {
+    "mem": "120g",
+    "threads": "16",
+    "time": "8:00:00"
+  },
+  "sort_star": {
+    "mem": "120g",
+    "threads": "8",
+    "time": "8:00:00"
+  },
+  "split_bam": {
+    "mem": "120g",
+    "threads": "8",
+    "time": "8:00:00"
+  },
+  "bam_to_bigwig": {
+    "mem": "120g",
+    "threads": "8",
+    "time": "8:00:00"
+  },
+  "qualimap": {
+    "mem": "120g",
+    "threads": "8",
     "time": "8:00:00"
   }
 }
