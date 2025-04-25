@@ -26,8 +26,44 @@ rule all:
         join(STAR_INDEX_DIR, "SA"),
 
         # trimmed fastq files
-        expand(join(WORKDIR, "results", "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
-        expand(join(WORKDIR, "results", "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
+
+        # STAR alignment
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam")               ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.bai")           ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab")                        ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.SJ.out.tab")                                  ,sample=SAMPLES),
+        expand(
+            join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.toTranscriptome.out.bam")                ,sample=SAMPLES
+        ) if config.get("star_save_transcript_sam", False) else [],
+
+        # split bams and bigwigs
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam")                            ,sample=SAMPLES,regionname=HOST_VIRUSES),
+        expand(join(RESULTSDIR, "{sample}", "bigwigs", "{sample}.{regionname}.bw")                          ,sample=SAMPLES,regionname=HOST_VIRUSES),
+
+        # strandedness
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.strandedness.txt")                            ,sample=SAMPLES),
+
+        # counts matrix
+        join(RESULTSDIR,"counts","counts_matrix.tsv"),
+
+        # qc
+        # qualimap
+        expand(join(RESULTSDIR, "{sample}", "qualimap", "{sample}.qualimap.html")                          ,sample=SAMPLES),
+        # rseqc read_distribution
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                     ,sample=SAMPLES),
+        # rseqc infer_experiment
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                          ,sample=SAMPLES),
 
 include: "rules/create_index.smk"
+
 include: "rules/preprocessing.smk"
+
+include: "rules/align.smk"
+
+include: "rules/visualize.smk"
+
+include: "rules/quantify.smk"
+
+include: "rules/qc.smk"
