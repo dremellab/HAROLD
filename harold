@@ -506,7 +506,7 @@ function run() {
     --cores all \
     --rerun-incomplete \
     --rerun-triggers $trigger \
-    --retries 2 \
+    --retries 0 \
     --keep-going \
     --stats ${WORKDIR}/snakemake.stats \
     2>&1|tee ${WORKDIR}/snakemake.log
@@ -548,7 +548,7 @@ snakemake -s $SNAKEFILE \\
     -j 500 \\
     --rerun-incomplete \\
     --rerun-triggers $trigger \\
-    --retries 2 \\
+    --retries 0 \\
     --keep-going \\
     --stats ${WORKDIR}/snakemake.stats \\
     2>&1 | tee ${WORKDIR}/snakemake.log
