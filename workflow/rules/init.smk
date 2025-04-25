@@ -130,7 +130,7 @@ GTFS = [join(FASTAS_GTFS_DIR, f + ".gtf") for f in HOST_ADDITIVES_VIRUSES]
 FASTAS_REGIONS_GTFS = FASTAS.copy()
 FASTAS_REGIONS_GTFS.extend(REGIONS)
 FASTAS_REGIONS_GTFS.extend(GTFS)
-# EGS = join(FASTAS_GTFS_DIR, "effectiveGenomeSizes.tsv")
+EGS = join(FASTAS_GTFS_DIR, "effectiveGenomeSizes.tsv")
 
 print("FASTAS_REGIONS_GTFS: ", FASTAS_REGIONS_GTFS)
 
