@@ -1,0 +1,68 @@
+from os.path import join
+import sys
+import re
+import os
+import pandas as pd
+import yaml
+import uuid
+from pathlib import Path
+from snakemake.utils import min_version
+from collections import defaultdict
+
+# no truncations during print pandas data frames
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", None)
+pd.set_option("display.max_colwidth", None)
+
+min_version("5.24")
+
+include: "rules/init.smk"
+
+rule all:
+    input:
+        # create ref index
+        join(REF_DIR, "ref.genes.genepred_w_geneid"),
+        join(STAR_INDEX_DIR, "SA"),
+
+        # trimmed fastq files
+        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
+
+        # STAR alignment
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam")               ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.bai")           ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab")                        ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.SJ.out.tab")                                  ,sample=SAMPLES),
+        expand(
+            join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.toTranscriptome.out.bam")                ,sample=SAMPLES
+        ) if config.get("star_save_transcript_sam", False) else [],
+
+        # split bams and bigwigs
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam")                            ,sample=SAMPLES,regionname=HOST_VIRUSES),
+        expand(join(RESULTSDIR, "{sample}", "bigwigs", "{sample}.{regionname}.bw")                          ,sample=SAMPLES,regionname=HOST_VIRUSES),
+
+        # counts matrix
+        join(RESULTSDIR,"counts","counts_matrix.tsv"),
+
+        # qc
+        # qualimap
+        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                    ,sample=SAMPLES),
+        # rseqc read_distribution
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                     ,sample=SAMPLES),
+        # rseqc infer_experiment
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                          ,sample=SAMPLES),
+        # genebody_coverage
+        # expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBody_coverage.txt")                     ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+
+include: "rules/create_index.smk"
+
+include: "rules/preprocessing.smk"
+
+include: "rules/align.smk"
+
+include: "rules/visualize.smk"
+
+include: "rules/quantify.smk"
+
+include: "rules/qc.smk"
