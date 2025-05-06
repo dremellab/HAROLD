@@ -1,14 +1,14 @@
 import os
+import sys
 import pandas as pd
 import re
-from glob import glob
 
 
 def infer_strandedness(file_path):
     with open(file_path) as f:
         content = f.read()
     if "Fraction of reads explained by" not in content:
-        return "unstranded"  # fallback
+        return "unstranded"
     match = re.findall(r'Fraction of reads explained by "(.*?)": (\d+\.\d+)', content)
     if not match or len(match) < 2:
         return "unstranded"
@@ -37,22 +37,18 @@ def read_counts_file(count_file, column, sample_name):
     return df.set_index("gene")
 
 
-def main(input_dirs, output_counts, output_strand):
+def main(count_files, strandedness_files, output_counts, output_strand):
     all_counts = []
     strand_info = []
 
-    for sample_dir in input_dirs:
-        sample_name = os.path.basename(os.path.dirname(sample_dir.rstrip("/")))
-        infer_file = os.path.join(sample_dir, sample_name + ".strandedness.txt")
-        read_counts_file_path = os.path.join(
-            sample_dir, sample_name + ".ReadsPerGene.out.tab"
-        )
+    for count_file, strand_file in zip(count_files, strandedness_files):
+        sample_name = os.path.basename(count_file).split(".")[0]
 
-        if not os.path.exists(infer_file) or not os.path.exists(read_counts_file_path):
+        if not os.path.exists(count_file) or not os.path.exists(strand_file):
             print(f"Skipping {sample_name}, missing files")
             continue
 
-        strandedness = infer_strandedness(infer_file)
+        strandedness = infer_strandedness(strand_file)
         strand_info.append((sample_name, strandedness))
 
         if strandedness == "unstranded":
@@ -64,11 +60,10 @@ def main(input_dirs, output_counts, output_strand):
         else:
             col = 2  # fallback
 
-        df = read_counts_file(read_counts_file_path, col, sample_name)
+        df = read_counts_file(count_file, col, sample_name)
         all_counts.append(df)
 
     counts_df = pd.concat(all_counts, axis=1).fillna(0).astype(int)
-    # 🔍 Remove rows (genes) where gene name starts with "N_"
     counts_df = counts_df[~counts_df.index.str.startswith("N_")]
     counts_df.to_csv(output_counts, sep="\t")
 
@@ -77,13 +72,9 @@ def main(input_dirs, output_counts, output_strand):
 
 
 if __name__ == "__main__":
-    import sys
+    count_files = sys.argv[1].split(",")
+    strandedness_files = sys.argv[2].split(",")
+    output_counts = sys.argv[3]
+    output_strand = sys.argv[4]
 
-    sample_dirs_file = sys.argv[1]
-    output_counts = sys.argv[2]
-    output_strand = sys.argv[3]
-
-    with open(sample_dirs_file) as f:
-        input_dirs = [line.strip() for line in f if line.strip()]
-
-    main(input_dirs, output_counts, output_strand)
+    main(count_files, strandedness_files, output_counts, output_strand)

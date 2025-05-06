@@ -47,21 +47,15 @@ rule infer_strandedness:
 localrules: aggregate_stranded_counts
 rule aggregate_stranded_counts:
     input:
-        strandedness_txt = expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt"), sample=SAMPLES)
+        counts_files = expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab"), sample=SAMPLES),
+        strandedness_files = expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt"), sample=SAMPLES)
     output:
         counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
         strand = join(RESULTSDIR,"counts","sample_strandedness.tsv")
     params:
-        script = join(SCRIPTS_DIR,"_aggregate_counts_by_strandedness.py"),
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        script = join(SCRIPTS_DIR,"_aggregate_counts_by_strandedness.py")
     run:
-        # Extract STAR directory paths from strandedness files
-        sample_dirs = sorted(set(os.path.dirname(path) for path in input.strandedness_txt))
-        print("Sample strandedness dirs:", sample_dirs)
-        sample_dir_file = join(params.tmpdir, "sample_dirs.txt")
-        os.makedirs(os.path.dirname(sample_dir_file), exist_ok=True)
-        with open(sample_dir_file, "w") as f:
-            for d in sample_dirs:
-                f.write(d + "\n")
         os.makedirs(os.path.dirname(output.counts), exist_ok=True)
-        shell(f"python {params.script} {sample_dir_file} {output.counts} {output.strand}")
+        counts_list = ",".join(input.counts_files)
+        strandedness_list = ",".join(input.strandedness_files)
+        shell(f"python {params.script} {counts_list} {strandedness_list} {output.counts} {output.strand}")
