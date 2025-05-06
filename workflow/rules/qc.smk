@@ -2,8 +2,8 @@ rule qualimap:
     input:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
     output:
-        html = join(RESULTSDIR, "{sample}", "qualimap", "{sample}.qualimap.html"),
-        pdf = join(RESULTSDIR, "{sample}", "qualimap", "{sample}.qualimap.pdf"),
+        html = join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html"),
+        pdf = join(RESULTSDIR, "{sample}", "qualimap", "report.pdf"),
     params:
         sample = "{sample}",
         outdir = join(RESULTSDIR, "{sample}", "qualimap"),
@@ -12,7 +12,12 @@ rule qualimap:
     shell:
         r"""
         set -exo pipefail
-        qualimap bamqc -bam {input.bam} -outdir {params.outdir} -outformat HTML,PDF -nt {threads}
+        export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
+        qualimap --java-mem-size=4G bamqc \
+            -bam {input.bam} \
+            -outdir {params.outdir} \
+            -outformat PDF:HTML \
+            -nt {threads}
         """
 
 localrules: gtf2genepred
@@ -43,17 +48,17 @@ rule genepred2bed12:
         genePredToBed {input.genepred} {output.bed12}
         """
 
-rule rseqc:
+rule rseqc_read_distribution:
     input:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
         bed12 = join(REF_DIR, "ref.genes.bed12"),
     output:
         read_distribution = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt"),
-        tin = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.tin.txt"),
     params:
         sample = "{sample}",
     container:
-        config['containers']['rseqc']
+        config['containers']['rseqc'],
+    threads: 1
     shell:
         r"""
         set -exo pipefail
@@ -63,12 +68,48 @@ rule rseqc:
             -i {input.bam} \
             -r {input.bed12} \
             > {output.read_distribution}
+        """
+
+rule rseqc_tin:
+    input:
+        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
+        bed12 = join(REF_DIR, "ref.genes.bed12"),
+    output:
+        tin = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.tin.txt"),
+    params:
+        sample = "{sample}",
+    container:
+        config['containers']['rseqc'],
+    threads: 1
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.tin})
+        mkdir -p $outdir
         tin.py \
             -i {input.bam} \
             -r {input.bed12} \
             > {output.tin}
-        genebody_coverage.py \
+        """
+
+rule rseqc_geneBody_coverage:
+    input:
+        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
+        bed12 = join(REF_DIR, "ref.genes.bed12"),
+    output:
+        geneBody_coverage = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBody_coverage.txt"),
+    params:
+        sample = "{sample}",
+    container:
+        config['containers']['rseqc'],
+    threads: 1
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.geneBody_coverage})
+        mkdir -p $outdir
+        geneBody_coverage.py \
             -i {input.bam} \
             -r {input.bed12} \
-            -o ${{outdir}}/{params.sample}.genebody_coverage
+            -o {output.geneBody_coverage}
         """

@@ -47,11 +47,13 @@ rule all:
 
         # qc
         # qualimap
-        expand(join(RESULTSDIR, "{sample}", "qualimap", "{sample}.qualimap.html")                          ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                    ,sample=SAMPLES),
         # rseqc read_distribution
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                     ,sample=SAMPLES),
         # rseqc infer_experiment
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                          ,sample=SAMPLES),
+        # genebody_coverage
+        # expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBody_coverage.txt")                     ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
 
 include: "rules/create_index.smk"
 
