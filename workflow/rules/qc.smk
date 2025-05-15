@@ -64,10 +64,12 @@ rule rseqc_read_distribution:
         set -exo pipefail
         outdir=$(dirname {output.read_distribution})
         mkdir -p $outdir
+        cd $outdir
         read_distribution.py \
             -i {input.bam} \
             -r {input.bed12} \
             > {output.read_distribution}
+        ls -alrth $outdir
         """
 
 rule rseqc_tin:
@@ -75,7 +77,7 @@ rule rseqc_tin:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
         bed12 = join(REF_DIR, "ref.genes.bed12"),
     output:
-        tin = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.tin.txt"),
+        tin = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt"),
     params:
         sample = "{sample}",
     container:
@@ -86,10 +88,11 @@ rule rseqc_tin:
         set -exo pipefail
         outdir=$(dirname {output.tin})
         mkdir -p $outdir
+        cd $outdir
         tin.py \
             -i {input.bam} \
-            -r {input.bed12} \
-            > {output.tin}
+            -r {input.bed12}
+        ls -larth $outdir
         """
 
 rule rseqc_geneBody_coverage:
@@ -97,7 +100,7 @@ rule rseqc_geneBody_coverage:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
         bed12 = join(REF_DIR, "ref.genes.bed12"),
     output:
-        geneBody_coverage = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBody_coverage.txt"),
+        geneBody_coverage = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt"),
     params:
         sample = "{sample}",
     container:
@@ -108,8 +111,30 @@ rule rseqc_geneBody_coverage:
         set -exo pipefail
         outdir=$(dirname {output.geneBody_coverage})
         mkdir -p $outdir
+        cd $outdir
         geneBody_coverage.py \
             -i {input.bam} \
             -r {input.bed12} \
-            -o {output.geneBody_coverage}
+            -o ${{outdir}}/{params.sample}
+        ls -larth $outdir
+        """
+
+localrules: multiqc
+rule multiqc:
+    input:
+        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                              ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+    output:
+        multiqc = join(RESULTSDIR, "multiqc_report.html"),
+    container:
+        config['containers']['multiqc'],
+    threads: 1
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.multiqc})
+        multiqc --verbose --interactive --force .
         """
