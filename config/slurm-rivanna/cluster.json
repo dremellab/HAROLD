@@ -45,12 +45,15 @@
     "time": "8:00:00"
   },
   "rseqc_geneBody_coverage": {
-    "time": "8:00:00"
+    "time": "24:00:00"
   },
   "rseqc_infer_experiment": {
     "time": "8:00:00"
   },
   "rseqc_read_distribution": {
     "time": "8:00:00"
+  },
+  "rseqc_tin": {
+    "time": "12:00:00"
   }
 }
