@@ -82,7 +82,7 @@ containers:
   gtfToGenePred: "docker://seqinfomics/gtftogenepred:latest"
   genePredToBed: "docker://seqinfomics/genepredtobed:latest"
   mapsplice: "docker://cgrlab/mapsplice2:latest"
-  multiqc: "docker://nciccbr/ccbr_multiqc_1.15:v1"
+  multiqc: "docker://multiqc/multiqc:v1.28"
   picard: "docker://nciccbr/ccbr_picard_2.27.5:v1"
   qualimap: "docker://stjudecloud/qualimap:1.0.3"
   R: "docker://nciccbr/ccbr_r_4.3.0:v1"
