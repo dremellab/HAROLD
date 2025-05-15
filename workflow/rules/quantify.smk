@@ -48,14 +48,16 @@ localrules: aggregate_stranded_counts
 rule aggregate_stranded_counts:
     input:
         counts_files = expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab"), sample=SAMPLES),
-        strandedness_files = expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt"), sample=SAMPLES)
+        strandedness_files = expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt"), sample=SAMPLES),
+        gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
         counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
         strand = join(RESULTSDIR,"counts","sample_strandedness.tsv")
     params:
+        regions = REF_REGIONS,
         script = join(SCRIPTS_DIR,"_aggregate_counts_by_strandedness.py")
     run:
         os.makedirs(os.path.dirname(output.counts), exist_ok=True)
         counts_list = ",".join(input.counts_files)
         strandedness_list = ",".join(input.strandedness_files)
-        shell(f"python {params.script} {counts_list} {strandedness_list} {output.counts} {output.strand}")
+        shell(f"python {params.script} --counts {counts_list} --strandinfo {strandedness_list} --output_counts {output.counts} --output_strand {output.strand} --gtf {input.gtf} --regions {params.regions}")
