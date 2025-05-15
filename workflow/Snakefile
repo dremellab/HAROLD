@@ -17,6 +17,42 @@ pd.set_option("display.max_colwidth", None)
 
 min_version("5.24")
 
+def oncomplete():
+    from datetime import datetime
+    import subprocess
+    import shutil
+
+    # Get timestamp
+    now = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    log_copy = f"snakemake.{now}.log"
+    jobby_output = f"{log_copy}.jobby.tsv"
+
+    try:
+        # Step 1: Copy the log file
+        shutil.copyfile("snakemake.log", log_copy)
+        print(f"📁 Copied snakemake.log to {log_copy}")
+
+        # Step 2: Run jobby on the copied log
+        result = subprocess.run(
+            ["jobby", log_copy, "--tsv"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+        # Step 3: Write jobby output to file
+        with open(jobby_output, "w") as f:
+            f.write(result.stdout)
+        print(f"✅ jobby output saved to {jobby_output}")
+
+    except subprocess.CalledProcessError as e:
+        print("❌ jobby command failed!")
+        print(f"Return code: {e.returncode}")
+        print("stderr:", e.stderr.strip())
+
+    except FileNotFoundError as e:
+        print("❌ File not found:", e)
+
 include: "rules/init.smk"
 
 rule all:
@@ -47,13 +83,17 @@ rule all:
 
         # qc
         # qualimap
-        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                    ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                              ,sample=SAMPLES),
         # rseqc read_distribution
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                     ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
         # rseqc infer_experiment
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                          ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
         # genebody_coverage
-        # expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBody_coverage.txt")                     ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        # rseqc tin
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+        # multiqc
+        join(RESULTSDIR, "multiqc_report.html"),
 
 include: "rules/create_index.smk"
 
@@ -66,3 +106,12 @@ include: "rules/visualize.smk"
 include: "rules/quantify.smk"
 
 include: "rules/qc.smk"
+
+onsuccess:
+    oncomplete()
+    print("All rules completed successfully.")
+
+onerror:
+    oncomplete()
+    print("Some rules failed. Please check the logs for more information.")
+    sys.exit(1)
