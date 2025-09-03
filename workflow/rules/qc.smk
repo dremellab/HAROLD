@@ -1,3 +1,36 @@
+rule kraken2:
+    input:
+        unpack(get_fastqs),
+    output:
+        kraken2_report = join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt"),
+    params:
+        sample = "{sample}",
+        outdir = join(RESULTSDIR, "{sample}", "kraken2"),
+        kraken2_db = config['kraken2_db'],
+        kraken2_params = config['kraken2_params'],
+        peorse=get_peorse,
+    threads: _get_threads("kraken2", profile_config)
+    container: config['containers']['kraken2']
+    shell:
+        r"""
+        set -exo pipefail
+        mkdir -p {params.outdir}
+
+        if [ "{params.peorse}" == "PE" ]; then
+            kraken2 --db {params.kraken2_db} \
+                --paired {input.R1} {input.R2} \
+                {params.kraken2_params} \
+                --report {output.kraken2_report} \
+                --threads {threads}
+        else
+            kraken2 --db {params.kraken2_db} \
+                {input.R1} \
+                {params.kraken2_params} \
+                --report {output.kraken2_report} \
+                --threads {threads}
+        fi
+        """
+
 rule qualimap:
     input:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
@@ -7,7 +40,7 @@ rule qualimap:
     params:
         sample = "{sample}",
         outdir = join(RESULTSDIR, "{sample}", "qualimap"),
-    threads: getthreads("qualimap")
+    threads: _get_threads("qualimap", profile_config)
     container: config['containers']['qualimap']
     shell:
         r"""
@@ -58,7 +91,7 @@ rule rseqc_read_distribution:
         sample = "{sample}",
     container:
         config['containers']['rseqc'],
-    threads: 1
+    threads: _get_threads("rseqc_read_distribution", profile_config)
     shell:
         r"""
         set -exo pipefail
@@ -82,7 +115,7 @@ rule rseqc_tin:
         sample = "{sample}",
     container:
         config['containers']['rseqc'],
-    threads: 1
+    threads: _get_threads("rseqc_tin", profile_config)
     shell:
         r"""
         set -exo pipefail
@@ -105,7 +138,7 @@ rule rseqc_geneBody_coverage:
         sample = "{sample}",
     container:
         config['containers']['rseqc'],
-    threads: 1
+    threads: _get_threads("rseqc_geneBody_coverage", profile_config)
     shell:
         r"""
         set -exo pipefail
@@ -127,6 +160,7 @@ rule multiqc:
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
     output:
         multiqc = join(RESULTSDIR, "multiqc_report.html"),
     container:
