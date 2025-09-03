@@ -69,7 +69,8 @@ VERSION=$(cat $VERSIONFILE | head -n 1 | awk '{print $1}')
 ##########################################################################################
 
 PYTHONVERSION="3.11"
-SNAKEMAKEVERSION="7.24.2"
+# SNAKEMAKEVERSION="7.24.2"
+SNAKEMAKEVERSION="9.8.1"
 CONDA_ACTIVATE=''
 PATH_PREPEND=''
 MODULE_LOAD=''
@@ -78,20 +79,27 @@ PARTITION=''
 EXTRA_SINGULARITY_BINDS=""
 TEMP_DIR=""
 REFS_DIR=""
-CLUSTER_PROFILE="config/unknown"
+CLUSTER_PROFILE="unknown"
 if [ "$PLATFORM" == "shen" ]; then
-  CLUSTER_PROFILE="config/slurm-rivanna"
+  CLUSTER_PROFILE="rivanna"
   PARTITION="standard"
   EXTRA_SINGULARITY_BINDS=""
-  CONDA_ACTIVATE="source /standard/dremel_lab/conda/miniconda/etc/profile.d/conda.sh && conda activate py311"
+  CONDA_ACTIVATE="source /project/dremel_lab/conda/miniconda/etc/profile.d/conda.sh && conda activate py311"
+  # PY311_BIN=$(conda run -n py311 python -c "import sys; print(sys.executable.rsplit('/',1)[0])")
+  PY311_BIN="/project/dremel_lab/conda/envs/py311/bin"
+  # echo "PY311_BIN: $PY311_BIN"
   # make sure spooker is in the path
-  PATH_PREPEND='export PATH="/standard/dremel_lab/scripts/bin:$PATH"'
+  PATH_PREPEND='export PATH="${PY311_BIN}:/standard/dremel_lab/scripts/bin:$PATH"'
+  # echo $PATH
+  # exit 1
   # eval $PATH_PREPEND
   # eval $CONDA_ACTIVATE
-  MODULE_LOAD="$PATH_PREPEND && $CONDA_ACTIVATE && module load apptainer && module load snakemake/$SNAKEMAKEVERSION"
+  # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer"
   # MODULE_LOAD="module load apptainer && module load snakemake"
+  MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer && $PATH_PREPEND"
   TEMP_DIR="/scratch/${USER}/"
   REFS_DIR="/standard/dremel_lab/workflows/reference_data/fasta_gtf/"
+  KRAKEN2_DB="/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
 else
   echo """WARNING: detected platform is $PLATFORM. Please edit the files in config/unknown/ & config.yaml for compatibility with your computing environment
     """
@@ -226,19 +234,42 @@ mkdir -p $WORKDIR
 # copy config resources
 cp -r ${PIPELINE_HOME}/config $WORKDIR/
 
+echo "Editing config.yaml with the following parameters:"
+echo ""
+
+echo "Pipeline Dir: $PIPELINE_HOME"
+echo "Git Commit/Tag: $GIT_COMMIT_TAG"
+echo "Work Dir: $WORKDIR"
+echo "Host: $HOST"
+echo "Additives: $ADDITIVES"
+echo "Viruses: $VIRUSES"
+echo "Manifest: $MANIFEST"
+echo "Temp Dir: $TEMP_DIR"
+echo "Refs Dir: $REFS_DIR"
+echo "Cluster Profile: $CLUSTER_PROFILE"
+echo "Singularity Cache Dir: $SING_CACHE_DIR"
+echo "Editing file $WORKDIR/config.yaml"
+echo "..."
+
 # copy config template and samples files
 if [ ! -f $CONFIGFILE ];then
-sed -e "s/PIPELINE_HOME/${PIPELINE_HOME//\//\\/}/g" \
-    -e "s/WORKDIR/${WORKDIR//\//\\/}/g" \
-    -e "s/HOST/${HOST}/g" \
-    -e "s/ADDITIVES/${ADDITIVES}/g" \
-    -e "s/VIRUSES/${VIRUSES}/g" \
-    -e "s/TEMP_DIR/${TEMP_DIR//\//\\/}/g" \
-    -e "s/REFS_DIR/${REFS_DIR//\//\\/}/g" \
-    -e "s|CLUSTER_PROFILE|${CLUSTER_PROFILE}|g" \
-    ${PIPELINE_HOME}/config/config.yaml \
-    > $CONFIGFILE
+sed -e "
+  s|PIPELINE_HOME|$PIPELINE_HOME|g;
+  s|WORKDIR|$WORKDIR|g;
+  s|HOST|$HOST|g;
+  s|ADDITIVES|$ADDITIVES|g;
+  s|VIRUSES|$VIRUSES|g;
+  s|TEMP_DIR|$TEMP_DIR|g;
+  s|REFS_DIR|$REFS_DIR|g;
+  s|KRAKEN2_DB|$KRAKEN2_DB|g;
+  s|CLUSTER_PROFILE|$CLUSTER_PROFILE|g
+" ${PIPELINE_HOME}/config/config.yaml > $CONFIGFILE
+else
+  err "File $WORKDIR/config.yaml already exists!"
 fi
+
+echo "Completed writing $WORKDIR/config.yaml"
+echo ""
 
 if [ ! -f $WORKDIR/samples.tsv ];then
 # copy manifest file ... follow symlink
@@ -278,16 +309,17 @@ function reconfig(){
   # rebuild config file and replace the config.yaml in the WORKDIR
   # this is only for dev purposes when new key-value pairs are being added to the config file
   check_essential_files
-  sed -e "s/PIPELINE_HOME/${PIPELINE_HOME//\//\\/}/g" \
-    -e "s/WORKDIR/${WORKDIR//\//\\/}/g" \
-    -e "s/HOST/${HOST}/g" \
-    -e "s/ADDITIVES/${ADDITIVES}/g" \
-    -e "s/VIRUSES/${VIRUSES}/g" \
-    -e "s/TEMP_DIR/${TEMP_DIR//\//\\/}/g" \
-    -e "s/REFS_DIR/${REFS_DIR//\//\\/}/g" \
-    -e "s|CLUSTER_PROFILE|${CLUSTER_PROFILE}|g" \
-    ${PIPELINE_HOME}/config/config.yaml \
-    > $CONFIGFILE
+sed -e "
+  s|PIPELINE_HOME|$PIPELINE_HOME|g;
+  s|WORKDIR|$WORKDIR|g;
+  s|HOST|$HOST|g;
+  s|ADDITIVES|$ADDITIVES|g;
+  s|VIRUSES|$VIRUSES|g;
+  s|TEMP_DIR|$TEMP_DIR|g;
+  s|REFS_DIR|$REFS_DIR|g;
+  s|KRAKEN2_DB|$KRAKEN2_DB|g;
+  s|CLUSTER_PROFILE|$CLUSTER_PROFILE|g
+" ${PIPELINE_HOME}/config/config.yaml > $CONFIGFILE
   echo "$WORKDIR/config.yaml has been updated!"
 }
 
@@ -321,9 +353,10 @@ function load_modules() {
   echo "$MODULE_LOAD"
   eval $MODULE_LOAD
   module list
-  # which python
-  # which singularity
-  # which snakemake
+  which python
+  which singularity
+  which snakemake
+  echo $PATH
   check_deps
 }
 
@@ -410,7 +443,8 @@ function runlocal() {
 function runslurm() {
   runcheck
   set_singularity_binds
-  run "--dry-run " && run "slurm"
+  timestamp=$(date +"%y%m%d%H%M%S")
+  run "slurm" | tee ${WORKDIR}/snakemake.log
 }
 
 ##########################################################################################
@@ -453,26 +487,29 @@ function preruncleanup() {
   # check initialization
   check_essential_files
 
+  # export PROFILE
+  export PROFILE="${WORKDIR}/config/${CLUSTER_PROFILE}"
+
   cd $WORKDIR
   modtime=""
   ## Archive previous run files
-  if [ -f ${WORKDIR}/snakemake.log ];then
-    modtime=$(stat ${WORKDIR}/snakemake.log |grep Modify|awk '{print $2,$3}'|awk -F"." '{print $1}'|sed "s/ //g"|sed "s/-//g"|sed "s/://g")
-    mv ${WORKDIR}/snakemake.log ${WORKDIR}/stats/snakemake.${modtime}.log
-    if [ -f ${WORKDIR}/snakemake.log.HPC_summary.txt ];then
-      mv ${WORKDIR}/snakemake.log.HPC_summary.txt ${WORKDIR}/stats/snakemake.${modtime}.log.HPC_summary.txt
-    fi
-    if [ -f ${WORKDIR}/snakemake.stats ];then
-      mv ${WORKDIR}/snakemake.stats ${WORKDIR}/stats/snakemake.${modtime}.stats
-    fi
-    if [ -f ${WORKDIR}/snakemake.log.jobinfo ];then
-      mv ${WORKDIR}/snakemake.log.jobinfo ${WORKDIR}/stats/snakemake.${modtime}.log.jobinfo
-    fi
-  fi
-  nslurmouts=$(find ${WORKDIR} -maxdepth 1 -name "slurm-*.out" |wc -l)
-  if [ "$nslurmouts" != "0" ];then
-    for f in $(ls ${WORKDIR}/slurm-*.out);do mv ${f} ${WORKDIR}/logs/;done
-  fi
+  # if [ -f ${WORKDIR}/snakemake.log ];then
+  #   modtime=$(stat ${WORKDIR}/snakemake.log |grep Modify|awk '{print $2,$3}'|awk -F"." '{print $1}'|sed "s/ //g"|sed "s/-//g"|sed "s/://g")
+  #   mv ${WORKDIR}/snakemake.log ${WORKDIR}/stats/snakemake.${modtime}.log
+  #   if [ -f ${WORKDIR}/snakemake.log.HPC_summary.txt ];then
+  #     mv ${WORKDIR}/snakemake.log.HPC_summary.txt ${WORKDIR}/stats/snakemake.${modtime}.log.HPC_summary.txt
+  #   fi
+  #   if [ -f ${WORKDIR}/report.html ];then
+  #     mv ${WORKDIR}/report.html ${WORKDIR}/stats/snakemake.${modtime}.stats
+  #   fi
+  #   if [ -f ${WORKDIR}/snakemake.log.jobinfo ];then
+  #     mv ${WORKDIR}/snakemake.log.jobinfo ${WORKDIR}/stats/snakemake.${modtime}.log.jobinfo
+  #   fi
+  # fi
+  # nslurmouts=$(find ${WORKDIR} -maxdepth 1 -name "slurm-*.out" |wc -l)
+  # if [ "$nslurmouts" != "0" ];then
+  #   for f in $(ls ${WORKDIR}/slurm-*.out);do mv ${f} ${WORKDIR}/logs/;done
+  # fi
 
   create_runinfo modtime
 
@@ -492,111 +529,35 @@ function run() {
 
     preruncleanup
 
-    $EXPORT_SING_CACHE_DIR_CMD
-
-    snakemake -s $SNAKEFILE\
+    snakemake -s $SNAKEFILE \
     --directory $WORKDIR \
-    --printshellcmds \
-    --use-singularity \
-    --singularity-prefix $SING_CACHE_DIR \
-    --singularity-args "$SINGULARITY_BINDS" \
-    --use-envmodules \
-    --latency-wait 300 \
-    --configfile $CONFIGFILE \
-    --cores all \
-    --rerun-incomplete \
-    --rerun-triggers $trigger \
-    --retries 0 \
-    --keep-going \
-    --stats ${WORKDIR}/snakemake.stats \
-    2>&1|tee ${WORKDIR}/snakemake.log
-
-    if [ "$?" -eq "0" ];then
-        snakemake -s $SNAKEFILE \
-        --report ${WORKDIR}/runlocal_snakemake_report.html \
-        --directory $WORKDIR \
-        --configfile $CONFIGFILE
-    fi
+    -j 100 --verbose
+    --profile config/local
 
   elif [ "$1" == "slurm" ];then
 
     preruncleanup
 
-    cat > ${WORKDIR}/submit_script.sbatch << EOF
-#!/bin/bash
-#SBATCH --job-name="harold"
-#SBATCH --mem=40g
-#SBATCH --partition="$PARTITION"
-#SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=2
-#SBATCH --mail-type=BEGIN,END,FAIL
-
-cd \$SLURM_SUBMIT_DIR
-$MODULE_LOAD
-$EXPORT_SING_CACHE_DIR_CMD
-
-snakemake -s $SNAKEFILE \\
-    --directory $WORKDIR \\
-    --use-singularity \\
-    --singularity-prefix $SING_CACHE_DIR \\
-    --singularity-args "$SINGULARITY_BINDS" \\
-    --use-envmodules \\
-    --printshellcmds \\
-    --latency-wait 300 \\
-    --configfile $CONFIGFILE \\
-    --profile $CLUSTER_PROFILE \\
-    -j 500 \\
-    --rerun-incomplete \\
-    --rerun-triggers $trigger \\
-    --retries 0 \\
-    --keep-going \\
-    --stats ${WORKDIR}/snakemake.stats \\
-    2>&1 | tee ${WORKDIR}/snakemake.log
-
-if [ "\$?" -eq "0" ];then
-  snakemake -s $SNAKEFILE \\
-  --directory $WORKDIR \\
-  --report ${WORKDIR}/runslurm_snakemake_report.html \\
-  --configfile $CONFIGFILE
-fi
-
-EOF
-
-    sbatch ${WORKDIR}/submit_script.sbatch
+    snakemake -s $SNAKEFILE \
+    --directory $WORKDIR \
+    -j 100 --verbose \
+    --profile config/${CLUSTER_PROFILE}
 
   elif [ "$1" == "--touch" ];then
 
     snakemake $1 -s $SNAKEFILE \
     --directory $WORKDIR \
-    --configfile $CONFIGFILE \
     --cores 1
 
   else # dry-run and unlock
-  echo "Running with:"
-  echo "SNAKEFILE: $SNAKEFILE"
-  echo "WORKDIR: $WORKDIR"
-  echo "CONFIGFILE: $CONFIGFILE"
-  echo "CLUSTER_PROFILE: $CLUSTER_PROFILE"
-  echo "SINGULARITY_BINDS: $SINGULARITY_BINDS"
-  echo "TRIGGER: $trigger"
-  echo "SING_CACHE_DIR: $SING_CACHE_DIR"
 
-    snakemake $1 -s $SNAKEFILE \
+    preruncleanup
+
+    snakemake -s $SNAKEFILE \
     --directory $WORKDIR \
-    --use-envmodules \
-    --use-singularity \
-    --singularity-prefix $SING_CACHE_DIR \
-    --singularity-args "$SINGULARITY_BINDS" \
-    --printshellcmds \
-    --latency-wait 300 \
-    --configfile $CONFIGFILE \
-    --profile $CLUSTER_PROFILE \
-    -j 500 \
-    --rerun-incomplete \
-    --rerun-triggers $trigger \
-    --keep-going \
-    --reason \
-    --stats ${WORKDIR}/snakemake.stats
+    -j 100 --verbose \
+    --profile config/${CLUSTER_PROFILE} \
+    $1
 
   fi
 
