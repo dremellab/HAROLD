@@ -13,7 +13,8 @@ rule create_index:
         script1=join(SCRIPTS_DIR, "_fix_gtf.py"),
         script2=join(SCRIPTS_DIR, "_add_geneid_to_genepred.py"),
     container: config['containers']['star_ucsc_cufflinks']
-    threads: getthreads("create_index")
+    # threads: getthreads("create_index")
+    # threads: 1
     shell:
         """
 set -exo pipefail
