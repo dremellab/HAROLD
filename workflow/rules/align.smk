@@ -18,7 +18,7 @@ rule star_align_two_pass:
         out_prefix = join(RESULTSDIR, "{sample}", "STAR", "{sample}."),
         peorse = get_peorse,
         quantMode = "TranscriptomeSAM GeneCounts" if config.get("star_save_transcript_sam", False) else "GeneCounts",
-    threads: getthreads("star_align_two_pass")
+    threads:  _get_threads("star_align_two_pass", profile_config)
     container: config['containers']['star']
     shell:
         r"""
@@ -77,7 +77,7 @@ rule sort_star:
         flagstat = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.flagstat"),
         stats = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.stats"),
         idxstats = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.idxstats")
-    threads: getthreads("sort_star")
+    threads: _get_threads("sort_star", profile_config)
     container: config['containers']['samtools']
     shell:
         r"""
