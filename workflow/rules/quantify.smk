@@ -32,6 +32,7 @@ rule infer_strandedness:
         tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
     container:
         config['containers']['rseqc']
+    threads: _get_threads("rseqc_infer_strandedness", profile_config)
     shell:
         r"""
         set -exo pipefail
