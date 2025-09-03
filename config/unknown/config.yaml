@@ -1,0 +1,26 @@
+# Snakemake v8+ profile for Rivanna (SLURM)
+# generic "unknown" profile
+
+executor: slurm
+jobs: 200
+# use-apptainer: true
+# apptainer-prefix: /standard/dremel_lab/workflows/singularity_images
+# apptainer-args: --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab
+
+# --- Global defaults (from "__default__") ---
+default-resources:
+  threads: 2 # "__default__.threads"
+  mem_mb: 40960 # "__default__.mem" = 40g -> 40*1024 = 40960 MB
+  runtime: 240 # "__default__.time" = 4:00:00 -> 240 minutes
+  # slurm_partition: standard
+  # slurm_ntasks: 1
+# --- Per-rule overrides ---
+# set-resources:
+#   create_index:
+#     threads: 8
+#     mem_mb: 122880     # 120 GB
+#     runtime: 480       # 8 hours
+#   cutadapt:
+#     threads: 16
+#     mem_mb: 122880     # 120 GB
+#     runtime: 960       # 16 hours
