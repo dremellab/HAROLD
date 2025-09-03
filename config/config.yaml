@@ -45,16 +45,16 @@ scriptsdir: "PIPELINE_HOME/workflow/scripts"
 resourcesdir: "PIPELINE_HOME/resources"
 fastas_gtfs_dir: "REFS_DIR"
 
-# default cluster
-# cluster: "PIPELINE_HOME/resources/cluster.json"
-cluster: "WORKDIR/CLUSTER_PROFILE/cluster.json"
-
 # Cutadapt parameters
 cutadapt_min_length: 15
 cutadapt_n: 5
 cutadapt_max_n: 0.5
 cutadapt_O: 5
 cutadapt_q: 20
+
+# kraken2 db
+kraken2_db: "/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
+kraken2_params: "--use-names --gzip-compressed --quick"
 
 # STAR parameters
 star_save_transcript_sam: false
@@ -81,6 +81,7 @@ containers:
   gffread: "docker://zavolab/gffread:0.11.7"
   gtfToGenePred: "docker://seqinfomics/gtftogenepred:latest"
   genePredToBed: "docker://seqinfomics/genepredtobed:latest"
+  kraken2: "docker://staphb/kraken2:2.1.3"
   mapsplice: "docker://cgrlab/mapsplice2:latest"
   multiqc: "docker://multiqc/multiqc:v1.28"
   picard: "docker://nciccbr/ccbr_picard_2.27.5:v1"
