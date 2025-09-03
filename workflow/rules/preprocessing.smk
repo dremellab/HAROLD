@@ -1,22 +1,6 @@
 ## functions
 
 
-def get_fastqs(wildcards):
-    d = dict()
-    peorse = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'PEorSE'].values[0]
-    # print(f"peorse: {peorse}")
-    if peorse == "PE":
-        d["R1"] = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'path_to_R1_fastq'].values[0]
-        d["R2"] = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'path_to_R2_fastq'].values[0]
-    else:
-        d["R1"] = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'path_to_R1_fastq'].values[0]
-        d["R2"] = DUMMYFILE
-
-    # print(f"sample: {wildcards.sample}")
-    # print(f"R1: ##{d['R1']}##")
-    # print(f"R2: ##{d['R2']}##")
-    return d
-
 
 ## rules
 
@@ -30,7 +14,7 @@ rule cutadapt:
     params:
         sample="{sample}",
         workdir=WORKDIR,
-        outdir=join(WORKDIR, "results", "{sample}"),
+        outdir=join(RESULTSDIR, "{sample}"),
         peorse=get_peorse,
         cutadapt_min_length=config["cutadapt_min_length"],
         cutadapt_n=config["cutadapt_n"],
@@ -38,9 +22,16 @@ rule cutadapt:
         cutadapt_O=config["cutadapt_O"],
         cutadapt_q=config["cutadapt_q"],
         adapters=join(RESOURCES_DIR, "adapters.fa"),
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir=temp(f"{TEMPDIR}/{str(uuid.uuid4())}"),
     container: config['containers']['cutadapt']
-    threads: getthreads("cutadapt")
+    # threads: getthreads("cutadapt")
+    # threads: 4
+    # threads: resources.threads
+    # threads:
+    #     profile_config['set-resources']['cutadapt']['threads']
+    #     if 'cutadapt' in profile_config['set-resources'] and 'threads' in profile_config['set-resources']['cutadapt']
+    #     else profile_config['default-resources']['threads']
+    threads: _get_threads("cutadapt", profile_config)
     shell:
         """
         set -exo pipefail
