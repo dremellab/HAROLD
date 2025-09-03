@@ -9,7 +9,7 @@ rule split_bam:
         outdir = join(RESULTSDIR, "{sample}", "STAR"),
         regions = REF_REGIONS_HOST_VIRUSES,
     threads:
-        getthreads("split_bam")
+        _get_threads("split_bam", profile_config)
     container:
         config['containers']['samtools']
     shell:
@@ -39,7 +39,7 @@ rule bam_to_bigwig:
         binSize = config.get("deeptools_binSize", 10),
         effectiveGenomeSizes = EGS,
     threads:
-        getthreads("bam_to_bigwig")
+        _get_threads("bam_to_bigwig", profile_config)
     container:
         config['containers']['deeptools']
     shell:
