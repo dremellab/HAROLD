@@ -8,6 +8,8 @@ import uuid
 from pathlib import Path
 from snakemake.utils import min_version
 from collections import defaultdict
+from pprint import pprint
+import shutil
 
 # no truncations during print pandas data frames
 pd.set_option("display.max_rows", None)
@@ -25,7 +27,7 @@ def oncomplete():
     # Get timestamp
     now = datetime.now().isoformat(timespec="seconds").replace(":", "-")
     log_copy = f"snakemake.{now}.log"
-    jobby_output = f"{log_copy}.jobby.tsv"
+    # jobby_output = f"{log_copy}.jobby.tsv"
 
     try:
         # Step 1: Copy the log file
@@ -33,16 +35,24 @@ def oncomplete():
         print(f"📁 Copied snakemake.log to {log_copy}")
 
         # Step 2: Run jobby on the copied log
-        result = subprocess.run(
-            ["jobby", log_copy, "--tsv"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        jobby_bin = shutil.which("jobby")
+        if not jobby_bin:
+            raise FileNotFoundError("jobby not found in PATH")
 
-        # Step 3: Write jobby output to file
+        log_dir = Path(".snakemake/log")
+        latest = max(log_dir.glob("*.snakemake.log"), key=lambda p: p.stat().st_mtime)
+        print(f"Using log file: {latest}")
+        print(f"Running jobby command: {jobby_bin} {latest} --tsv > {log_copy}.jobby.tsv")
+        jobby_output = f"{latest}.jobby.tsv"
         with open(jobby_output, "w") as f:
-            f.write(result.stdout)
+            result = subprocess.run(
+                [jobby_bin, latest, "--tsv"],
+                stdout=f,
+                stderr=subprocess.PIPE,  # still capture errors
+                text=True,
+                check=True
+            )
+
         print(f"✅ jobby output saved to {jobby_output}")
 
     except subprocess.CalledProcessError as e:
@@ -92,6 +102,8 @@ rule all:
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
         # rseqc tin
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+        # kraken2
+        expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
         # multiqc
         join(RESULTSDIR, "multiqc_report.html"),
 
