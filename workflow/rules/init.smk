@@ -37,30 +37,89 @@ def get_peorse(wildcards):
 
 ###################################################################################
 
+def get_fastqs(wildcards):
+    d = dict()
+    peorse = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'PEorSE'].values[0]
+    # print(f"peorse: {peorse}")
+    if peorse == "PE":
+        d["R1"] = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'path_to_R1_fastq'].values[0]
+        d["R2"] = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'path_to_R2_fastq'].values[0]
+    else:
+        d["R1"] = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'path_to_R1_fastq'].values[0]
+        d["R2"] = DUMMYFILE
+
+    # print(f"sample: {wildcards.sample}")
+    # print(f"R1: ##{d['R1']}##")
+    # print(f"R2: ##{d['R2']}##")
+    return d
+
+###################################################################################
+
+def _get_threads(rule_name, profile_config):
+    """
+    Return threads for a rule from profile_config.
+    Falls back to default if not defined.
+    """
+    if (
+        "set-resources" in profile_config
+        and rule_name in profile_config["set-resources"]
+        and "threads" in profile_config["set-resources"][rule_name]
+    ):
+        return profile_config["set-resources"][rule_name]["threads"]
+    return profile_config["default-resources"]["threads"]
+
 ## Load cluster.json
-with open(config["cluster"]) as json_file:
-    CLUSTER = yaml.safe_load(json_file)
+# with open(config["cluster"]) as json_file:
+#     CLUSTER = yaml.safe_load(json_file)
+
 
 ## Create lambda functions to allow a way to insert read-in values
 ## as rule directives
-getthreads = (
-    lambda rname: int(CLUSTER[rname]["threads"])
-    if rname in CLUSTER and "threads" in CLUSTER[rname]
-    else int(CLUSTER["__default__"]["threads"])
-)
-getmemg = (
-    lambda rname: CLUSTER[rname]["mem"]
-    if rname in CLUSTER and "mem" in CLUSTER[rname]
-    else CLUSTER["__default__"]["mem"]
-)
-getmemG = lambda rname: getmemg(rname).replace("g", "G")
+# getthreads = (
+#     lambda rname: int(CLUSTER[rname]["threads"])
+#     if rname in CLUSTER and "threads" in CLUSTER[rname]
+#     else int(CLUSTER["__default__"]["threads"])
+# )
+# getmemg = (
+#     lambda rname: CLUSTER[rname]["mem"]
+#     if rname in CLUSTER and "mem" in CLUSTER[rname]
+#     else CLUSTER["__default__"]["mem"]
+# )
+# getmemG = lambda rname: getmemg(rname).replace("g", "G")
 
 ###################################################################################
 ###################################################################################
 
+# import yaml
+# from pathlib import Path
+
+# Locate your cluster profile (relative to workdir or absolute path)
+profile_path = join(Path(os.environ["PROFILE"]) , "config.yaml")
+with open(profile_path) as f:
+    profile_config = yaml.safe_load(f)
+
+# Now profile_config is a normal dict
+# pprint(profile_config)
+# sys.exit(1)
+
+
+# print("printing config...")
+WORKDIR = os.getcwd()
+print(WORKDIR)
+configfilepath = join(WORKDIR, "config.yaml") # this is workflow config .. not to be confused with snakemake cluster profile above
+try:
+    with open(configfilepath, "r") as f:
+        config = yaml.safe_load(f)
+except Exception as e:
+    print(f"❌ File does not exist: {configfilepath}")
+    print(f"❌ Error opening config file: {e}")
+    sys.exit(1)
+print("Snakemake working directory:", WORKDIR)
+# print(config)
+# print("end of config")
 
 # resource absolute path
-WORKDIR = config["workdir"]
+# WORKDIR = config["workdir"]
 TEMPDIR = config["tempdir"]
 SCRIPTS_DIR = config["scriptsdir"]
 RESOURCES_DIR = config["resourcesdir"]
