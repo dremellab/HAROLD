@@ -42,8 +42,8 @@ def oncomplete():
         log_dir = Path(".snakemake/log")
         latest = max(log_dir.glob("*.snakemake.log"), key=lambda p: p.stat().st_mtime)
         print(f"Using log file: {latest}")
-        print(f"Running jobby command: {jobby_bin} {latest} --tsv > {log_copy}.jobby.tsv")
         jobby_output = f"{latest}.jobby.tsv"
+        print(f"Running jobby command: {jobby_bin} {latest} --tsv > {jobby_output}")
         with open(jobby_output, "w") as f:
             result = subprocess.run(
                 [jobby_bin, latest, "--tsv"],
