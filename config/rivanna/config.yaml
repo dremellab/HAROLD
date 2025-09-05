@@ -3,24 +3,54 @@
 
 executor: slurm
 jobs: 200
+
+# singularity related settings
+# --deployment-method apptainer
 use-apptainer: true
+# --apptainer-prefix '/standard/dremel_lab/workflows/singularity_images'
 apptainer-prefix: /standard/dremel_lab/workflows/singularity_images
+# --apptainer-args --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab'
 apptainer-args: --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab
+
+# debugging and verbosity
+# --verbose
+verbose: true # is true by default for plugin
+# --printshellcmds
+printshellcmds: true
+
+# rerun settings
+# --rerun-triggers input mtime software-env code
 rerun-triggers: [mtime, input, code, software-env]
-rerun-incomplete: true
+# --rerun-incomplete
+rerun-incomplete: true # not parsed via plugin
+# do not use --ignore-incomplete
+ignore-incomplete: false # set true via plugin
+
+# no parameters
+# --notemp
+notemp: true # logs of successful jobs are kept .. this is parsed correctly via plugin but logs are still deleted
+# do not use --nolock
+nolock: false # reset lock to default, plugin sets to true .. but this does not work it is still set to true by plugin
+# do not use --no-hooks
+no-hooks: false # reset hooks to default, plugin sets to true
+
+# latency and speed related
+# --latency-wait 300
+latency-wait: 300
+# --max-inventory-time 60
+max-inventory-time: 60 # plugin parses this correctly as 0 .. trying to reset to default
+
+# plugin seems to ignore these setting ... ??
 slurm-logdir: logs
 show-failed-logs: true
-logger: rich
-latency-wait: 300
+# logger: rich
 keep-going: true
 restart-times: 3
-nolock: false
-printshellcmds: true
-notemp: true # logs of successful jobs are kept
+
 # report: report.html
 
 # these are not really working ... ignore
-job-name: "{rule}.{wildcards}.{jobid}"
+jobname: "{rule}.{wildcards}.{jobid}" # job-name errors out ... needs to be jobname
 jobscript: config/rivanna/jobscript.sh
 
 # --- Global defaults (from "__default__") ---
