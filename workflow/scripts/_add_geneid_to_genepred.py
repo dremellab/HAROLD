@@ -9,13 +9,17 @@ and prepends the corresponding gene ID to each row.
 
 
 def get_id(s, whatid):
-    s = s.split()
-    for i, j in enumerate(s):
+    parts = s.split()
+    if whatid not in parts:
+        print(f"{s} does not have {whatid}")
+        sys.exit(1)
+        return None  # or return "" or raise Exception
+
+    for i, j in enumerate(parts):
         if j == whatid:
-            r = s[i + 1]
-    r = r.replace('"', "")
-    r = r.replace(";", "")
-    return r
+            r = parts[i + 1]
+            r = r.replace('"', "").replace(";", "")
+            return r
 
 
 gtffile = sys.argv[1]
