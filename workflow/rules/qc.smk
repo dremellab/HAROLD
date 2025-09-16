@@ -63,7 +63,7 @@ rule gtf2genepred:
     shell:
         r"""
         set -exo pipefail
-        gtfToGenePred {input.gtf} {output.genepred}
+        gtfToGenePred -ignoreGroupsWithoutExons {input.gtf} {output.genepred}
         """
 
 localrules: genepred2bed12
@@ -170,5 +170,6 @@ rule multiqc:
         r"""
         set -exo pipefail
         outdir=$(dirname {output.multiqc})
+        cd $outdir
         multiqc --verbose --interactive --force .
         """
