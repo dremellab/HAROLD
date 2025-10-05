@@ -102,6 +102,13 @@ rule all:
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
         # rseqc tin
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls")          ,sample=SAMPLES),
+        join(RESULTSDIR, "counts", "aggregate_tin.tsv"),
+        # rseqc read GC
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.GC.xls"),                       sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else [],
+        # rseqc junction bb
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.junction.bb"),                  sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else [],
+
         # kraken2
         expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
         # multiqc

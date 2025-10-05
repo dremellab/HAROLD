@@ -84,7 +84,8 @@ if [ "$PLATFORM" == "shen" ]; then
   CLUSTER_PROFILE="rivanna"
   PARTITION="standard"
   EXTRA_SINGULARITY_BINDS=""
-  CONDA_ACTIVATE="source /project/dremel_lab/conda/miniconda/etc/profile.d/conda.sh && conda activate py311"
+  # CONDA_ACTIVATE="source /project/dremel_lab/conda/miniconda/etc/profile.d/conda.sh && conda activate py311"
+  CONDA_ACTIVATE='eval "$(/project/dremel_lab/conda/miniconda/condabin/mamba shell hook --shell bash)" && mamba activate py311'
   # PY311_BIN=$(conda run -n py311 python -c "import sys; print(sys.executable.rsplit('/',1)[0])")
   PY311_BIN="/project/dremel_lab/conda/envs/py311/bin"
   # echo "PY311_BIN: $PY311_BIN"
@@ -96,7 +97,8 @@ if [ "$PLATFORM" == "shen" ]; then
   # eval $CONDA_ACTIVATE
   # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer"
   # MODULE_LOAD="module load apptainer && module load snakemake"
-  MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer && $PATH_PREPEND"
+  # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer && $PATH_PREPEND"
+  MODULE_LOAD="module load apptainer"
   TEMP_DIR="/scratch/${USER}/"
   REFS_DIR="/standard/dremel_lab/workflows/reference_data/fasta_gtf/"
   KRAKEN2_DB="/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"

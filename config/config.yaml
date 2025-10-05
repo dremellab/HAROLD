@@ -45,6 +45,11 @@ scriptsdir: "PIPELINE_HOME/workflow/scripts"
 resourcesdir: "PIPELINE_HOME/resources"
 fastas_gtfs_dir: "REFS_DIR"
 
+# strand inference
+infer_strandedness: true
+infer_strandedness_threshold: 0.8
+strandedness_column: "strandedness"
+
 # Cutadapt parameters
 cutadapt_min_length: 15
 cutadapt_n: 5
@@ -62,13 +67,13 @@ star_alignTranscriptsPerReadNmax: 30000
 star_flanksize: 15
 
 # deepTools parameters
-deeptools_normalize: "RPKM"
+deeptools_normalize: "CPM"
 deeptools_binSize: 10
-deeptools_extendReads: 200
 
 # list out all containers to be used
 containers:
   base: "docker://nciccbr/ccbr_ubuntu_base_20.04:v7"
+  bedToBigBed: "docker://seqinfomics/bedtobigbed:latest"
   bowtie1: "docker://nciccbr/charlie_bowtie1:v0.1.1"
   circexplorer: "docker://nciccbr/ccbr_circexplorer:v1.0"
   circRNA_finder: "docker://nciccbr/charlie_circrna_finder:v1.0.1"

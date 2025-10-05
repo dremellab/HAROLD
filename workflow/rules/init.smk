@@ -309,7 +309,8 @@ append_files_in_list(GTFS, REF_GTF)
 
 # read in the samplesheet
 # Step 1: Read the tab-delimited file with headers
-SAMPLESDF = pd.read_csv(config["samples"], sep="\t", dtype=str).fillna("")
+MANIFEST_FILE = config.get("samples")
+SAMPLESDF = pd.read_csv(MANIFEST_FILE, sep="\t", dtype=str).fillna("")
 
 required_columns = [
     "sampleName",
@@ -375,3 +376,16 @@ DUMMYFILE = join(RESOURCES_DIR, "dummy")
 RESULTSDIR = join(WORKDIR, "results")
 if not os.path.exists(RESULTSDIR):
     os.mkdir(RESULTSDIR)
+
+INFER_STRANDEDNESS = str(config.get("infer_strandedness", "true")).lower()
+INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
+STRANDEDNESS_COLUMN = config.get("strandedness_column", "strandedness")
+if INFER_STRANDEDNESS == "false":
+    # samplesdf then needs to have a column called "strandedness"
+    if STRANDEDNESS_COLUMN not in SAMPLESDF.columns:
+        raise ValueError(f"Column '{STRANDEDNESS_COLUMN}' not found in samplesheet but is required when infer_strandedness is set to False.")
+    # check if values in that column are valid
+    valid_values = {"unstranded", "forward", "reverse"}
+    invalid_values = set(SAMPLESDF[STRANDEDNESS_COLUMN].unique()) - valid_values
+    if invalid_values:
+        raise ValueError(f"Invalid values in column '{STRANDEDNESS_COLUMN}': {', '.join(invalid_values)} ... Valid values are: {', '.join(valid_values)}.")
