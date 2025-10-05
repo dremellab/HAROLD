@@ -56,9 +56,14 @@ rule aggregate_stranded_counts:
         strand = join(RESULTSDIR,"counts","sample_strandedness.tsv")
     params:
         regions = REF_REGIONS,
+        infer_strandedness = INFER_STRANDEDNESS,
+        infer_strandedness_fraction = INFER_FRACTION_THRESHOLD,
+        manifest_file = MANIFEST_FILE,
+        strandinfo_column = STRANDEDNESS_COLUMN,
         script = join(SCRIPTS_DIR,"_aggregate_counts_by_strandedness.py")
     run:
         os.makedirs(os.path.dirname(output.counts), exist_ok=True)
         counts_list = ",".join(input.counts_files)
         strandedness_list = ",".join(input.strandedness_files)
-        shell(f"python {params.script} --counts {counts_list} --strandinfo {strandedness_list} --output_counts {output.counts} --output_strand {output.strand} --gtf {input.gtf} --regions {params.regions}")
+        strand_arg = "--infer_strandedness" if params.infer_strandedness == "true" else "--no-infer_strandedness"
+        shell(f"python {params.script} --counts {counts_list} --strandinfo {strandedness_list} --output_counts {output.counts} --output_strand {output.strand} --gtf {input.gtf} --regions {params.regions} {strand_arg} --manifest_file {params.manifest_file} --strandinfo_column {params.strandinfo_column} --infer_strandedness_fraction {params.infer_strandedness_fraction}")

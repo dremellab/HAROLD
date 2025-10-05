@@ -1,32 +1,50 @@
+#!/usr/bin/env python3
 import os
 import sys
 import pandas as pd
 import re
 from collections import defaultdict
 import argparse
-from pprint import pprint
 
 
-def infer_strandedness(file_path):
+def infer_strandedness(file_path, fraction_threshold=0.8):
+    """
+    Returns (strand, inference_fraction)
+    strand ∈ {forward, reverse, unstranded}
+    inference_fraction = fraction value used to decide
+    """
     with open(file_path) as f:
         content = f.read()
     if "Fraction of reads explained by" not in content:
-        return "unstranded"
+        return "unstranded", 0.0
+
     match = re.findall(r"Fraction of reads explained by \"(.*?)\": (\d+\.\d+)", content)
-    if not match or len(match) < 2:
-        return "unstranded"
+    if not match:
+        return "unstranded", 0.0
 
-    first_type, first_frac = match[0]
-    second_type, second_frac = match[1]
-    first_frac = float(first_frac)
-    second_frac = float(second_frac)
+    fractions = {read_type: float(value) for read_type, value in match}
 
-    if first_frac > 0.8:
-        return "forward"
-    elif second_frac > 0.8:
-        return "reverse"
-    else:
-        return "unstranded"
+    # Paired-end case
+    if "1+-,1-+,2++,2--" in fractions:
+        frac = fractions.get("1+-,1-+,2++,2--", 0.5)
+        if frac > fraction_threshold:
+            return "reverse", frac
+        elif frac < (1 - fraction_threshold):
+            return "forward", frac
+        else:
+            return "unstranded", frac
+
+    # Single-end case
+    if "+-,-+" in fractions:
+        frac = fractions.get("+-,-+", 0.5)
+        if frac > fraction_threshold:
+            return "reverse", frac
+        elif frac < (1 - fraction_threshold):
+            return "forward", frac
+        else:
+            return "unstranded", frac
+
+    return "unstranded", 0.0
 
 
 def parse_gtf_lookup(gtf_file):
@@ -127,9 +145,27 @@ def main(
     output_strand,
     gtf_file,
     regions_file,
+    infer_flag,
+    manifest_file,
+    strandinfo_column,
+    infer_fraction,
 ):
     chrom_to_species = parse_regions_file(regions_file)
     lookup_dict = parse_gtf_lookup(gtf_file)
+
+    # Load manifest if provided
+    manifest = None
+    if manifest_file:
+        try:
+            manifest = pd.read_csv(manifest_file, sep=None, engine="python")
+        except Exception as e:
+            sys.exit(f"❌ ERROR: Failed to read manifest {manifest_file}: {e}")
+
+        if strandinfo_column not in manifest.columns:
+            print(
+                f"⚠️ WARNING: Column '{strandinfo_column}' not found in manifest. Forcing inference."
+            )
+            infer_flag = True
 
     all_counts = []
     strand_info = []
@@ -141,14 +177,32 @@ def main(
             print(f"Skipping {sample_name}, missing files")
             continue
 
-        strandedness = infer_strandedness(strand_file)
-        strand_info.append((sample_name, strandedness))
+        inferred, frac = infer_strandedness(strand_file, infer_fraction)
+        used = inferred  # default
 
-        if strandedness == "unstranded":
+        if not infer_flag:  # manifest-driven
+            if manifest is not None and strandinfo_column in manifest.columns:
+                row = manifest.loc[manifest.iloc[:, 0] == sample_name]
+                if not row.empty:
+                    value = str(row.iloc[0][strandinfo_column]).lower()
+                    if value in ["forward", "reverse", "unstranded"]:
+                        used = value
+                    else:
+                        print(
+                            f"⚠️ WARNING: Invalid strandedness '{value}' in manifest for {sample_name}. Using inferred instead."
+                        )
+                else:
+                    print(
+                        f"⚠️ WARNING: Sample {sample_name} not found in manifest. Using inferred instead."
+                    )
+
+        strand_info.append((sample_name, inferred, used, round(frac, 3)))
+
+        if used == "unstranded":
             col = 2
-        elif strandedness == "forward":
+        elif used == "forward":
             col = 3
-        elif strandedness == "reverse":
+        elif used == "reverse":
             col = 4
         else:
             col = 2  # fallback
@@ -199,7 +253,11 @@ def main(
     )
     final_df.to_csv(output_counts, sep="\t")
 
-    strand_df = pd.DataFrame(strand_info, columns=["sample", "strandedness"])
+    # strand file with 4 columns
+    strand_df = pd.DataFrame(
+        strand_info,
+        columns=["sample", "inferred_strand", "used_strand", "inference_fraction"],
+    )
     strand_df.to_csv(output_strand, sep="\t", index=False)
 
 
@@ -229,22 +287,45 @@ if __name__ == "__main__":
         required=True,
         help="Tab-separated regions file mapping chromosomes to species",
     )
+
+    # new args
+    parser.add_argument(
+        "--infer_strandedness",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Whether to infer strandedness (default: True). Use --no-infer_strandedness to disable.",
+    )
+    parser.add_argument("--manifest_file", required=False, help="Path to manifest file")
+    parser.add_argument(
+        "--strandinfo_column",
+        required=False,
+        help="Column name in manifest for strandedness info",
+    )
+    parser.add_argument(
+        "--infer_strandedness_fraction",
+        type=float,
+        default=0.8,
+        help="Fraction threshold for inference (default=0.8)",
+    )
+
     args = parser.parse_args()
 
     count_files = args.counts.split(",")
     strandedness_files = args.strandinfo.split(",")
     output_counts = args.output_counts
     output_strand = args.output_strand
-    gtf_file = args.gtf
-    regions_file = args.regions
 
     main(
         count_files,
         strandedness_files,
         output_counts,
         output_strand,
-        gtf_file,
-        regions_file,
+        args.gtf,
+        args.regions,
+        args.infer_strandedness,
+        args.manifest_file,
+        args.strandinfo_column,
+        args.infer_strandedness_fraction,
     )
     print(f"Output written to {output_counts} and {output_strand}")
     sys.exit(0)
