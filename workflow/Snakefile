@@ -1,0 +1,136 @@
+from os.path import join
+import sys
+import re
+import os
+import pandas as pd
+import yaml
+import uuid
+from pathlib import Path
+from snakemake.utils import min_version
+from collections import defaultdict
+from pprint import pprint
+import shutil
+
+# no truncations during print pandas data frames
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", None)
+pd.set_option("display.max_colwidth", None)
+
+min_version("5.24")
+
+def oncomplete():
+    from datetime import datetime
+    import subprocess
+    import shutil
+
+    # Get timestamp
+    now = datetime.now().isoformat(timespec="seconds").replace(":", "-")
+    log_copy = f"snakemake.{now}.log"
+    # jobby_output = f"{log_copy}.jobby.tsv"
+
+    try:
+        # Step 1: Copy the log file
+        shutil.copyfile("snakemake.log", log_copy)
+        print(f"📁 Copied snakemake.log to {log_copy}")
+
+        # Step 2: Run jobby on the copied log
+        jobby_bin = shutil.which("jobby")
+        if not jobby_bin:
+            raise FileNotFoundError("jobby not found in PATH")
+
+        log_dir = Path(".snakemake/log")
+        latest = max(log_dir.glob("*.snakemake.log"), key=lambda p: p.stat().st_mtime)
+        print(f"Using log file: {latest}")
+        jobby_output = f"{latest}.jobby.tsv"
+        print(f"Running jobby command: {jobby_bin} {latest} --tsv > {jobby_output}")
+        with open(jobby_output, "w") as f:
+            result = subprocess.run(
+                [jobby_bin, latest, "--tsv"],
+                stdout=f,
+                stderr=subprocess.PIPE,  # still capture errors
+                text=True,
+                check=True
+            )
+
+        print(f"✅ jobby output saved to {jobby_output}")
+
+    except subprocess.CalledProcessError as e:
+        print("❌ jobby command failed!")
+        print(f"Return code: {e.returncode}")
+        print("stderr:", e.stderr.strip())
+
+    except FileNotFoundError as e:
+        print("❌ File not found:", e)
+
+include: "rules/init.smk"
+
+rule all:
+    input:
+        # create ref index
+        join(REF_DIR, "ref.genes.genepred_w_geneid"),
+        join(STAR_INDEX_DIR, "SA"),
+
+        # trimmed fastq files
+        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
+
+        # STAR alignment
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam")               ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.bai")           ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab")                        ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.SJ.out.tab")                                  ,sample=SAMPLES),
+        expand(
+            join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.toTranscriptome.out.bam")                ,sample=SAMPLES
+        ) if config.get("star_save_transcript_sam", False) else [],
+
+        # split bams and bigwigs
+        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam")                            ,sample=SAMPLES,regionname=HOST_VIRUSES),
+        expand(join(RESULTSDIR, "{sample}", "bigwigs", "{sample}.{regionname}.bw")                          ,sample=SAMPLES,regionname=HOST_VIRUSES),
+
+        # counts matrix
+        join(RESULTSDIR,"counts","counts_matrix.tsv"),
+
+        # qc
+        # qualimap
+        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                              ,sample=SAMPLES),
+        # rseqc read_distribution
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
+        # rseqc infer_experiment
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
+        # genebody_coverage
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        # rseqc tin
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls")          ,sample=SAMPLES),
+        join(RESULTSDIR, "counts", "aggregate_tin.tsv"),
+        # rseqc read GC
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.GC.xls"),                       sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else [],
+        # rseqc junction bb
+        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.junction.bb"),                  sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else [],
+
+        # kraken2
+        expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
+        # multiqc
+        join(RESULTSDIR, "multiqc_report.html"),
+
+include: "rules/create_index.smk"
+
+include: "rules/preprocessing.smk"
+
+include: "rules/align.smk"
+
+include: "rules/visualize.smk"
+
+include: "rules/quantify.smk"
+
+include: "rules/qc.smk"
+
+onsuccess:
+    oncomplete()
+    print("All rules completed successfully.")
+
+onerror:
+    oncomplete()
+    print("Some rules failed. Please check the logs for more information.")
+    sys.exit(1)
