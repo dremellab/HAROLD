@@ -109,7 +109,7 @@ with open(args.ingtf, "r") as ingtf:
             if "gene_name" in attributes:
                 gene_id_2_gene_name[attributes["gene_id"]] = attributes["gene_name"]
             else:
-                gene_id_2_gene_name["gene_id"] = attributes["gene_id"]
+                gene_id_2_gene_name[attributes["gene_id"]] = attributes["gene_id"]
 
 with open("gene_id_2_gene_name.tsv", "w") as tmp:
     for k, v in gene_id_2_gene_name.items():
