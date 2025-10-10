@@ -34,7 +34,6 @@ website:
           - docs/pipeline.md
           - docs/inputs.md
           - docs/outputs.md
-          - docs/parameters.md
       - section: "Help"
         contents:
           - docs/help.md

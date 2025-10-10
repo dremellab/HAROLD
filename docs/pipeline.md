@@ -1,1 +1,3 @@
-# 📥 HAROLD Outputs
+# 📥 HAROLD Workflow Diagram
+
+Placeholder .. coming soon.
