@@ -8,3 +8,5 @@ site/
 **/tmp*
 **__pycache__/**
 *.pyc
+
+/.quarto/
