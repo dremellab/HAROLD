@@ -1,0 +1,302 @@
+[
+  {
+    "objectID": "docs/prereq.html",
+    "href": "docs/prereq.html",
+    "title": "⚙️ Prerequisites for Running HAROLD on Rivanna",
+    "section": "",
+    "text": "Before running HAROLD, ensure that your computing environment is correctly configured and that you have access to the University of Virginia’s high-performance computing (HPC) system, Rivanna. HAROLD is tested and supported exclusively on Rivanna.\n\n\n\nTo access Rivanna, you must first have an active UVA computing account. Visit the Research Computing website for detailed instructions on creating an account and requesting HPC access. You’ll receive a username and credentials that allow you to log in via SSH.\n\n\n\n\nAccess to Rivanna requires connecting to the UVA network through the UVA VPN. It is recommended to use the VPN Anywhere profile or a better connection profile to ensure uninterrupted SSH access. Instructions for installing and configuring the VPN are also available on the UVA Research Computing site.\n\n\n\n\nYou will need a terminal interface (such as Terminal on macOS, Command Prompt or PowerShell on Windows, or any Linux shell). This environment allows you to use SSH to connect to Rivanna and run the HAROLD command-line interface.\nOnce the VPN connection is active, open your terminal and log in to Rivanna:\nssh &lt;your_computing_id&gt;@login.hpc.virginia.edu\n\n\n\n\nOnce connected to Rivanna, load the shared configuration and activate the pipelines conda environment used by HAROLD.\n# Load mamba and activate environment\nsource /standard/dremel_lab/scripts/.sh_common\nmamba activate pipelines\nThis prepares the environment with all required dependencies, including Snakemake, Python, and the HAROLD executable.\n\n\n\n\nTyping harold by itself will not display the full help message. To confirm that HAROLD is properly installed, use the --help flag:\nharold --help\nWhen executed correctly, you should see output similar to the following:\n##########################################################################################\n\nWelcome to HAROLD\nThis is a basic RNAseq pipeline to get counts matrix for host + viral proteins.\n\nHAROLD is only tested on Rivanna (https://www.rc.virginia.edu).\nPlease edit the files in config/unknown/ & config.yaml for compatibility with your\ncomputing environment\n\n##########################################################################################\n\nHAROLD can be used to detect and count transcripts in hosts and viruses.\n\nHere is the list of hosts and viruses that are currently supported:\n\nHOSTS:\n  * hg38          [Human]\n  * mm39          [Mouse]\n\nADDITIVES:\n  * ERCC          [External RNA Control Consortium sequences]\n  * BAC16Insert   [insert from rKSHV.219-derived BAC clone of the full-length KSHV genome]\n\nVIRUSES:\n  * NC_007605.1   [Human gammaherpesvirus 4 (Epstein-Barr virus)]\n  * NC_006273.2   [Human betaherpesvirus 5 (Cytomegalovirus )]\n  * NC_001664.4   [Human betaherpesvirus 6A (HHV-6A)]\n  * NC_000898.1   [Human betaherpesvirus 6B (HHV-6B)]\n  * NC_001716.2   [Human betaherpesvirus 7 (HHV-7)]\n  * NC_009333.1   [Human gammaherpesvirus 8 (KSHV)]\n  * NC_045512.2   [Severe acute respiratory syndrome (SARS)-related coronavirus]\n  * MN485971.1    [HIV from Belgium]\n  * NC_001806.2   [Human alphaherpesvirus 1 (Herpes simplex virus type 1) (strain 17)]\n  * KT899744.1    [HSV-1 strain KOS]\n  * MH636806.1    [MHV68 (Murine herpesvirus 68 strain WUMS)]\n\n##########################################################################################\n\nUSAGE:\n  harold -w/--workdir=&lt;WORKDIR&gt; -m/--runmode=&lt;RUNMODE&gt;\n\nRequired Arguments:\n1.  WORKDIR     : [Type: String] Absolute or relative path to the output folder with write permissions.\n2.  RUNMODE     : [Type: String] Valid options:\n    * init      : initialize workdir\n    * dryrun    : dry run snakemake to generate DAG\n    * run       : run with slurm\n    * runlocal  : run without submitting to sbatch\n    * unlock    : unlock WORKDIR if locked by snakemake (use with caution)\n    * reconfig  : recreate config file in WORKDIR\n    * reset     : DELETE workdir dir and re-init it (debugging)\n    * printbinds: print singularity binds (paths)\n    * local     : same as runlocal\n\nOptional Arguments:\n--host|-g       : supply host genome (hg38 or mm39) (--runmode=init only)\n--additives|-a  : supply comma-separated list of additives (ERCC or BAC16Insert) (--runmode=init only)\n--viruses|-v    : supply comma-separated list of viruses (--runmode=init only)\n--manifest|-s   : absolute path to samples.tsv (--runmode=init only)\n--help|-h       : print this help\n\nExample commands:\n  harold -w=/my/output/folder -m=init\n  harold -w=/my/output/folder -m=dryrun\n  harold -w=/my/output/folder -m=run\n\n##########################################################################################\n\nVersionInfo:\n  python          : 3.11\n  snakemake       : 9.8.1\n  pipeline_home   : /sfs/ceph/standard/dremel_lab/workflows/pipelines/HAROLD/v1.0.0\n  git commit/tag  : 2156e6eb4b142f74dc5ae2d65f3bca4159574eda v1.0.0\n  pipeline version: v1.0.0\n  cluster_name    : shen\n\n##########################################################################################\nIf you see this output, HAROLD is ready to run.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "⚙️ Prerequisites for Running HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/prereq.html#obtain-a-rivanna-account",
+    "href": "docs/prereq.html#obtain-a-rivanna-account",
+    "title": "⚙️ Prerequisites for Running HAROLD on Rivanna",
+    "section": "",
+    "text": "To access Rivanna, you must first have an active UVA computing account. Visit the Research Computing website for detailed instructions on creating an account and requesting HPC access. You’ll receive a username and credentials that allow you to log in via SSH.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "⚙️ Prerequisites for Running HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/prereq.html#connect-via-uva-vpn",
+    "href": "docs/prereq.html#connect-via-uva-vpn",
+    "title": "⚙️ Prerequisites for Running HAROLD on Rivanna",
+    "section": "",
+    "text": "Access to Rivanna requires connecting to the UVA network through the UVA VPN. It is recommended to use the VPN Anywhere profile or a better connection profile to ensure uninterrupted SSH access. Instructions for installing and configuring the VPN are also available on the UVA Research Computing site.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "⚙️ Prerequisites for Running HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/prereq.html#accessing-rivanna-from-the-command-line",
+    "href": "docs/prereq.html#accessing-rivanna-from-the-command-line",
+    "title": "⚙️ Prerequisites for Running HAROLD on Rivanna",
+    "section": "",
+    "text": "You will need a terminal interface (such as Terminal on macOS, Command Prompt or PowerShell on Windows, or any Linux shell). This environment allows you to use SSH to connect to Rivanna and run the HAROLD command-line interface.\nOnce the VPN connection is active, open your terminal and log in to Rivanna:\nssh &lt;your_computing_id&gt;@login.hpc.virginia.edu",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "⚙️ Prerequisites for Running HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/prereq.html#load-the-mamba-environment",
+    "href": "docs/prereq.html#load-the-mamba-environment",
+    "title": "⚙️ Prerequisites for Running HAROLD on Rivanna",
+    "section": "",
+    "text": "Once connected to Rivanna, load the shared configuration and activate the pipelines conda environment used by HAROLD.\n# Load mamba and activate environment\nsource /standard/dremel_lab/scripts/.sh_common\nmamba activate pipelines\nThis prepares the environment with all required dependencies, including Snakemake, Python, and the HAROLD executable.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "⚙️ Prerequisites for Running HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/prereq.html#verify-harold-installation",
+    "href": "docs/prereq.html#verify-harold-installation",
+    "title": "⚙️ Prerequisites for Running HAROLD on Rivanna",
+    "section": "",
+    "text": "Typing harold by itself will not display the full help message. To confirm that HAROLD is properly installed, use the --help flag:\nharold --help\nWhen executed correctly, you should see output similar to the following:\n##########################################################################################\n\nWelcome to HAROLD\nThis is a basic RNAseq pipeline to get counts matrix for host + viral proteins.\n\nHAROLD is only tested on Rivanna (https://www.rc.virginia.edu).\nPlease edit the files in config/unknown/ & config.yaml for compatibility with your\ncomputing environment\n\n##########################################################################################\n\nHAROLD can be used to detect and count transcripts in hosts and viruses.\n\nHere is the list of hosts and viruses that are currently supported:\n\nHOSTS:\n  * hg38          [Human]\n  * mm39          [Mouse]\n\nADDITIVES:\n  * ERCC          [External RNA Control Consortium sequences]\n  * BAC16Insert   [insert from rKSHV.219-derived BAC clone of the full-length KSHV genome]\n\nVIRUSES:\n  * NC_007605.1   [Human gammaherpesvirus 4 (Epstein-Barr virus)]\n  * NC_006273.2   [Human betaherpesvirus 5 (Cytomegalovirus )]\n  * NC_001664.4   [Human betaherpesvirus 6A (HHV-6A)]\n  * NC_000898.1   [Human betaherpesvirus 6B (HHV-6B)]\n  * NC_001716.2   [Human betaherpesvirus 7 (HHV-7)]\n  * NC_009333.1   [Human gammaherpesvirus 8 (KSHV)]\n  * NC_045512.2   [Severe acute respiratory syndrome (SARS)-related coronavirus]\n  * MN485971.1    [HIV from Belgium]\n  * NC_001806.2   [Human alphaherpesvirus 1 (Herpes simplex virus type 1) (strain 17)]\n  * KT899744.1    [HSV-1 strain KOS]\n  * MH636806.1    [MHV68 (Murine herpesvirus 68 strain WUMS)]\n\n##########################################################################################\n\nUSAGE:\n  harold -w/--workdir=&lt;WORKDIR&gt; -m/--runmode=&lt;RUNMODE&gt;\n\nRequired Arguments:\n1.  WORKDIR     : [Type: String] Absolute or relative path to the output folder with write permissions.\n2.  RUNMODE     : [Type: String] Valid options:\n    * init      : initialize workdir\n    * dryrun    : dry run snakemake to generate DAG\n    * run       : run with slurm\n    * runlocal  : run without submitting to sbatch\n    * unlock    : unlock WORKDIR if locked by snakemake (use with caution)\n    * reconfig  : recreate config file in WORKDIR\n    * reset     : DELETE workdir dir and re-init it (debugging)\n    * printbinds: print singularity binds (paths)\n    * local     : same as runlocal\n\nOptional Arguments:\n--host|-g       : supply host genome (hg38 or mm39) (--runmode=init only)\n--additives|-a  : supply comma-separated list of additives (ERCC or BAC16Insert) (--runmode=init only)\n--viruses|-v    : supply comma-separated list of viruses (--runmode=init only)\n--manifest|-s   : absolute path to samples.tsv (--runmode=init only)\n--help|-h       : print this help\n\nExample commands:\n  harold -w=/my/output/folder -m=init\n  harold -w=/my/output/folder -m=dryrun\n  harold -w=/my/output/folder -m=run\n\n##########################################################################################\n\nVersionInfo:\n  python          : 3.11\n  snakemake       : 9.8.1\n  pipeline_home   : /sfs/ceph/standard/dremel_lab/workflows/pipelines/HAROLD/v1.0.0\n  git commit/tag  : 2156e6eb4b142f74dc5ae2d65f3bca4159574eda v1.0.0\n  pipeline version: v1.0.0\n  cluster_name    : shen\n\n##########################################################################################\nIf you see this output, HAROLD is ready to run.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "⚙️ Prerequisites for Running HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/help.html",
+    "href": "docs/help.html",
+    "title": "❓ Help and Support",
+    "section": "",
+    "text": "If you encounter issues running HAROLD or have questions about its configuration, execution, or interpretation of results, this page provides guidance on how to get assistance.\n\n\n\n1. Missing or unreadable FASTQ files If HAROLD reports that input FASTQ files are missing or unreadable, double-check that the paths listed in your manifest file are correct and that you have read permissions. Paths can be absolute or relative to your working directory.\n2. Manifest format errors Ensure your manifest file is tab-separated and includes all required columns (sampleName, groupName, batch, path_to_R1_fastq, path_to_R2_fastq, and optionally strandedness). Duplicate sample names or incorrect headers will cause initialization to fail.\n3. Unsupported host or virus identifiers If HAROLD returns an error related to unsupported genomes, confirm that the host, additives, and viral accessions match the list of supported references. Refer to the Inputs page for the complete list.\n4. Pipeline fails after submission to SLURM Check the logs/ subdirectory in your working directory. Each rule in Snakemake generates its own log file, which records errors and resource usage. You can also use squeue -u $USER to monitor job status.\n5. Configuration or environment errors If you see errors related to missing conda environments or software dependencies, verify that you have activated the correct environment using:\nsource /standard/dremel_lab/scripts/.sh_common\nmamba activate pipelines\n\n\n\n\nIf you have a question that is not covered in this documentation, or you believe you’ve encountered a bug, please contact the HAROLD maintainer directly at:\n📧 cud2td@virginia.edu\nWhen reaching out, include the following information to help diagnose your issue:\n\nA short description of what you were attempting to do.\nThe exact command you ran.\nAny relevant error messages or log snippets.\nThe location of your working directory (if sharing within Rivanna).\n\nThis information will help expedite troubleshooting and ensure a timely response.\n\n\n\n\n\nUVA Research Computing Documentation — Information on Rivanna usage, job submission, and resource management.\nSnakemake Documentation — For understanding Snakemake rules and configuration.\nMultiQC Documentation — To interpret the interactive reports generated by HAROLD.\n\nIf you have suggestions for improving HAROLD’s documentation or new feature requests, please include them in your email or GitHub issue submission.",
+    "crumbs": [
+      "Docs",
+      "Help",
+      "❓ Help and Support"
+    ]
+  },
+  {
+    "objectID": "docs/help.html#common-issues",
+    "href": "docs/help.html#common-issues",
+    "title": "❓ Help and Support",
+    "section": "",
+    "text": "1. Missing or unreadable FASTQ files If HAROLD reports that input FASTQ files are missing or unreadable, double-check that the paths listed in your manifest file are correct and that you have read permissions. Paths can be absolute or relative to your working directory.\n2. Manifest format errors Ensure your manifest file is tab-separated and includes all required columns (sampleName, groupName, batch, path_to_R1_fastq, path_to_R2_fastq, and optionally strandedness). Duplicate sample names or incorrect headers will cause initialization to fail.\n3. Unsupported host or virus identifiers If HAROLD returns an error related to unsupported genomes, confirm that the host, additives, and viral accessions match the list of supported references. Refer to the Inputs page for the complete list.\n4. Pipeline fails after submission to SLURM Check the logs/ subdirectory in your working directory. Each rule in Snakemake generates its own log file, which records errors and resource usage. You can also use squeue -u $USER to monitor job status.\n5. Configuration or environment errors If you see errors related to missing conda environments or software dependencies, verify that you have activated the correct environment using:\nsource /standard/dremel_lab/scripts/.sh_common\nmamba activate pipelines",
+    "crumbs": [
+      "Docs",
+      "Help",
+      "❓ Help and Support"
+    ]
+  },
+  {
+    "objectID": "docs/help.html#getting-help",
+    "href": "docs/help.html#getting-help",
+    "title": "❓ Help and Support",
+    "section": "",
+    "text": "If you have a question that is not covered in this documentation, or you believe you’ve encountered a bug, please contact the HAROLD maintainer directly at:\n📧 cud2td@virginia.edu\nWhen reaching out, include the following information to help diagnose your issue:\n\nA short description of what you were attempting to do.\nThe exact command you ran.\nAny relevant error messages or log snippets.\nThe location of your working directory (if sharing within Rivanna).\n\nThis information will help expedite troubleshooting and ensure a timely response.",
+    "crumbs": [
+      "Docs",
+      "Help",
+      "❓ Help and Support"
+    ]
+  },
+  {
+    "objectID": "docs/help.html#additional-resources",
+    "href": "docs/help.html#additional-resources",
+    "title": "❓ Help and Support",
+    "section": "",
+    "text": "UVA Research Computing Documentation — Information on Rivanna usage, job submission, and resource management.\nSnakemake Documentation — For understanding Snakemake rules and configuration.\nMultiQC Documentation — To interpret the interactive reports generated by HAROLD.\n\nIf you have suggestions for improving HAROLD’s documentation or new feature requests, please include them in your email or GitHub issue submission.",
+    "crumbs": [
+      "Docs",
+      "Help",
+      "❓ Help and Support"
+    ]
+  },
+  {
+    "objectID": "docs/usage.html",
+    "href": "docs/usage.html",
+    "title": "🧭 Using HAROLD on Rivanna",
+    "section": "",
+    "text": "Once your environment is configured and HAROLD is available as a command, the pipeline can typically be executed in three main steps. These steps correspond to the standard workflow of initialization, validation, and execution. Before starting, make sure you have:\n\nA sample sheet (manifest) that lists your input FASTQ files and sample identifiers.\nA known reference combination, including the host genome, any additives, and the viral genomes you want to include.\n\nEach run of HAROLD is controlled through the --runmode option, which determines what the pipeline will do.\n\n\n\nThe initialization step prepares the working directory and configuration for the analysis. When you run HAROLD in initialization mode, it will:\n\nCreate a new output directory where all results and logs will be stored.\nCopy the required pipeline templates and configuration files into that directory.\nGenerate a new config.yaml file in the working directory based on your inputs.\n\n\n\n\n--workdir or -w: The absolute or relative path to the directory where HAROLD will create output files.\n--host or -g: The host genome to use (hg38 for human or mm39 for mouse).\n--additives or -a: Additive control sequences such as ERCC or BAC16Insert. Multiple values can be supplied as a comma-separated list.\n--viruses or -v: One or more virus accessions (for example, NC_009333.1 for KSHV or NC_045512.2 for SARS-CoV-2). Multiple accessions can also be supplied as a comma-separated list.\n--manifest or -s: The path to the sample manifest file, usually a tab-separated file listing sample names and FASTQ file paths.\n\n\n\n\nharold -w=/scratch/$USER/harold_test -m=init \\\n  --host=hg38 \\\n  --additives=ERCC,BAC16Insert \\\n  --viruses=NC_009333.1,NC_045512.2 \\\n  --manifest=/project/$USER/samples.tsv\nAfter this command runs successfully, HAROLD creates the working directory, populates it with configuration files, and prepares it for analysis.\n\n\n\n\n\nThe dry run step is used to verify that the pipeline is configured correctly and that Snakemake can execute all necessary rules without errors. It does not run the actual computations but instead performs a dependency and syntax check of the workflow.\nTo perform a dry run, specify the same working directory and set the run mode to dryrun:\nharold -w=/scratch/$USER/harold_test -m=dryrun\nDuring this step, HAROLD checks the configuration, paths, and dependencies. If everything is correctly configured, it will display a list of Snakemake rules that would be executed if the pipeline were run for real. This step ensures that all input files exist and that the selected reference and manifest are compatible.\nIf errors are detected, HAROLD provides informative messages about missing files or invalid parameters so they can be fixed before running the full workflow.\n\n\n\n\nOnce the dry run completes successfully, you can proceed to the execution phase. In this step, HAROLD submits all required Snakemake jobs to the SLURM scheduler on Rivanna. The pipeline will handle job dependencies, memory requests, and resource allocations automatically.\nTo start the full analysis, run:\nharold -w=/scratch/$USER/harold_test -m=run\nThe workflow will now begin executing on Rivanna’s compute nodes. Each rule (step of the pipeline) will produce a corresponding log file stored under the logs/ subdirectory within your working directory. You can monitor progress by examining these log files or by using standard SLURM commands such as squeue -u $USER to check job status.\nWhen the pipeline finishes, the working directory will contain organized subfolders for counts, alignment, logs, and reports. The main outputs include raw count matrices, sample manifest copies, BAM/BAI alignment files, bigWig coverage tracks, and the MultiQC report summarizing quality control results.\n\n\n\n\nRunning HAROLD typically involves three steps: initialization, dry-run validation, and execution. Together, these steps make sure the configuration is correct, resources are available, and the final analysis can proceed without interruption. Following this workflow ensures reproducibility and consistency in large-scale RNA-seq processing on the Rivanna HPC environment.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧭 Using HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/usage.html#step-1-initialization-runmodeinit",
+    "href": "docs/usage.html#step-1-initialization-runmodeinit",
+    "title": "🧭 Using HAROLD on Rivanna",
+    "section": "",
+    "text": "The initialization step prepares the working directory and configuration for the analysis. When you run HAROLD in initialization mode, it will:\n\nCreate a new output directory where all results and logs will be stored.\nCopy the required pipeline templates and configuration files into that directory.\nGenerate a new config.yaml file in the working directory based on your inputs.\n\n\n\n\n--workdir or -w: The absolute or relative path to the directory where HAROLD will create output files.\n--host or -g: The host genome to use (hg38 for human or mm39 for mouse).\n--additives or -a: Additive control sequences such as ERCC or BAC16Insert. Multiple values can be supplied as a comma-separated list.\n--viruses or -v: One or more virus accessions (for example, NC_009333.1 for KSHV or NC_045512.2 for SARS-CoV-2). Multiple accessions can also be supplied as a comma-separated list.\n--manifest or -s: The path to the sample manifest file, usually a tab-separated file listing sample names and FASTQ file paths.\n\n\n\n\nharold -w=/scratch/$USER/harold_test -m=init \\\n  --host=hg38 \\\n  --additives=ERCC,BAC16Insert \\\n  --viruses=NC_009333.1,NC_045512.2 \\\n  --manifest=/project/$USER/samples.tsv\nAfter this command runs successfully, HAROLD creates the working directory, populates it with configuration files, and prepares it for analysis.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧭 Using HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/usage.html#step-2-dry-run-runmodedryrun",
+    "href": "docs/usage.html#step-2-dry-run-runmodedryrun",
+    "title": "🧭 Using HAROLD on Rivanna",
+    "section": "",
+    "text": "The dry run step is used to verify that the pipeline is configured correctly and that Snakemake can execute all necessary rules without errors. It does not run the actual computations but instead performs a dependency and syntax check of the workflow.\nTo perform a dry run, specify the same working directory and set the run mode to dryrun:\nharold -w=/scratch/$USER/harold_test -m=dryrun\nDuring this step, HAROLD checks the configuration, paths, and dependencies. If everything is correctly configured, it will display a list of Snakemake rules that would be executed if the pipeline were run for real. This step ensures that all input files exist and that the selected reference and manifest are compatible.\nIf errors are detected, HAROLD provides informative messages about missing files or invalid parameters so they can be fixed before running the full workflow.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧭 Using HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/usage.html#step-3-execution-runmoderun",
+    "href": "docs/usage.html#step-3-execution-runmoderun",
+    "title": "🧭 Using HAROLD on Rivanna",
+    "section": "",
+    "text": "Once the dry run completes successfully, you can proceed to the execution phase. In this step, HAROLD submits all required Snakemake jobs to the SLURM scheduler on Rivanna. The pipeline will handle job dependencies, memory requests, and resource allocations automatically.\nTo start the full analysis, run:\nharold -w=/scratch/$USER/harold_test -m=run\nThe workflow will now begin executing on Rivanna’s compute nodes. Each rule (step of the pipeline) will produce a corresponding log file stored under the logs/ subdirectory within your working directory. You can monitor progress by examining these log files or by using standard SLURM commands such as squeue -u $USER to check job status.\nWhen the pipeline finishes, the working directory will contain organized subfolders for counts, alignment, logs, and reports. The main outputs include raw count matrices, sample manifest copies, BAM/BAI alignment files, bigWig coverage tracks, and the MultiQC report summarizing quality control results.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧭 Using HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/usage.html#summary",
+    "href": "docs/usage.html#summary",
+    "title": "🧭 Using HAROLD on Rivanna",
+    "section": "",
+    "text": "Running HAROLD typically involves three steps: initialization, dry-run validation, and execution. Together, these steps make sure the configuration is correct, resources are available, and the final analysis can proceed without interruption. Following this workflow ensures reproducibility and consistency in large-scale RNA-seq processing on the Rivanna HPC environment.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧭 Using HAROLD on Rivanna"
+    ]
+  },
+  {
+    "objectID": "docs/pipeline.html",
+    "href": "docs/pipeline.html",
+    "title": "📥 HAROLD Workflow Diagram",
+    "section": "",
+    "text": "📥 HAROLD Workflow Diagram\nPlaceholder .. coming soon.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📥 HAROLD Workflow Diagram"
+    ]
+  },
+  {
+    "objectID": "docs/inputs.html",
+    "href": "docs/inputs.html",
+    "title": "📥 HAROLD Input Requirements",
+    "section": "",
+    "text": "HAROLD accepts a small set of clearly defined inputs that ensure each run is reproducible, validated, and compatible with downstream analyses. This page describes all required and optional inputs and how HAROLD validates them before running the pipeline.\n\n\n\nThe sample manifest (also called samples.tsv or manifest.tsv) is required only during the initialization phase (runmode=init). It defines the list of samples and their corresponding FASTQ file paths. The manifest must be a tab-separated file with the following columns:\n\n\n\n\n\n\n\nColumn Name\nDescription\n\n\n\n\nsampleName\nA unique identifier for each sample. No duplicates are allowed.\n\n\ngroupName\nA label representing the biological or experimental group (for example, treated, control, infected).\n\n\nbatch\nAn optional batch identifier if the experiment spans multiple sequencing batches. This helps downstream normalization and batch correction.\n\n\npath_to_R1_fastq\nThe absolute or relative path to the FASTQ file containing Read 1 sequences.\n\n\npath_to_R2_fastq\nThe path to the Read 2 FASTQ file for paired-end libraries. For single-end libraries, this column can be left blank or omitted.\n\n\nstrandedness\n(Optional) Library strandedness. Valid values include forward, reverse, or unstranded. If this field is missing or left empty, HAROLD will automatically infer strandedness using RSeQC utilities.\n\n\n\n\n\nsampleName  groupName   batch   path_to_R1_fastq    path_to_R2_fastq    strandedness\nS1  Control B1  /data/fastq/S1_R1.fastq.gz  /data/fastq/S1_R2.fastq.gz  forward\nS2  Treatment   B1  /data/fastq/S2_R1.fastq.gz  /data/fastq/S2_R2.fastq.gz  reverse\nS3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded\n\n\n\nHAROLD supports both paired-end (PE) and single-end (SE) sequencing data. FASTQ files must be gzip-compressed (.fastq.gz) and accessible from the file system at runtime. Absolute paths are required.\n\n\n\nBefore execution, HAROLD validates the manifest automatically to prevent misconfiguration. The validation checks include:\n\nEach sampleName must be unique.\nFASTQ files referenced in path_to_R1_fastq (SE,PE) and path_to_R2_fastq (PE) must exist and be readable.\nColumn names must match the expected header structure.\nThe strandedness field, if provided, must be one of the accepted values. (forward/reverse/unstranded)\nGroup and batch assignments are checked for consistency to avoid missing metadata.\n\nIf any issue is detected, HAROLD will stop execution and report the specific error message to guide correction before rerunning initialization.\n\n\n\n\n\nThe working directory is the central location where all output, logs, and configuration files are created. It must be specified for every HAROLD command and must be writable by the user.\nDuring the initialization step (runmode=init), HAROLD creates the specified directory (if it does not already exist) and populates it with:\n\nA pipeline-specific configuration file (config.yaml).\nTemplate Snakemake rule files and subdirectories.\nA copy of the sample manifest for record keeping.\nOther required files for execution.\n\nOnce initialized, all subsequent commands (dryrun, run, etc.) must reference the same working directory.\n\n\n\n\nThe reference combination defines the biological context for alignment and quantification. These inputs are required only for initialization (runmode=init) and must correspond to one of HAROLD’s supported reference components.\n\n\n\n--host: Specifies the host genome to be used. Supported values are:\n\nhg38 for Homo sapiens\nmm39 for Mus musculus\n\n--additives: Defines optional spike-in sequences or synthetic controls. Supported values are:\n\nERCC for External RNA Control Consortium controls.\nBAC16Insert for BAC16-derived KSHV genomic insert sequences.\nMultiple additives can be supplied as a comma-separated list (e.g., ERCC,BAC16Insert).\n\n--viruses: Lists one or more viral genomes by their accession IDs. These must match one of the supported viral references in HAROLD’s library. Multiple accessions can be provided as a comma-separated list.\n\n\n\n\nDuring initialization, HAROLD validates that:\n\nThe selected host, additives, and viruses are recognized and supported.\nAll required genome bundles are available for indexing.\n\nIf unsupported or misspelled identifiers are supplied, HAROLD will display an error message listing the allowed options.\n\n\n\n\n\nHAROLD requires minimal input to begin analysis: a correctly formatted sample manifest, a writable working directory, and valid reference selections for host, additives, and viruses. Together, these inputs ensure that HAROLD can dynamically build the appropriate reference index, validate experimental metadata, and execute reproducible, high-quality RNA-seq analyses across host and viral genomes.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📥 HAROLD Input Requirements"
+    ]
+  },
+  {
+    "objectID": "docs/inputs.html#sample-manifest-required-for-initialization",
+    "href": "docs/inputs.html#sample-manifest-required-for-initialization",
+    "title": "📥 HAROLD Input Requirements",
+    "section": "",
+    "text": "The sample manifest (also called samples.tsv or manifest.tsv) is required only during the initialization phase (runmode=init). It defines the list of samples and their corresponding FASTQ file paths. The manifest must be a tab-separated file with the following columns:\n\n\n\n\n\n\n\nColumn Name\nDescription\n\n\n\n\nsampleName\nA unique identifier for each sample. No duplicates are allowed.\n\n\ngroupName\nA label representing the biological or experimental group (for example, treated, control, infected).\n\n\nbatch\nAn optional batch identifier if the experiment spans multiple sequencing batches. This helps downstream normalization and batch correction.\n\n\npath_to_R1_fastq\nThe absolute or relative path to the FASTQ file containing Read 1 sequences.\n\n\npath_to_R2_fastq\nThe path to the Read 2 FASTQ file for paired-end libraries. For single-end libraries, this column can be left blank or omitted.\n\n\nstrandedness\n(Optional) Library strandedness. Valid values include forward, reverse, or unstranded. If this field is missing or left empty, HAROLD will automatically infer strandedness using RSeQC utilities.\n\n\n\n\n\nsampleName  groupName   batch   path_to_R1_fastq    path_to_R2_fastq    strandedness\nS1  Control B1  /data/fastq/S1_R1.fastq.gz  /data/fastq/S1_R2.fastq.gz  forward\nS2  Treatment   B1  /data/fastq/S2_R1.fastq.gz  /data/fastq/S2_R2.fastq.gz  reverse\nS3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded\n\n\n\nHAROLD supports both paired-end (PE) and single-end (SE) sequencing data. FASTQ files must be gzip-compressed (.fastq.gz) and accessible from the file system at runtime. Absolute paths are required.\n\n\n\nBefore execution, HAROLD validates the manifest automatically to prevent misconfiguration. The validation checks include:\n\nEach sampleName must be unique.\nFASTQ files referenced in path_to_R1_fastq (SE,PE) and path_to_R2_fastq (PE) must exist and be readable.\nColumn names must match the expected header structure.\nThe strandedness field, if provided, must be one of the accepted values. (forward/reverse/unstranded)\nGroup and batch assignments are checked for consistency to avoid missing metadata.\n\nIf any issue is detected, HAROLD will stop execution and report the specific error message to guide correction before rerunning initialization.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📥 HAROLD Input Requirements"
+    ]
+  },
+  {
+    "objectID": "docs/inputs.html#working-directory---workdir",
+    "href": "docs/inputs.html#working-directory---workdir",
+    "title": "📥 HAROLD Input Requirements",
+    "section": "",
+    "text": "The working directory is the central location where all output, logs, and configuration files are created. It must be specified for every HAROLD command and must be writable by the user.\nDuring the initialization step (runmode=init), HAROLD creates the specified directory (if it does not already exist) and populates it with:\n\nA pipeline-specific configuration file (config.yaml).\nTemplate Snakemake rule files and subdirectories.\nA copy of the sample manifest for record keeping.\nOther required files for execution.\n\nOnce initialized, all subsequent commands (dryrun, run, etc.) must reference the same working directory.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📥 HAROLD Input Requirements"
+    ]
+  },
+  {
+    "objectID": "docs/inputs.html#reference-configuration-host-additives-and-viruses",
+    "href": "docs/inputs.html#reference-configuration-host-additives-and-viruses",
+    "title": "📥 HAROLD Input Requirements",
+    "section": "",
+    "text": "The reference combination defines the biological context for alignment and quantification. These inputs are required only for initialization (runmode=init) and must correspond to one of HAROLD’s supported reference components.\n\n\n\n--host: Specifies the host genome to be used. Supported values are:\n\nhg38 for Homo sapiens\nmm39 for Mus musculus\n\n--additives: Defines optional spike-in sequences or synthetic controls. Supported values are:\n\nERCC for External RNA Control Consortium controls.\nBAC16Insert for BAC16-derived KSHV genomic insert sequences.\nMultiple additives can be supplied as a comma-separated list (e.g., ERCC,BAC16Insert).\n\n--viruses: Lists one or more viral genomes by their accession IDs. These must match one of the supported viral references in HAROLD’s library. Multiple accessions can be provided as a comma-separated list.\n\n\n\n\nDuring initialization, HAROLD validates that:\n\nThe selected host, additives, and viruses are recognized and supported.\nAll required genome bundles are available for indexing.\n\nIf unsupported or misspelled identifiers are supplied, HAROLD will display an error message listing the allowed options.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📥 HAROLD Input Requirements"
+    ]
+  },
+  {
+    "objectID": "docs/inputs.html#summary",
+    "href": "docs/inputs.html#summary",
+    "title": "📥 HAROLD Input Requirements",
+    "section": "",
+    "text": "HAROLD requires minimal input to begin analysis: a correctly formatted sample manifest, a writable working directory, and valid reference selections for host, additives, and viruses. Together, these inputs ensure that HAROLD can dynamically build the appropriate reference index, validate experimental metadata, and execute reproducible, high-quality RNA-seq analyses across host and viral genomes.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📥 HAROLD Input Requirements"
+    ]
+  },
+  {
+    "objectID": "docs/outputs.html",
+    "href": "docs/outputs.html",
+    "title": "📊 HAROLD Outputs (Coming Soon)",
+    "section": "",
+    "text": "📊 HAROLD Outputs (Coming Soon)\nThis section will describe the files and directories generated by HAROLD upon successful completion of a run. It will include detailed explanations of result types, such as:\n\nCount Matrices: Raw and normalized count tables for host and viral genes.\nQC Reports: MultiQC summary reports combining results from various quality-control tools.\nAlignment Files: BAM and BAI files for read alignments, plus bigWig and junction bigBed files for visualization.\nConfiguration and Logs: Metadata, logs, and configuration files saved for reproducibility.\n\nDocumentation for this page is under development and will be expanded soon to include file structure diagrams, naming conventions, and data interpretation guidance.",
+    "crumbs": [
+      "Docs",
+      "Pipeline",
+      "📊 HAROLD Outputs (Coming Soon)"
+    ]
+  },
+  {
+    "objectID": "docs/index.html",
+    "href": "docs/index.html",
+    "title": "🧬 HAROLD — RNA-seq Quantification Pipeline",
+    "section": "",
+    "text": "HAROLD (High-throughput Alignment and RNA Output Level Detection) is a modular and reproducible RNA-seq quantification pipeline, designed for seamless integration with downstream analysis tools such as DiffEx.\nHAROLD automates the process from raw FASTQ files to normalized count matrices and interactive reports that use MultiQC for visualization and quality control summaries; these outputs can then be parsed by the DiffEx package to generate additional Quarto-based interactive reports for differential gene expression and gene set enrichment analysis, making it ideal for virus-host transcriptomic studies and multi-genome RNA-seq experiments.\n\n\n\n\nHAROLD supports custom reference generation. It allows users to build composite STAR references that include a host genome such as hg38 (human) or mm39 (mouse), optional additives like ERCC or BAC16Insert (or both), and one or more viral genomes from a curated collection.\nHAROLD includes a comprehensive viral reference library. The current library is summarized in the following table:\n\n\n\n\n\n\n\n\n\nAccession\nVirus Name\nDescription\n\n\n\n\nNC_007605.1\nEpstein–Barr virus\nHuman gammaherpesvirus 4\n\n\nNC_006273.2\nCytomegalovirus\nHuman betaherpesvirus 5\n\n\nNC_001664.4\nHHV‑6A\nHuman betaherpesvirus 6A\n\n\nNC_000898.1\nHHV‑6B\nHuman betaherpesvirus 6B\n\n\nNC_001716.2\nHHV‑7\nHuman betaherpesvirus 7\n\n\nNC_009333.1\nKSHV\nHuman gammaherpesvirus 8\n\n\nNC_045512.2\nSARS‑CoV‑2\nSevere acute respiratory syndrome coronavirus 2\n\n\nMN485971.1\nHIV\nHuman immunodeficiency virus (Belgium isolate)\n\n\nNC_001806.2\nHSV‑1 strain 17\nHuman alphaherpesvirus 1 (Herpes simplex virus type 1)\n\n\nKT899744.1\nHSV‑1 strain KOS\nHuman alphaherpesvirus 1 (HSV‑1) strain KOS\n\n\nKT899744delRR\nHSV‑1 strain KOS‑deleted terminal repeats Δ1‑9603, Δ125845‑126977, Δ145361‑151974\nCustom HSV‑1 strain with deleted terminal repeats\n\n\nMH636806.1\nMHV68\nMurine herpesvirus 68, strain WUMS\n\n\n\n\nHAROLD dynamically generates the required reference bundles. It builds STAR indices on the fly using selected host and viral genomes, removing the need for large prebuilt references and reducing storage overhead.\nHAROLD is powered by Snakemake for workflow orchestration. Each stage, from index creation to alignment and normalization, is managed through clearly defined rules that ensure reproducibility and modular execution.\nHAROLD provides flexible alignment and quantification. It performs both gene- and transcript-level counting, using STAR for alignment and feature-based quantification tools for accurate expression measurement.\nHAROLD performs normalization with trusted statistical frameworks. It calculates FPKM, TPM, and other normalization metrics using limma, edgeR, and DESeq2, leveraging the DiffEx package for visualization and interactive exploration.\nHAROLD includes seamless HPC integration. The pipeline can be run on clusters like Rivanna through a single wrapper script that supports initialization, dry-run validation, and SLURM-based execution for efficient job scheduling.\nHAROLD produces a comprehensive MultiQC report. This report aggregates extensive quality-control metrics, incorporating results from FastQC, FastQ Screen, RSeQC tools such as tin.py, and other QC modules that evaluate read quality, mapping bias, coverage uniformity, and gene body integrity. The MultiQC report provides an interactive dashboard where users can assess sample-level performance and experiment-wide consistency.\nHAROLD is designed for direct downstream compatibility. The pipeline produces raw count matrices and an input sample manifest that are ready for import into DiffEx or other RNA-seq analysis frameworks.\nHAROLD can autodetect strandedness. Users can specify strandedness directly in the sample manifest if it is known, or let HAROLD infer it automatically using RSeQC utilities, ensuring accurate quantification across diverse library preparation protocols.\n\n\n\n\n\nHAROLD orchestrates the full RNA-seq analysis pipeline in a reproducible manner, capturing the central philosophy of transcriptomic studies. A typical RNA-seq experiment begins with sequencing reads that represent fragments of expressed genes. These reads provide a snapshot of which genes are active and at what levels across different samples or experimental conditions. HAROLD automates this process by first assembling a composite reference based on user-selected host, viral, and additive components. This ensures that both host and pathogen contributions to transcriptional changes can be examined in a single coherent analysis framework.\nReads are trimmed using Cutadapt to remove adapters and low-quality regions before alignment. The pipeline then builds a STAR index for the selected reference and performs highly efficient alignments that preserve splicing information critical for downstream interpretation. Once aligned, HAROLD generates both gene- and transcript-level quantifications, converting raw read counts into normalized measures such as FPKM and TPM. These values help compare expression levels between samples by adjusting for gene length and sequencing depth, allowing researchers to identify genes that change meaningfully rather than artifacts of sampling.\nBeyond quantification, HAROLD emphasizes transparency and interpretability. Quality-control summaries and interactive MultiQC reports consolidate information from multiple tools, offering insights into sequencing quality, alignment efficiency, and potential biases. The final deliverables include BAM and BAI files for visualization, along with bigWig coverage and junction bigBed tracks, which together create a complete resource for exploring transcriptional landscapes, detecting novel features, and setting the stage for differential expression analysis in DiffEx or other frameworks.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧬 HAROLD — RNA-seq Quantification Pipeline"
+    ]
+  },
+  {
+    "objectID": "docs/index.html#key-features",
+    "href": "docs/index.html#key-features",
+    "title": "🧬 HAROLD — RNA-seq Quantification Pipeline",
+    "section": "",
+    "text": "HAROLD supports custom reference generation. It allows users to build composite STAR references that include a host genome such as hg38 (human) or mm39 (mouse), optional additives like ERCC or BAC16Insert (or both), and one or more viral genomes from a curated collection.\nHAROLD includes a comprehensive viral reference library. The current library is summarized in the following table:\n\n\n\n\n\n\n\n\n\nAccession\nVirus Name\nDescription\n\n\n\n\nNC_007605.1\nEpstein–Barr virus\nHuman gammaherpesvirus 4\n\n\nNC_006273.2\nCytomegalovirus\nHuman betaherpesvirus 5\n\n\nNC_001664.4\nHHV‑6A\nHuman betaherpesvirus 6A\n\n\nNC_000898.1\nHHV‑6B\nHuman betaherpesvirus 6B\n\n\nNC_001716.2\nHHV‑7\nHuman betaherpesvirus 7\n\n\nNC_009333.1\nKSHV\nHuman gammaherpesvirus 8\n\n\nNC_045512.2\nSARS‑CoV‑2\nSevere acute respiratory syndrome coronavirus 2\n\n\nMN485971.1\nHIV\nHuman immunodeficiency virus (Belgium isolate)\n\n\nNC_001806.2\nHSV‑1 strain 17\nHuman alphaherpesvirus 1 (Herpes simplex virus type 1)\n\n\nKT899744.1\nHSV‑1 strain KOS\nHuman alphaherpesvirus 1 (HSV‑1) strain KOS\n\n\nKT899744delRR\nHSV‑1 strain KOS‑deleted terminal repeats Δ1‑9603, Δ125845‑126977, Δ145361‑151974\nCustom HSV‑1 strain with deleted terminal repeats\n\n\nMH636806.1\nMHV68\nMurine herpesvirus 68, strain WUMS\n\n\n\n\nHAROLD dynamically generates the required reference bundles. It builds STAR indices on the fly using selected host and viral genomes, removing the need for large prebuilt references and reducing storage overhead.\nHAROLD is powered by Snakemake for workflow orchestration. Each stage, from index creation to alignment and normalization, is managed through clearly defined rules that ensure reproducibility and modular execution.\nHAROLD provides flexible alignment and quantification. It performs both gene- and transcript-level counting, using STAR for alignment and feature-based quantification tools for accurate expression measurement.\nHAROLD performs normalization with trusted statistical frameworks. It calculates FPKM, TPM, and other normalization metrics using limma, edgeR, and DESeq2, leveraging the DiffEx package for visualization and interactive exploration.\nHAROLD includes seamless HPC integration. The pipeline can be run on clusters like Rivanna through a single wrapper script that supports initialization, dry-run validation, and SLURM-based execution for efficient job scheduling.\nHAROLD produces a comprehensive MultiQC report. This report aggregates extensive quality-control metrics, incorporating results from FastQC, FastQ Screen, RSeQC tools such as tin.py, and other QC modules that evaluate read quality, mapping bias, coverage uniformity, and gene body integrity. The MultiQC report provides an interactive dashboard where users can assess sample-level performance and experiment-wide consistency.\nHAROLD is designed for direct downstream compatibility. The pipeline produces raw count matrices and an input sample manifest that are ready for import into DiffEx or other RNA-seq analysis frameworks.\nHAROLD can autodetect strandedness. Users can specify strandedness directly in the sample manifest if it is known, or let HAROLD infer it automatically using RSeQC utilities, ensuring accurate quantification across diverse library preparation protocols.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧬 HAROLD — RNA-seq Quantification Pipeline"
+    ]
+  },
+  {
+    "objectID": "docs/index.html#workflow-overview",
+    "href": "docs/index.html#workflow-overview",
+    "title": "🧬 HAROLD — RNA-seq Quantification Pipeline",
+    "section": "",
+    "text": "HAROLD orchestrates the full RNA-seq analysis pipeline in a reproducible manner, capturing the central philosophy of transcriptomic studies. A typical RNA-seq experiment begins with sequencing reads that represent fragments of expressed genes. These reads provide a snapshot of which genes are active and at what levels across different samples or experimental conditions. HAROLD automates this process by first assembling a composite reference based on user-selected host, viral, and additive components. This ensures that both host and pathogen contributions to transcriptional changes can be examined in a single coherent analysis framework.\nReads are trimmed using Cutadapt to remove adapters and low-quality regions before alignment. The pipeline then builds a STAR index for the selected reference and performs highly efficient alignments that preserve splicing information critical for downstream interpretation. Once aligned, HAROLD generates both gene- and transcript-level quantifications, converting raw read counts into normalized measures such as FPKM and TPM. These values help compare expression levels between samples by adjusting for gene length and sequencing depth, allowing researchers to identify genes that change meaningfully rather than artifacts of sampling.\nBeyond quantification, HAROLD emphasizes transparency and interpretability. Quality-control summaries and interactive MultiQC reports consolidate information from multiple tools, offering insights into sequencing quality, alignment efficiency, and potential biases. The final deliverables include BAM and BAI files for visualization, along with bigWig coverage and junction bigBed tracks, which together create a complete resource for exploring transcriptional landscapes, detecting novel features, and setting the stage for differential expression analysis in DiffEx or other frameworks.",
+    "crumbs": [
+      "Docs",
+      "Getting Started",
+      "🧬 HAROLD — RNA-seq Quantification Pipeline"
+    ]
+  }
+]
