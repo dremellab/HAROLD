@@ -58,7 +58,7 @@ cutadapt_O: 5
 cutadapt_q: 20
 
 # kraken2 db
-kraken2_db: "/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
+kraken2_db: "/project/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
 kraken2_params: "--use-names --gzip-compressed --quick"
 
 # STAR parameters

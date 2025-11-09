@@ -22,7 +22,7 @@ Check the `logs/` subdirectory in your working directory. Each rule in Snakemake
 If you see errors related to missing conda environments or software dependencies, verify that you have activated the correct environment using:
 
 ```bash
-source /standard/dremel_lab/scripts/.sh_common
+source /project/dremel_lab/scripts/.sh_common
 mamba activate pipelines
 ```
 

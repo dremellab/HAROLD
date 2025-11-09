@@ -34,7 +34,7 @@ Once connected to Rivanna, load the shared configuration and activate the **pipe
 
 ```bash
 # Load mamba and activate environment
-source /standard/dremel_lab/scripts/.sh_common
+source /project/dremel_lab/scripts/.sh_common
 mamba activate pipelines
 ```
 
@@ -124,7 +124,7 @@ Example commands:
 VersionInfo:
   python          : 3.11
   snakemake       : 9.8.1
-  pipeline_home   : /sfs/ceph/standard/dremel_lab/workflows/pipelines/HAROLD/v1.0.0
+  pipeline_home   : /sfs/ceph/project/dremel_lab/workflows/pipelines/HAROLD/v1.0.0
   git commit/tag  : 2156e6eb4b142f74dc5ae2d65f3bca4159574eda v1.0.0
   pipeline version: v1.0.0
   cluster_name    : shen
