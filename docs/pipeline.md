@@ -1,3 +1,1 @@
-# 📥 HAROLD Workflow Diagram
-
-Placeholder .. coming soon.
+# 📥 HAROLD Workflow diagram

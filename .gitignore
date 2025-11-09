@@ -1,4 +1,3 @@
-**/_site/
 **/.kop*
 **/.snakemake
 !.editorconfig
@@ -9,5 +8,3 @@ site/
 **/tmp*
 **__pycache__/**
 *.pyc
-
-/.quarto/
