@@ -212,19 +212,19 @@ rule rseqc_junction_annotation:
     shell:
         r"""
         set -exo pipefail
-        outdir=$(dirname {output.junctions})
-        mkdir -p $outdir
+        outdir="$(dirname {output.junctions})"
+        mkdir -p "${{outdir}}"
         mkdir -p {params.tmpdir}
-        cd $outdir
+        cd "${{outdir}}"
         junction_annotation.py \
             -i {input.bam} \
             -r {input.bed12} \
-            -o ${outdir}/{params.sample}.{params.regionname} | tee {params.sample}.{params.regionname}.junction.bed.log || true
+            -o "${{outdir}}/{params.sample}.{params.regionname}" | tee {params.sample}.{params.regionname}.junction.bed.log || true
         # Create output file if it doesn't exist (no junctions found case)
         if [[ ! -f "{output.junctions}" ]]; then
-            touch {output.junctions}
+            touch "{output.junctions}"
         fi
-        ls -larth $outdir
+        ls -larth "${{outdir}}"
         """
 
 rule junctions_to_bigbed:
