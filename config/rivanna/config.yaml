@@ -38,10 +38,11 @@ latency-wait: 300
 # --max-inventory-time 60
 max-inventory-time: 60 # plugin parses this correctly as 0 .. trying to reset to default
 
-# plugin seems to ignore these setting ... ??
+# Logging settings
 slurm-logdir: logs
+successful-logs-dir: logs/successful_jobs
 show-failed-logs: true
-# logger: rich
+keep-logs: true  # Don't delete logs
 keep-going: true
 restart-times: 3
 
