@@ -219,8 +219,9 @@ rule rseqc_junction_annotation:
         junction_annotation.py \
             -i {input.bam} \
             -r {input.bed12} \
-            -o ${{outdir}}/{params.sample}.{params.regionname} | tee {params.sample}.{params.regionname}.junction.bed.log
-        if grep -q "total = 0" {params.sample}.{params.regionname}.junction.bed.log; then
+            -o ${outdir}/{params.sample}.{params.regionname} | tee {params.sample}.{params.regionname}.junction.bed.log || true
+        # Create output file if it doesn't exist (no junctions found case)
+        if [[ ! -f "{output.junctions}" ]]; then
             touch {output.junctions}
         fi
         ls -larth $outdir
