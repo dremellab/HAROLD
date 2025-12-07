@@ -471,6 +471,7 @@ function runslurm() {
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=40G
 #SBATCH --time=3-00:00:00
+#SBATCH --account=dremel_lab
 #SBATCH --job-name=harold_head_job
 #SBATCH --output=__WORKDIR__/slurm-%j.out
 __PART_OPTION__
