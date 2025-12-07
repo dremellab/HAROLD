@@ -390,11 +390,7 @@ def _normalize_species_label(value):
         return "Mm"
     return None
 
-DIFFEX_HOST = (
-    _normalize_species_label(config.get('diffex_normalized_counts', {}).get('host'))
-    or _normalize_species_label(config.get('host'))
-    or "Hs"
-)
+DIFFEX_HOST = _normalize_species_label(config.get('host'))
 
 INFER_STRANDEDNESS = str(config.get("infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
