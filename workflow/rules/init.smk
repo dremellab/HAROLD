@@ -379,6 +379,23 @@ if not os.path.exists(RESULTSDIR):
 
 DIFFEX_NORMALIZED_COUNTS = str(config.get('diffex_normalized_counts', {}).get('run', 'false')).lower()
 
+def _normalize_species_label(value):
+    """Return DiffEx host label (Hs/Mm) from assorted config inputs."""
+    if value is None:
+        return None
+    key = str(value).strip().lower()
+    if key in {"hs", "hg38", "grch38", "human"}:
+        return "Hs"
+    if key in {"mm", "mm39", "mm10", "mouse"}:
+        return "Mm"
+    return None
+
+DIFFEX_HOST = (
+    _normalize_species_label(config.get('diffex_normalized_counts', {}).get('host'))
+    or _normalize_species_label(config.get('host'))
+    or "Hs"
+)
+
 INFER_STRANDEDNESS = str(config.get("infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
 STRANDEDNESS_COLUMN = config.get("strandedness_column", "strandedness")

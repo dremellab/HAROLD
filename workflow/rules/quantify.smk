@@ -156,7 +156,7 @@ rule normalized_counts:
         user_batch = str(config.get('diffex_normalized_counts', {}).get('use_batch', 'false')).lower(),
         batch_column = str(config.get('diffex_normalized_counts', {}).get('batch_column', 'batch')),
         genes_selection = str(config.get('diffex_normalized_counts', {}).get('genes_selection', 'both')).lower(),
-        host = str(config.get('diffex_normalized_counts', {}).get('host', 'Hs')),
+        host = DIFFEX_HOST,
     container:
         config['containers']['diffex']
     threads: _get_threads("diffex_normalized_counts", profile_config)
