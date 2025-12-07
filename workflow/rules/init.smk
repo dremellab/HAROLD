@@ -377,6 +377,8 @@ RESULTSDIR = join(WORKDIR, "results")
 if not os.path.exists(RESULTSDIR):
     os.mkdir(RESULTSDIR)
 
+DIFFEX_NORMALIZED_COUNTS = str(config.get('diffex_normalized_counts', {}).get('run', 'false')).lower()
+
 INFER_STRANDEDNESS = str(config.get("infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
 STRANDEDNESS_COLUMN = config.get("strandedness_column", "strandedness")

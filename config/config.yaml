@@ -70,6 +70,16 @@ star_flanksize: 15
 deeptools_normalize: "CPM"
 deeptools_binSize: 10
 
+# generate diffex normalized counts
+diffex_normalized_counts:
+  run: true # true or false
+  use_ercc: false # should we use ERCC for normalization
+  ercc_mix: 1 # which ERCC mix was used ... 1 or 2
+  use_batch: false # should we use batch for normalization
+  batch_column: "batch" # if use_batch is true, which column in samples.tsv has the batch info
+  host: "Hs" # options are Hs or Mm
+  genes_selection: "both" # host virus or both ... recommend both
+
 # list out all containers to be used
 containers:
   base: "docker://nciccbr/ccbr_ubuntu_base_20.04:v7"
@@ -82,6 +92,8 @@ containers:
   cutadapt: "docker://nciccbr/charlie_cutadapt_fqfilter:v1.0.1"
   deeptools: "docker://stjudecloud/deeptools:1.0.1"
   dcc: "docker://nciccbr/charlie_dcc:v0.2.1"
+  # diffex: "docker://seqinfomics/diffex:0.5.2"
+  diffex: "docker://ghcr.io/dremellab/diffex:0.5.2"
   fastqc: "docker://nciccbr/ccrgb_qctools:v4.0"
   gffread: "docker://zavolab/gffread:0.11.7"
   gtfToGenePred: "docker://seqinfomics/gtftogenepred:latest"
@@ -92,7 +104,7 @@ containers:
   picard: "docker://nciccbr/ccbr_picard_2.27.5:v1"
   qualimap: "docker://stjudecloud/qualimap:1.0.3"
   R: "docker://nciccbr/ccbr_r_4.3.0:v1"
-  rseqc: "docker://clinicalgenomics/rseqc:4.0.0"
+  rseqc: "docker://seqinfomics/rseqc:4.0.0"
   samtools: "docker://staphb/samtools:1.21"
   star: "docker://nciccbr/ccbr_star_2.7.6a:latest"
   star_ucsc_cufflinks: "docker://nciccbr/charlie_star_ucsc_cufflinks:v0.4.1"
