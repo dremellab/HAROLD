@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [dev]
 
+- _No changes yet._
+
+## [1.1.0]
+
 ### Added
 - Optional diffex-normalized counts workflow, including per-sample RSeQC transcript quantification and generation of gene/transcript RPKM/TPM matrices.
 - `config/rivanna/slurm-status.py` utility to surface job states and archive successful Slurm logs automatically.
