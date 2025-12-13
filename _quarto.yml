@@ -1,0 +1,52 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "HAROLD — RNA-seq Quantification & Normalization"
+  site-url: https://dremellab.github.io/HAROLD/
+  repo-url: https://github.com/dremellab/HAROLD
+
+  navbar:
+    pinned: true
+    right:
+      - text: "Docs"
+        href: docs/index.md
+      - text: "Version"
+        menu:
+          - text: "Latest (dev)"
+            href: https://dremellab.github.io/HAROLD/latest/
+      - icon: github
+        href: https://github.com/dremellab/HAROLD
+
+  sidebar:
+    style: floating
+    collapse-level: 2
+    search: true
+    contents:
+      - section: "Getting Started"
+        contents:
+          - docs/index.md
+          - docs/prereq.md
+          - docs/usage.md
+      - section: "Pipeline"
+        contents:
+          - docs/pipeline.md
+          - docs/inputs.md
+          - docs/outputs.md
+          - docs/parameters.md
+      - section: "Help"
+        contents:
+          - docs/help.md
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
+    code-copy: true
+    smooth-scroll: true
+
+metadata:
+  version: "dev"

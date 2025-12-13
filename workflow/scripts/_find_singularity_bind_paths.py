@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# filepath: /standard/dremel_lab/workflows/pipelines/CHAPLIN/dev_cud2td/find_singularity_bind_paths.py
+# filepath: /project/dremel_lab/workflows/pipelines/CHAPLIN/dev_cud2td/find_singularity_bind_paths.py
 
 import os
 import re

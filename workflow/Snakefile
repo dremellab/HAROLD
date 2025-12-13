@@ -90,6 +90,17 @@ rule all:
 
         # counts matrix
         join(RESULTSDIR,"counts","counts_matrix.tsv"),
+        join(RESULTSDIR,"counts","counts_matrix.rpkm.tsv"),
+        join(RESULTSDIR,"counts","counts_matrix.tpm.tsv"),
+
+        # transcript quantification with rseqc
+        expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.rseqc_fpkm_tpm.tsv")                        ,sample=SAMPLES),
+        join(RESULTSDIR,"counts","counts_matrix.transcript_level.tsv"),
+        join(RESULTSDIR,"counts","counts_matrix.transcript_level.rpkm.tsv"),
+        join(RESULTSDIR,"counts","counts_matrix.transcript_level.tpm.tsv"),
+
+        # diffex normalized counts
+        join(RESULTSDIR,"counts","normalized_counts","normalize.html") if DIFFEX_NORMALIZED_COUNTS == "true" else [],
 
         # qc
         # qualimap

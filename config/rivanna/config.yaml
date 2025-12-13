@@ -7,10 +7,9 @@ jobs: 200
 # singularity related settings
 # --deployment-method apptainer
 use-apptainer: true
-# --apptainer-prefix '/standard/dremel_lab/workflows/singularity_images'
-apptainer-prefix: /standard/dremel_lab/workflows/singularity_images
-# --apptainer-args --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab'
-apptainer-args: --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab
+# harold wrapper overrides apptainer-prefix to /scratch/$USER/apptainer/sif by default.
+apptainer-prefix: /project/dremel_lab/workflows/singularity_images
+apptainer-args: --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab --bind /sfs/weka/scratch:/sfs/weka/scratch --bind /scratch:/scratch
 
 # debugging and verbosity
 # --verbose
@@ -40,10 +39,9 @@ latency-wait: 300
 # --max-inventory-time 60
 max-inventory-time: 60 # plugin parses this correctly as 0 .. trying to reset to default
 
-# plugin seems to ignore these setting ... ??
+# Logging settings
 slurm-logdir: logs
-show-failed-logs: true
-# logger: rich
+slurm-keep-successful-logs: true
 keep-going: true
 restart-times: 3
 
