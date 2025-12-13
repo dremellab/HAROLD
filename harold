@@ -5,6 +5,12 @@
 
 set -eo pipefail
 
+# suppress platform echo when only --version/-V is requested
+SUPPRESS_PLATFORM_ECHO=0
+if [[ $# -eq 1 && ( "$1" == "-V" || "$1" == "--version" ) ]]; then
+  SUPPRESS_PLATFORM_ECHO=1
+fi
+
 # decide trigger
 trigger="mtime"
 # trigger="input"
@@ -57,7 +63,9 @@ check_file $SNAKEFILE
 
 # get github commit tag
 GIT_COMMIT_TAG=$(get_git_commitid_tag $PIPELINE_HOME)
-echo "$PLATFORM"
+if [[ $SUPPRESS_PLATFORM_ECHO -eq 0 ]]; then
+  echo "$PLATFORM"
+fi
 
 # pipeline version file
 VERSIONFILE="${PIPELINE_HOME}/VERSION"
@@ -194,6 +202,7 @@ Optional Arguments:
 --singcache|-c  : path for the Apptainer/Singularity cache (default: /scratch/\$USER/apptainer/cache if available)
 --sifdir|-i     : path for cached SIF images (default: /scratch/\$USER/apptainer/sif)
 --help|-h       : print this help
+--version|-V    : print HAROLD version and exit
 
 
 Example commands:
@@ -729,6 +738,10 @@ function main(){
       ;;
       -h|--help)
         usage && exit 0;
+      ;;
+      -V|--version)
+        echo "$VERSION"
+        exit 0
       ;;
       *)
         err "Unknown argument $i!"    # unknown option
