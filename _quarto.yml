@@ -49,4 +49,4 @@ format:
     smooth-scroll: true
 
 metadata:
-  version: "dev"
+  version: "1.2.0"

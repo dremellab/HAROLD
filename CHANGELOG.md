@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [dev]
 
-- _No changes yet._
+### Changed
+- TBD
+
+## [1.2.0]
+
+### Changed
+- The HAROLD wrapper now defaults `--sifdir` to `/project/dremel_lab/workflows/singularity_images`, prepares per-user caches under `/scratch/$USER/singularity`, honors standard `SINGULARITY_*` environment overrides, exports a dedicated scratch pull directory (`/scratch/$USER/singularity/images` when using the shared tree), and emits warnings when shared images are missing so users understand when a Docker pull to scratch will occur.
+- `harold --runmode=init` now prints the cache directory (`--singcache`), the image directory (`--sifdir`), and the effective pull directory so users can confirm exactly where SIFs will be stored.
+- Updated `docs/prereq.md` to spell out how the wrapper reports and uses the cache/tmp/pull directories versus the shared image directory, and to set expectations around the warning messages shown while new `.sif` files are staged.
+- Documented where the composite `ref.fa`, `.gtf`, STAR index, and related files are written inside each work directory, added guidance for interpreting Snakemake’s verbose dry-run output, and expanded the usage guide with practical instructions for monitoring Slurm jobs and drilling into per-rule log files under `logs/`.
 
 ## [1.1.0]
 
