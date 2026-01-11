@@ -124,9 +124,9 @@ Example commands:
 VersionInfo:
   python          : 3.11
   snakemake       : 9.8.1
-  pipeline_home   : /sfs/ceph/project/dremel_lab/workflows/pipelines/HAROLD/v1.1.0
-  git commit/tag  : f8b62bb1596e2c91587921849ab47f3e8b2a8ab8 v1.1.0
-  pipeline version: v1.1.0
+  pipeline_home   : /sfs/ceph/project/dremel_lab/workflows/pipelines/HAROLD/v1.2.0
+  git commit/tag  : f8b62bb1596e2c91587921849ab47f3e8b2a8ab8 v1.2.0
+  pipeline version: v1.2.0
   cluster_name    : shen
 
 ##########################################################################################
