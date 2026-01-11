@@ -133,3 +133,21 @@ VersionInfo:
 ```
 
 If you see this output, HAROLD is ready to run.
+
+---
+
+## 6. Shared Apptainer Images and Cache Layout
+
+HAROLD uses Apptainer/Singularity containers for every Snakemake rule. To reduce duplicate pulls, the wrapper now points to the lab-managed image repository at `/project/dremel_lab/workflows/singularity_images` by default. All cached SIF files in that directory are shared read-only across Rivanna users.
+
+During runtime HAROLD also prepares a per-user scratch workspace under `/scratch/$USER/singularity/`:
+
+- `cache/` – Apptainer layer cache used while pulling from Docker/OCI registries.
+- `tmp/` – temporary directory exported as `APPTAINER_TMPDIR`/`SINGULARITY_TMPDIR`.
+
+If a requested SIF is missing from the shared repository, the wrapper prints a warning and Apptainer automatically pulls it into your scratch cache when the rule executes. You can override the defaults with:
+
+- `--sifdir /path/to/sif` to point at a different image directory (for example, a personal mirror).
+- `--singcache /path/to/cache` to control where cache layers and temporary files are written.
+
+On compute nodes, the jobscript reuses the shared image directory when available and transparently falls back to `/scratch/$USER/singularity/sif` if the shared path is not accessible, ensuring every rule can still run.

@@ -7,7 +7,7 @@ jobs: 200
 # singularity related settings
 # --deployment-method apptainer
 use-apptainer: true
-# harold wrapper overrides apptainer-prefix to /scratch/$USER/apptainer/sif by default.
+# harold wrapper points to the shared /project/dremel_lab/workflows/singularity_images SIF directory by default.
 apptainer-prefix: /project/dremel_lab/workflows/singularity_images
 apptainer-args: --bind /project/dremel_lab:/project/dremel_lab --bind /standard/dremel_lab:/standard/dremel_lab --bind /sfs/gpfs/tardis/project/dremel_lab:/sfs/gpfs/tardis/project/dremel_lab --bind /sfs/ceph/standard/dremel_lab:/sfs/ceph/standard/dremel_lab --bind /sfs/weka/scratch:/sfs/weka/scratch --bind /scratch:/scratch
 

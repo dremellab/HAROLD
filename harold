@@ -49,6 +49,84 @@ function check_file() {
   fi
 }
 
+# warn users if shared sif images are missing so they know a pull will occur
+function warn_missing_shared_sifs() {
+  local cfg_file="$1"
+  local sif_dir="$2"
+  if [[ ! -f "$cfg_file" ]]; then
+    return
+  fi
+  if [[ ! -d "$sif_dir" ]]; then
+    echo "WARNING: Requested Apptainer/Singularity image directory \"$sif_dir\" does not exist."
+    return
+  fi
+  python - "$cfg_file" "$sif_dir" <<'PY'
+import hashlib
+import pathlib
+import sys
+
+cfg = pathlib.Path(sys.argv[1])
+sif_dir = pathlib.Path(sys.argv[2])
+
+def collect_containers(path: pathlib.Path):
+    containers = {}
+    lines = path.read_text().splitlines()
+    capture = False
+    indent = None
+    for line in lines:
+        if not capture:
+            if line.strip().startswith("containers:"):
+                capture = True
+                indent = len(line) - len(line.lstrip())
+            continue
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        cur_indent = len(line) - len(line.lstrip())
+        if cur_indent <= indent:
+            break
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        value = value.split("#", 1)[0].strip()
+        if not value:
+            continue
+        if value[0] in "\"'":
+            quote = value[0]
+            if value.endswith(quote):
+                value = value[1:-1]
+            else:
+                value = value[1:]
+        containers[key.strip()] = value
+    return containers
+
+try:
+    containers = collect_containers(cfg)
+except Exception:
+    sys.exit(0)
+
+missing = []
+for key, image in containers.items():
+    if "://" not in image:
+        continue
+    digest = hashlib.md5(image.encode()).hexdigest()
+    found = False
+    for ext in (".sif", ".simg"):
+        candidate = sif_dir / f"{digest}{ext}"
+        if candidate.exists():
+            found = True
+            break
+    if not found:
+        missing.append((key, image, digest))
+
+if missing:
+    print(f"WARNING: One or more shared Apptainer images are not staged under {sif_dir}", file=sys.stderr)
+    for key, image, digest in missing:
+        print(f"  - {key}: {image}", file=sys.stderr)
+        print(f"    Expected digest filename {digest}.sif/.simg; will pull to /scratch/$USER/singularity on demand.", file=sys.stderr)
+PY
+}
+
 
 ##########################################################################################
 # initial setup
@@ -88,6 +166,7 @@ EXTRA_SINGULARITY_BINDS=""
 TEMP_DIR=""
 REFS_DIR=""
 CLUSTER_PROFILE="unknown"
+DEFAULT_SHARED_SIF_DIR="/project/dremel_lab/workflows/singularity_images"
 APPTAINER_SIF_DIR=""
 APPTAINER_CACHE_DIR=""
 APPTAINER_TMP_DIR=""
@@ -199,8 +278,8 @@ Optional Arguments:
 --additives|-a  : supply comma-separated list of additives at command line. ERCC or BAC16Insert or both (--runmode=init only)
 --viruses|-v    : supply comma-separated list of viruses at command line                                (--runmode=init only)
 --manifest|-s   : absolute path to samples.tsv. This will be copied to output folder                    (--runmode=init only)
---singcache|-c  : path for the Apptainer/Singularity cache (default: /scratch/\$USER/apptainer/cache if available)
---sifdir|-i     : path for cached SIF images (default: /scratch/\$USER/apptainer/sif)
+--singcache|-c  : path for the Apptainer/Singularity cache (default: /scratch/\$USER/singularity/cache if available)
+--sifdir|-i     : path for cached SIF images (default: /project/dremel_lab/workflows/singularity_images)
 --help|-h       : print this help
 --version|-V    : print HAROLD version and exit
 
@@ -751,6 +830,7 @@ function main(){
 
   WORKDIR=$(readlink -f $WORKDIR)
   echo "Working Dir: $WORKDIR"
+  CONFIGFILE="${WORKDIR}/config.yaml"
 
   SCRATCH_ROOT="${SCRATCH:-/scratch/$USER}"
   SCRATCH_FALLBACK="${WORKDIR}/.harold_runtime"
@@ -758,24 +838,32 @@ function main(){
     mkdir -p "$SCRATCH_ROOT" 2>/dev/null || SCRATCH_ROOT="$SCRATCH_FALLBACK"
   fi
 
+  SINGULARITY_RUNTIME_ROOT="${SCRATCH_ROOT}/singularity"
   if [[ -z "$SING_CACHE_DIR" ]]; then
     if [[ -d "$SCRATCH_ROOT" ]]; then
-      SING_CACHE_DIR="${SCRATCH_ROOT}/apptainer/cache"
+      SING_CACHE_DIR="${SINGULARITY_RUNTIME_ROOT}/cache"
     elif [[ -d "/data/$USER" ]]; then
-      SING_CACHE_DIR="/data/$USER/.apptainer/cache"
+      SING_CACHE_DIR="/data/$USER/singularity/cache"
     else
-      SING_CACHE_DIR="${WORKDIR}/.apptainer/cache"
+      SING_CACHE_DIR="${WORKDIR}/.singularity/cache"
     fi
     echo "apptainer cache dir (--singcache) is not set, using ${SING_CACHE_DIR}"
   fi
   if [[ -n "${SIF_DIR_OVERRIDE:-}" ]]; then
     APPTAINER_SIF_DIR="$SIF_DIR_OVERRIDE"
   else
-    APPTAINER_SIF_DIR="${SCRATCH_ROOT}/apptainer/sif"
+    APPTAINER_SIF_DIR="$DEFAULT_SHARED_SIF_DIR"
   fi
-  APPTAINER_TMP_DIR="${SCRATCH_ROOT}/apptainer/tmp"
+  if [[ ! -d "$APPTAINER_SIF_DIR" ]]; then
+    if ! mkdir -p "$APPTAINER_SIF_DIR" 2>/dev/null; then
+      echo "WARNING: Unable to access ${APPTAINER_SIF_DIR}; falling back to ${SINGULARITY_RUNTIME_ROOT}/sif"
+      APPTAINER_SIF_DIR="${SINGULARITY_RUNTIME_ROOT}/sif"
+      mkdir -p "$APPTAINER_SIF_DIR"
+    fi
+  fi
+  APPTAINER_TMP_DIR="${SINGULARITY_RUNTIME_ROOT}/tmp"
 
-  mkdir -p "$APPTAINER_SIF_DIR" "$SING_CACHE_DIR" "$APPTAINER_TMP_DIR"
+  mkdir -p "$SING_CACHE_DIR" "$APPTAINER_TMP_DIR"
 
   APPTAINER_SIF_DIR=$(readlink -f "$APPTAINER_SIF_DIR")
   APPTAINER_CACHE_DIR=$(readlink -f "$SING_CACHE_DIR")
@@ -793,6 +881,7 @@ function main(){
   export SINGULARITY_TMPDIR="${APPTAINER_TMP_DIR}"
   export APPTAINER_PULLDIR="${APPTAINER_SIF_DIR}"
   export TMPDIR="${APPTAINER_TMP_DIR}"
+  export APPTAINER_SIF_DIR
 
   EXPORT_SING_CACHE_DIR_CMD=$(
     cat <<EOF
@@ -802,13 +891,14 @@ export APPTAINER_TMPDIR="${APPTAINER_TMP_DIR}"
 export SINGULARITY_TMPDIR="${APPTAINER_TMP_DIR}"
 export APPTAINER_PULLDIR="${APPTAINER_SIF_DIR}"
 export TMPDIR="${APPTAINER_TMP_DIR}"
+export APPTAINER_SIF_DIR="${APPTAINER_SIF_DIR}"
 EOF
   )
   export EXPORT_SING_CACHE_DIR_CMD
 
-  # required files
-  CONFIGFILE="${WORKDIR}/config.yaml"
-
+  if [[ "$APPTAINER_SIF_DIR" == "$DEFAULT_SHARED_SIF_DIR" ]]; then
+    warn_missing_shared_sifs "$CONFIGFILE" "$APPTAINER_SIF_DIR"
+  fi
 
   case $RUNMODE in
     init) init && exit 0;;

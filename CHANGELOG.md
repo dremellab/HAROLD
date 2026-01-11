@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [dev]
 
-- _No changes yet._
+### Changed
+- The HAROLD wrapper now defaults `--sifdir` to `/project/dremel_lab/workflows/singularity_images`, prepares per-user caches under `/scratch/$USER/singularity`, and emits warnings when shared images are missing so users understand when a Docker pull to scratch will occur.
 
 ## [1.1.0]
 
