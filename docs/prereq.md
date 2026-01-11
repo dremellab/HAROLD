@@ -144,6 +144,17 @@ During runtime HAROLD also prepares a per-user scratch workspace under `/scratch
 
 - `cache/` – Apptainer layer cache used while pulling from Docker/OCI registries.
 - `tmp/` – temporary directory exported as `APPTAINER_TMPDIR`/`SINGULARITY_TMPDIR`.
+- `images/` – default pull location (`APPTAINER_PULLDIR`) when a container does not already exist in the shared SIF directory.
+
+When you run `harold --runmode init`, the wrapper now echoes the locations it will use, for example:
+
+```
+Singularity Cache Dir: /scratch/cud2td/singularity/cache
+Singularity Tmp Dir: /scratch/cud2td/singularity/tmp
+Singularity Pull Dir: /scratch/cud2td/singularity/images
+```
+
+The `Singularity Image Dir` line that appears in later Snakemake logs refers to the `--sifdir` setting (the shared `/project/dremel_lab/workflows/singularity_images` by default). The printed “Pull Dir” is the scratch location where new `.sif` files will be written when an image is missing from that shared tree, so you should always see three separate directories: cache, tmp, and pull.
 
 If a requested SIF is missing from the shared repository, the wrapper prints a warning and Apptainer automatically pulls it into your scratch cache when the rule executes. You can override the defaults with:
 
@@ -152,4 +163,62 @@ If a requested SIF is missing from the shared repository, the wrapper prints a w
 
 The wrapper also honors pre-set environment variables (`SINGULARITY_CACHEDIR`, `SINGULARITY_TMPDIR`, and `SINGULARITY_PULLFOLDER`) so site administrators can direct HAROLD to lab-managed storage via login scripts.
 
+When the shared `/project/.../singularity_images` tree is used for read-only access, new pulls automatically fall back to `/scratch/$USER/singularity/images`, ensuring jobs can still run without trying to write to the shared mount. The runtime warning
+
+```
+Singularity image docker://<repo>:<tag> will be pulled.
+```
+
+is expected the first time each container is staged to scratch.
+
 On compute nodes, the jobscript reuses the shared image directory when available and transparently falls back to `/scratch/$USER/singularity/sif` if the shared path is not accessible, ensuring every rule can still run.
+
+---
+
+## 7. Reference bundle created inside each work directory
+
+When you run `harold -m init`, the wrapper stages a full copy of `config/` plus your `samples.tsv` under the new working directory. The first Snakemake jobs (`create_index`, `gtf_to_bed`, and friends) then build a composite reference bundle under:
+
+```
+$WORKDIR/ref/
+├── ref.fa                         # combined host + additives + virus FASTA
+├── ref.fa.regions                 # BED-like regions file used for per-genome splitting
+├── ref.fa.regions.host(.*)        # host-only slices for BAM splitting
+├── ref.fa.regions.viruses(.*)     # virus-only slices
+├── ref.gtf                        # concatenated transcript annotation
+├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake consume
+├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC
+├── ref.genes.(bed|bed12)          # BED exports for GTF → BED jobs
+└── STAR_no_GTF/                   # STAR genome index
+```
+
+These files are built entirely inside the work directory so multiple HAROLD runs cannot interfere with each other. Re-running `harold -m dryrun` or `harold -m run` in the same directory will skip any reference assets that already exist unless you remove the files manually or use `harold -m reset`.
+
+---
+
+## 8. Understanding Snakemake dry-run output
+
+`harold -m dryrun` invokes Snakemake with `--dry-run`, `--printshellcmds`, and Rivanna’s profile so you can inspect the entire DAG without consuming compute time. A typical snippet looks like:
+
+```
+Need to rerun job cutadapt because of missing output required by all.
+Need to rerun job create_index because of missing output required by all.
+Singularity image docker://seqinfomics/rseqc:4.0.0 will be pulled.
+FILE /path/to/workdir/ref/ref.fa does not exist! Creating it!
+Job stats:
+job                    count
+---------------------  -----
+cutadapt                   8
+create_index               1
+...
+total                    162
+```
+
+Key things to know:
+
+- Every `Need to rerun job ...` line simply means the corresponding rule has missing outputs in this new work directory. That is expected on the first run because nothing has been produced yet.
+- The `FILE ... does not exist! Creating it!` messages come from HAROLD helper scripts that pre-create composite files such as `ref.fa`, `ref.fa.regions`, and the derived `.gtf` artifacts listed above.
+- `Singularity image ... will be pulled.` is informative only; no containers are fetched during a dry run. The warning tells you which rules will contact Docker Hub the first time you do a real `run`/`runlocal`.
+- The final “Job stats” table is Snakemake’s count of how many times each rule would execute. This lets you gauge how much work is queued before launching a real run.
+
+Because `--dry-run` never touches data, you can use it freely after editing `config.yaml` or `samples.tsv` to confirm HAROLD recognizes the changes. Once you are satisfied with the dry-run summary, re-run `harold -m run` (or `runlocal`) from the same work directory to start the actual workflow.
