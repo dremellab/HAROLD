@@ -71,6 +71,38 @@ When the pipeline finishes, the working directory will contain organized subfold
 
 ---
 
+## Monitoring SLURM jobs and locating rule-specific logs
+
+While `harold -m run` is active, the driver submits one head job plus hundreds of per-rule batch jobs to SLURM. For a detailed status view, use the explicit Rivanna `squeue` binary with a custom format string:
+
+```bash
+/opt/slurm/current/bin/squeue -u <computing_id> \
+  -o "%.18i %.50j %.8u %.2t %.10M %.6D %.6C %R"
+```
+
+This prints the job ID, Snakemake-generated job name, user, state, elapsed time, nodes, cores, and pending reason/host. The columns make it easy to spot jobs that are queued (`PD`), actively running (`R`), or already finished.
+
+Every SLURM task writes a dedicated log file under `$WORKDIR/logs`, grouped by rule and sample. A typical tree looks like:
+
+```
+logs/
+├── rule_cutadapt/Uninf_RLIG1_R2/7130520.log
+├── rule_star_align_two_pass/Inf_NTC_R1/7130711.log
+├── rule_rseqc_tin/Uninf_RLIG1_R2/7130807.log
+└── ...
+```
+
+To jump straight to the stdout/stderr for a specific SLURM job ID, search the log tree:
+
+```bash
+# Example for jobid 7130807
+find $WORKDIR/logs -name "*7130807*"
+```
+
+Open the matching `.log` to see the exact command, module setup, and any errors for that Snakemake rule. This workflow—`squeue` to identify the job followed by `find` in `logs/`—is the fastest way to debug failed or stalled tasks.
+
+---
+
 ## Summary
 
 Running HAROLD typically involves three steps: **initialization**, **dry-run validation**, and **execution**. Together, these steps make sure the configuration is correct, resources are available, and the final analysis can proceed without interruption. Following this workflow ensures reproducibility and consistency in large-scale RNA-seq processing on the Rivanna HPC environment.
