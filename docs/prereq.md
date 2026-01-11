@@ -150,4 +150,6 @@ If a requested SIF is missing from the shared repository, the wrapper prints a w
 - `--sifdir /path/to/sif` to point at a different image directory (for example, a personal mirror).
 - `--singcache /path/to/cache` to control where cache layers and temporary files are written.
 
+The wrapper also honors pre-set environment variables (`SINGULARITY_CACHEDIR`, `SINGULARITY_TMPDIR`, and `SINGULARITY_PULLFOLDER`) so site administrators can direct HAROLD to lab-managed storage via login scripts.
+
 On compute nodes, the jobscript reuses the shared image directory when available and transparently falls back to `/scratch/$USER/singularity/sif` if the shared path is not accessible, ensuring every rule can still run.

@@ -178,7 +178,7 @@ if [ "$PLATFORM" == "shen" ]; then
   EXTRA_SINGULARITY_BINDS=""
   CONDA_ACTIVATE='source /project/dremel_lab/scripts/.sh_common && mamba activate pipelines'
   # PY311_BIN=$(conda run -n py311 python -c "import sys; print(sys.executable.rsplit('/',1)[0])")
-  PY311_BIN="/project/dremel_lab/conda/envs/py311/bin"
+  PY311_BIN="/sfs/gpfs/tardis/project/dremel_lab/miniforge3/envs/pipelines/bin"
   # echo "PY311_BIN: $PY311_BIN"
   # make sure spooker is in the path
   PATH_PREPEND='export PATH="${PY311_BIN}:/standard/dremel_lab/scripts/bin:$PATH"'
@@ -344,6 +344,7 @@ echo "Temp Dir: $TEMP_DIR"
 echo "Refs Dir: $REFS_DIR"
 echo "Cluster Profile: $CLUSTER_PROFILE"
 echo "Singularity Cache Dir: $SING_CACHE_DIR"
+echo "Singularity Image Dir: $APPTAINER_SIF_DIR"
 echo "Editing file $WORKDIR/config.yaml"
 echo "..."
 
@@ -840,7 +841,9 @@ function main(){
 
   SINGULARITY_RUNTIME_ROOT="${SCRATCH_ROOT}/singularity"
   if [[ -z "$SING_CACHE_DIR" ]]; then
-    if [[ -d "$SCRATCH_ROOT" ]]; then
+    if [[ -n "${SINGULARITY_CACHEDIR:-}" ]]; then
+      SING_CACHE_DIR="${SINGULARITY_CACHEDIR}"
+    elif [[ -d "$SCRATCH_ROOT" ]]; then
       SING_CACHE_DIR="${SINGULARITY_RUNTIME_ROOT}/cache"
     elif [[ -d "/data/$USER" ]]; then
       SING_CACHE_DIR="/data/$USER/singularity/cache"
@@ -851,6 +854,8 @@ function main(){
   fi
   if [[ -n "${SIF_DIR_OVERRIDE:-}" ]]; then
     APPTAINER_SIF_DIR="$SIF_DIR_OVERRIDE"
+  elif [[ -n "${SINGULARITY_PULLFOLDER:-}" ]]; then
+    APPTAINER_SIF_DIR="${SINGULARITY_PULLFOLDER}"
   else
     APPTAINER_SIF_DIR="$DEFAULT_SHARED_SIF_DIR"
   fi
@@ -861,7 +866,11 @@ function main(){
       mkdir -p "$APPTAINER_SIF_DIR"
     fi
   fi
-  APPTAINER_TMP_DIR="${SINGULARITY_RUNTIME_ROOT}/tmp"
+  if [[ -n "${SINGULARITY_TMPDIR:-}" ]]; then
+    APPTAINER_TMP_DIR="${SINGULARITY_TMPDIR}"
+  else
+    APPTAINER_TMP_DIR="${SINGULARITY_RUNTIME_ROOT}/tmp"
+  fi
 
   mkdir -p "$SING_CACHE_DIR" "$APPTAINER_TMP_DIR"
 

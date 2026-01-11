@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [dev]
 
 ### Changed
-- The HAROLD wrapper now defaults `--sifdir` to `/project/dremel_lab/workflows/singularity_images`, prepares per-user caches under `/scratch/$USER/singularity`, and emits warnings when shared images are missing so users understand when a Docker pull to scratch will occur.
+- The HAROLD wrapper now defaults `--sifdir` to `/project/dremel_lab/workflows/singularity_images`, prepares per-user caches under `/scratch/$USER/singularity`, honors standard `SINGULARITY_*` environment overrides, and emits warnings when shared images are missing so users understand when a Docker pull to scratch will occur.
+- `harold --runmode=init` now prints both the cache directory (`--singcache`) and the image directory (`--sifdir`) so users can confirm each path independently during initialization.
 
 ## [1.1.0]
 
