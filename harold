@@ -127,6 +127,15 @@ if missing:
 PY
 }
 
+function require_env() {
+  local var="$1"
+  local hint="$2"
+  if [[ -z "${!var:-}" ]]; then
+    echo "ERROR: ${var} is not set in the environment. ${hint}" >&2
+    exit 1
+  fi
+}
+
 
 ##########################################################################################
 # initial setup
@@ -166,13 +175,15 @@ EXTRA_SINGULARITY_BINDS=""
 TEMP_DIR=""
 REFS_DIR=""
 CLUSTER_PROFILE="unknown"
-DEFAULT_SHARED_SIF_DIR="/project/dremel_lab/workflows/singularity_images"
+
+
 APPTAINER_SIF_DIR=""
 APPTAINER_CACHE_DIR=""
 APPTAINER_TMP_DIR=""
 APPTAINER_PULL_DIR=""
 APPTAINER_PREFIX_ARG=""
 SIF_DIR_OVERRIDE=""
+
 if [ "$PLATFORM" == "shen" ]; then
   CLUSTER_PROFILE="rivanna"
   PARTITION="standard"
@@ -194,6 +205,17 @@ if [ "$PLATFORM" == "shen" ]; then
   TEMP_DIR="/scratch/${USER}/"
   REFS_DIR="/standard/dremel_lab/workflows/reference_data/fasta_gtf/"
   KRAKEN2_DB="/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
+  hint="This is set in pipelines mamba environment. If you are running into this error reach out to cud2td@virginia.edu."
+  require_env SINGULARITY_CACHEDIR "${hint}"
+  require_env SINGULARITY_TMPDIR "${hint}"
+  require_env SINGULARITY_PULLFOLDER "${hint}"
+  require_env DEFAULT_SHARED_SIF_DIR "${hint}"
+
+  APPTAINER_SIF_DIR="$DEFAULT_SHARED_SIF_DIR"
+  APPTAINER_CACHE_DIR="$SINGULARITY_CACHEDIR"
+  APPTAINER_TMP_DIR="$SINGULARITY_TMPDIR"
+  APPTAINER_PULL_DIR="$SINGULARITY_PULLFOLDER"
+  APPTAINER_PREFIX_ARG=""
 else
   echo """WARNING: detected platform is $PLATFORM. Please edit the files in config/unknown/ & config.yaml for compatibility with your computing environment
     """
@@ -299,6 +321,16 @@ VersionInfo:
   git commit/tag  : $GIT_COMMIT_TAG
   pipeline version: $VERSION
   cluster_name    : $PLATFORM
+
+Singularity/Apptainer env:
+  DEFAULT_SHARED_SIF_DIR: ${DEFAULT_SHARED_SIF_DIR:-}
+  SINGULARITY_CACHEDIR  : ${SINGULARITY_CACHEDIR:-}
+  SINGULARITY_TMPDIR    : ${SINGULARITY_TMPDIR:-}
+  SINGULARITY_PULLFOLDER: ${SINGULARITY_PULLFOLDER:-}
+  APPTAINER_SIF_DIR      : ${APPTAINER_SIF_DIR:-}
+  APPTAINER_CACHE_DIR    : ${APPTAINER_CACHE_DIR:-}
+  APPTAINER_TMP_DIR      : ${APPTAINER_TMP_DIR:-}
+  APPTAINER_PULL_DIR     : ${APPTAINER_PULL_DIR:-}
 
 ##########################################################################################
 EOF
@@ -799,9 +831,6 @@ function main(){
       -w=*|--workdir=*)
         WORKDIR="${i#*=}"
       ;;
-      -c=*|--singcache=*)
-        SING_CACHE_DIR="${i#*=}"
-      ;;
       -i=*|--sifdir=*)
         SIF_DIR_OVERRIDE="${i#*=}"
       ;;
@@ -841,83 +870,31 @@ function main(){
     mkdir -p "$SCRATCH_ROOT" 2>/dev/null || SCRATCH_ROOT="$SCRATCH_FALLBACK"
   fi
 
-  SINGULARITY_RUNTIME_ROOT="${SCRATCH_ROOT}/singularity"
-  if [[ -z "$SING_CACHE_DIR" ]]; then
-    if [[ -n "${SINGULARITY_CACHEDIR:-}" ]]; then
-      SING_CACHE_DIR="${SINGULARITY_CACHEDIR}"
-    elif [[ -d "$SCRATCH_ROOT" ]]; then
-      SING_CACHE_DIR="${SINGULARITY_RUNTIME_ROOT}/cache"
-    elif [[ -d "/data/$USER" ]]; then
-      SING_CACHE_DIR="/data/$USER/singularity/cache"
-    else
-      SING_CACHE_DIR="${WORKDIR}/.singularity/cache"
-    fi
-    echo "apptainer cache dir (--singcache) is not set, using ${SING_CACHE_DIR}"
-  fi
   if [[ -n "${SIF_DIR_OVERRIDE:-}" ]]; then
     APPTAINER_SIF_DIR="$SIF_DIR_OVERRIDE"
-  elif [[ -n "${SINGULARITY_PULLFOLDER:-}" ]]; then
-    APPTAINER_SIF_DIR="${SINGULARITY_PULLFOLDER}"
   else
     APPTAINER_SIF_DIR="$DEFAULT_SHARED_SIF_DIR"
   fi
-  if [[ ! -d "$APPTAINER_SIF_DIR" ]]; then
-    if ! mkdir -p "$APPTAINER_SIF_DIR" 2>/dev/null; then
-      echo "WARNING: Unable to access ${APPTAINER_SIF_DIR}; falling back to ${SINGULARITY_RUNTIME_ROOT}/sif"
-      APPTAINER_SIF_DIR="${SINGULARITY_RUNTIME_ROOT}/sif"
-      mkdir -p "$APPTAINER_SIF_DIR"
-    fi
-  fi
-  if [[ -n "${SINGULARITY_TMPDIR:-}" ]]; then
-    APPTAINER_TMP_DIR="${SINGULARITY_TMPDIR}"
-  else
-    APPTAINER_TMP_DIR="${SINGULARITY_RUNTIME_ROOT}/tmp"
-  fi
 
-  if [[ -n "${SINGULARITY_PULLDIR:-}" ]]; then
-    APPTAINER_PULL_DIR="${SINGULARITY_PULLDIR}"
-  elif [[ -n "${SINGULARITY_PULLFOLDER:-}" ]]; then
-    APPTAINER_PULL_DIR="${SINGULARITY_PULLFOLDER}"
-  elif [[ "$APPTAINER_SIF_DIR" == "$DEFAULT_SHARED_SIF_DIR" ]]; then
-    APPTAINER_PULL_DIR="${SINGULARITY_RUNTIME_ROOT}/images"
-  else
-    APPTAINER_PULL_DIR="${APPTAINER_SIF_DIR}"
-  fi
-
-  mkdir -p "$SING_CACHE_DIR" "$APPTAINER_TMP_DIR"
-  mkdir -p "$APPTAINER_PULL_DIR" 2>/dev/null || true
-
-  APPTAINER_SIF_DIR=$(readlink -f "$APPTAINER_SIF_DIR")
-  APPTAINER_CACHE_DIR=$(readlink -f "$SING_CACHE_DIR")
-  APPTAINER_TMP_DIR=$(readlink -f "$APPTAINER_TMP_DIR")
+  export APPTAINER_SIF_DIR=$(readlink -f "$APPTAINER_SIF_DIR")
+  export APPTAINER_CACHEDIR=$(readlink -f "$SINGULARITY_CACHEDIR")
+  export APPTAINER_TMPDIR=$(readlink -f "$SINGULARITY_TMPDIR")
+  export APPTAINER_PULLDIR=$(readlink -f "$SINGULARITY_PULLFOLDER")
 
   if [[ -n "$APPTAINER_SIF_DIR" ]]; then
-    APPTAINER_PREFIX_ARG="--apptainer-prefix=${APPTAINER_SIF_DIR}"
+    export APPTAINER_PREFIX_ARG="--apptainer-prefix=${APPTAINER_SIF_DIR}"
   else
-    APPTAINER_PREFIX_ARG=""
+    echo "ERROR: APPTAINER_SIF_DIR is not set!"
+    exit 1
   fi
-
-  export APPTAINER_CACHEDIR="${APPTAINER_CACHE_DIR}"
-  export SINGULARITY_CACHEDIR="${APPTAINER_CACHE_DIR}"
-  export APPTAINER_TMPDIR="${APPTAINER_TMP_DIR}"
-  export SINGULARITY_TMPDIR="${APPTAINER_TMP_DIR}"
-  export APPTAINER_PULLDIR="${APPTAINER_PULL_DIR}"
-  export SINGULARITY_PULLFOLDER="${APPTAINER_PULL_DIR}"
-  export SINGULARITY_PULLDIR="${APPTAINER_PULL_DIR}"
-  export TMPDIR="${APPTAINER_TMP_DIR}"
-  export APPTAINER_SIF_DIR
 
   EXPORT_SING_CACHE_DIR_CMD=$(
     cat <<EOF
-export APPTAINER_CACHEDIR="${APPTAINER_CACHE_DIR}"
-export SINGULARITY_CACHEDIR="${APPTAINER_CACHE_DIR}"
-export APPTAINER_TMPDIR="${APPTAINER_TMP_DIR}"
-export SINGULARITY_TMPDIR="${APPTAINER_TMP_DIR}"
-export APPTAINER_PULLDIR="${APPTAINER_PULL_DIR}"
-export SINGULARITY_PULLFOLDER="${APPTAINER_PULL_DIR}"
-export SINGULARITY_PULLDIR="${APPTAINER_PULL_DIR}"
-export TMPDIR="${APPTAINER_TMP_DIR}"
+export APPTAINER_CACHEDIR="${APPTAINER_CACHEDIR}"
+export APPTAINER_TMPDIR="${APPTAINER_TMPDIR}"
+export APPTAINER_PULLDIR="${APPTAINER_PULLDIR}"
 export APPTAINER_SIF_DIR="${APPTAINER_SIF_DIR}"
+export APPTAINER_PREFIX_ARG="${APPTAINER_PREFIX_ARG}"
 EOF
   )
   export EXPORT_SING_CACHE_DIR_CMD
@@ -937,7 +914,7 @@ EOF
     dry) dryrun && exit 0;;                      # hidden option
     local) runlocal && exit 0;;                  # hidden option
     reconfig) reconfig && exit 0;;               # hidden option for debugging
-    recluster) recluster && exit 0;;               # hidden option for debugging
+    recluster) recluster && exit 0;;             # hidden option for debugging
     printbinds) printbinds && exit 0;;           # hidden option
     help) usage && exit 0;;                      # print help
     *) err "Unknown RUNMODE \"$RUNMODE\"";;

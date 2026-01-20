@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - TBD
 
+## [1.2.1]
+
+### Changed
+- `harold --help` now prints the Singularity/Apptainer environment variables.
+
 ## [1.2.0]
 
 ### Changed
