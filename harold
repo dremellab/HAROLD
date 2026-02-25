@@ -203,7 +203,7 @@ if [ "$PLATFORM" == "shen" ]; then
   # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer && $PATH_PREPEND"
   MODULE_LOAD="module load apptainer"
   TEMP_DIR="/scratch/${USER}/"
-  REFS_DIR="/standard/dremel_lab/workflows/reference_data/fasta_gtf/"
+  REFS_DIR="/standard/dremel_lab/workflows/reference_data/fasta_gtf"
   KRAKEN2_DB="/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
   hint="This is set in pipelines mamba environment. If you are running into this error reach out to cud2td@virginia.edu."
   require_env SINGULARITY_CACHEDIR "${hint}"
