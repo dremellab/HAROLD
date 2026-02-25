@@ -171,12 +171,17 @@ else:
     else:
         raise ValueError("Both host and viruses are not set. Please set at least one of them.")
 
-REPEATS_GTF_MAP = config.get("repeats_gtf", {})
+TRNAS_GTF_MAP = config.get("trnas_gtf", {})
+CHRR_GTF_MAP = config.get("chrr_gtf", {})
+INCLUDE_TRNAS_GTF_IN_REF = _is_true(config.get("include_trnas_gtf_in_ref", True))
 if HOST != "":
-    REPEATS_GTF = REPEATS_GTF_MAP.get(HOST, join(FASTAS_GTFS_DIR, HOST + ".repeats.gtf"))
+    trnas_gtf_name = TRNAS_GTF_MAP.get(HOST, HOST + ".tRNAs." + HOST + "chroms.gtf")
+    TRNAS_GTF = trnas_gtf_name if os.path.isabs(trnas_gtf_name) else join(FASTAS_GTFS_DIR, trnas_gtf_name)
+    chrr_gtf_name = CHRR_GTF_MAP.get(HOST, HOST + ".chrR.gtf")
+    CHRR_GTF = chrr_gtf_name if os.path.isabs(chrr_gtf_name) else join(FASTAS_GTFS_DIR, chrr_gtf_name)
 else:
-    REPEATS_GTF = ""
-INCLUDE_REPEATS_GTF_IN_REF = _is_true(config.get("include_repeats_gtf_in_ref", True))
+    TRNAS_GTF = ""
+    CHRR_GTF = ""
 
 HOST_ADDITIVES_VIRUSES = HOST_ADDITIVES_VIRUSES.split(",")
 HOST_VIRUSES = HOST_VIRUSES.split(",")
@@ -191,8 +196,10 @@ if VIRUSES != "":
 else:
     REGIONS_VIRUSES = []
 GTFS = [join(FASTAS_GTFS_DIR, f + ".gtf") for f in HOST_ADDITIVES_VIRUSES]
-if INCLUDE_REPEATS_GTF_IN_REF and REPEATS_GTF != "":
-    GTFS.append(REPEATS_GTF)
+if CHRR_GTF != "":
+    GTFS.append(CHRR_GTF)
+if INCLUDE_TRNAS_GTF_IN_REF and TRNAS_GTF != "":
+    GTFS.append(TRNAS_GTF)
 FASTAS_REGIONS_GTFS = FASTAS.copy()
 FASTAS_REGIONS_GTFS.extend(REGIONS)
 FASTAS_REGIONS_GTFS.extend(GTFS)
