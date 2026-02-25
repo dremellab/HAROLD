@@ -44,6 +44,10 @@ viruses: "VIRUSES"
 scriptsdir: "PIPELINE_HOME/workflow/scripts"
 resourcesdir: "PIPELINE_HOME/resources"
 fastas_gtfs_dir: "REFS_DIR"
+repeats_gtf:
+  hg38: "REFS_DIR/hg38.repeats.hg38chroms.gtf"
+  mm39: "REFS_DIR/mm39.repeats.mm39chroms.gtf"
+include_repeats_gtf_in_ref: true # when true, append repeats_gtf[host] to GTFS before building ref.gtf
 
 # strand inference
 infer_strandedness: true
