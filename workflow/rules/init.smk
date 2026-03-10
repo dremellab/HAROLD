@@ -409,6 +409,9 @@ DIFFEX_HOST = _normalize_species_label(config.get('host'))
 INFER_STRANDEDNESS = str(config.get("infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
 STRANDEDNESS_COLUMN = config.get("strandedness_column", "strandedness")
+if STRANDEDNESS_COLUMN in SAMPLESDF.columns:
+    # Normalize user-provided labels so validation is case-insensitive.
+    SAMPLESDF[STRANDEDNESS_COLUMN] = SAMPLESDF[STRANDEDNESS_COLUMN].astype(str).str.strip().str.lower()
 if INFER_STRANDEDNESS == "false":
     # samplesdf then needs to have a column called "strandedness"
     if STRANDEDNESS_COLUMN not in SAMPLESDF.columns:
