@@ -77,14 +77,26 @@ rule sort_star:
         flagstat = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.flagstat"),
         stats = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.stats"),
         idxstats = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.idxstats")
+    params:
+        tmpdir = f"{TEMPDIR}/{str(uuid.uuid4())}",
     threads: _get_threads("sort_star", profile_config)
     container: config['containers']['samtools']
     shell:
         r"""
         set -exo pipefail
-        samtools sort -@ {threads} -o {output.bam} {input.bam}
-        samtools index -@ {threads} {output.bam}
-        samtools flagstat -@ {threads} {output.bam} > {output.bam}.flagstat
-        samtools stats -@ {threads} {output.bam} > {output.bam}.stats
-        samtools idxstats -@ {threads} {output.bam} > {output.bam}.idxstats
+        mkdir -p {params.tmpdir}
+        tmpbam={params.tmpdir}/{wildcards.sample}.Aligned.sortedByCoord.out.bam
+
+        samtools sort -@ {threads} -o ${{tmpbam}} {input.bam}
+        samtools index -@ {threads} ${{tmpbam}}
+        samtools flagstat -@ {threads} ${{tmpbam}} > ${{tmpbam}}.flagstat
+        samtools stats -@ {threads} ${{tmpbam}} > ${{tmpbam}}.stats
+        samtools idxstats -@ {threads} ${{tmpbam}} > ${{tmpbam}}.idxstats
+
+        mv -f ${{tmpbam}} {output.bam}
+        mv -f ${{tmpbam}}.bai {output.bai}
+        mv -f ${{tmpbam}}.flagstat {output.flagstat}
+        mv -f ${{tmpbam}}.stats {output.stats}
+        mv -f ${{tmpbam}}.idxstats {output.idxstats}
+        rm -rf {params.tmpdir}
         """
