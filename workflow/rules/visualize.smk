@@ -8,6 +8,7 @@ rule split_bam:
         sample = "{sample}",
         outdir = join(RESULTSDIR, "{sample}", "STAR"),
         regions = REF_REGIONS_HOST_VIRUSES,
+        tmpdir = f"{TEMPDIR}/{str(uuid.uuid4())}",
     threads:
         _get_threads("split_bam", profile_config)
     container:
@@ -15,15 +16,24 @@ rule split_bam:
     shell:
         r"""
         set -exo pipefail
+        mkdir -p {params.tmpdir}
         while read regionname regions; do
             outbam={params.outdir}/{params.sample}.${{regionname}}.bam
+            tmpbam={params.tmpdir}/{params.sample}.${{regionname}}.bam
 
-            samtools view -@ {threads} -b {input.bam} ${{regions}} > ${{outbam}}
-            samtools index -@ {threads} ${{outbam}}
-            samtools flagstat -@ {threads} ${{outbam}} > ${{outbam}}.flagstat
-            samtools stats -@ {threads} ${{outbam}} > ${{outbam}}.stats
-            samtools idxstats -@ {threads} ${{outbam}} > ${{outbam}}.idxstats
+            samtools view -@ {threads} -b {input.bam} ${{regions}} > ${{tmpbam}}
+            samtools index -@ {threads} ${{tmpbam}}
+            samtools flagstat -@ {threads} ${{tmpbam}} > ${{tmpbam}}.flagstat
+            samtools stats -@ {threads} ${{tmpbam}} > ${{tmpbam}}.stats
+            samtools idxstats -@ {threads} ${{tmpbam}} > ${{tmpbam}}.idxstats
+
+            mv -f ${{tmpbam}} ${{outbam}}
+            mv -f ${{tmpbam}}.bai ${{outbam}}.bai
+            mv -f ${{tmpbam}}.flagstat ${{outbam}}.flagstat
+            mv -f ${{tmpbam}}.stats ${{outbam}}.stats
+            mv -f ${{tmpbam}}.idxstats ${{outbam}}.idxstats
         done < {params.regions}
+        rm -rf {params.tmpdir}
         """
 
 
