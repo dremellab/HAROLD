@@ -101,6 +101,7 @@ containers:
   dcc: "docker://nciccbr/charlie_dcc:v0.2.1"
   # diffex: "docker://seqinfomics/diffex:0.5.2"
   diffex: "docker://ghcr.io/dremellab/diffex:0.5.2"
+  fastqvalidator: "docker://seqinfomics/fastqvalidator:0.1.1a"
   fastqc: "docker://nciccbr/ccrgb_qctools:v4.0"
   gffread: "docker://zavolab/gffread:0.11.7"
   gtfToGenePred: "docker://seqinfomics/gtftogenepred:latest"

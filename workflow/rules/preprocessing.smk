@@ -5,9 +5,69 @@
 ## rules
 
 
+rule fastq_validate_sample:
+    input:
+        unpack(get_fastqs),
+    output:
+        report=join(WORKDIR, "results", "{sample}", "fastq_validation", "{sample}.fastq_validator.txt"),
+        ok=join(WORKDIR, "results", "{sample}", "fastq_validation", "{sample}.ok"),
+    params:
+        peorse=get_peorse,
+        outdir=join(RESULTSDIR, "{sample}", "fastq_validation"),
+    container: config["containers"]["fastqvalidator"]
+    threads: 1
+    shell:
+        r"""
+        set -euo pipefail
+
+        mkdir -p "{params.outdir}"
+        : > "{output.report}"
+
+        run_validator() {{
+            fq="$1"
+            tmp_report=$(mktemp "{params.outdir}/{wildcards.sample}.XXXXXX.fastq_validator.tmp")
+
+            echo "Validating ${fq}" | tee -a "{output.report}"
+            if ! fastQValidator --file "$fq" > "$tmp_report" 2>&1; then
+                cat "$tmp_report" >> "{output.report}"
+                echo "ERROR: fastQValidator failed for ${fq}. cutadapt will not run." | tee -a "{output.report}" >&2
+                exit 1
+            fi
+
+            cat "$tmp_report" >> "{output.report}"
+
+            if ! grep -Fq "Returning: 0 : FASTQ_SUCCESS" "$tmp_report"; then
+                echo "ERROR: FASTQ_SUCCESS not found for ${fq}. The FASTQ may be incomplete or corrupted. cutadapt will not run." | tee -a "{output.report}" >&2
+                exit 1
+            fi
+        }}
+
+        run_validator "{input.R1}"
+
+        if [ "{params.peorse}" = "PE" ]; then
+            run_validator "{input.R2}"
+        fi
+
+        echo "FASTQ validation passed for sample {wildcards.sample}." | tee -a "{output.report}"
+        touch "{output.ok}"
+        """
+
+rule fastq_validate_all:
+    input:
+        expand(join(RESULTSDIR, "{sample}", "fastq_validation", "{sample}.ok"), sample=SAMPLES),
+    output:
+        ok=join(RESULTSDIR, "fastq_validation", "all_inputs.ok"),
+    shell:
+        r"""
+        set -euo pipefail
+        mkdir -p "$(dirname "{output.ok}")"
+        echo "All input FASTQ files passed fastQValidator." > "{output.ok}"
+        """
+
 rule cutadapt:
     input:
         unpack(get_fastqs),
+        validation=rules.fastq_validate_all.output.ok,
     output:
         of1=join(WORKDIR, "results", "{sample}", "trim", "{sample}.R1.trim.fastq.gz"),
         of2=join(WORKDIR, "results", "{sample}", "trim", "{sample}.R2.trim.fastq.gz"),
