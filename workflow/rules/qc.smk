@@ -147,6 +147,53 @@ rule aggregate_tin:
         python {params.script} {input} > {output.agg_tin}
         """
 
+localrules: alignment_summary
+rule alignment_summary:
+    input:
+        fastqvalidator_reports=expand(
+            join(
+                RESULTSDIR,
+                "{sample}",
+                "fastq_validation",
+                "{sample}.fastq_validator.txt",
+            ),
+            sample=SAMPLES,
+        ),
+        cutadapt_reports=expand(
+            join(RESULTSDIR, "{sample}", "trim", "{sample}.cutadapt.report.txt"),
+            sample=SAMPLES,
+        ),
+        star_logs=expand(
+            join(RESULTSDIR, "{sample}", "STAR", "{sample}.Log.final.out"),
+            sample=SAMPLES,
+        ),
+        idxstats=expand(
+            join(
+                RESULTSDIR,
+                "{sample}",
+                "STAR",
+                "{sample}.Aligned.sortedByCoord.out.bam.idxstats",
+            ),
+            sample=SAMPLES,
+        ),
+        regions_host=join(REF_DIR, "ref.fa.regions.host"),
+        regions_viruses=join(REF_DIR, "ref.fa.regions.viruses"),
+    output:
+        summary=join(RESULTSDIR, "alignmentqc", "alignment_summary.tsv"),
+    params:
+        script=join(SCRIPTS_DIR, "_alignment_summary.py"),
+    container: config["containers"]["star_ucsc_cufflinks"]
+    shell:
+        r"""
+        set -exo pipefail
+        mkdir -p $(dirname {output.summary})
+        python {params.script} \
+            --results-dir {RESULTSDIR} \
+            --regions-host {input.regions_host} \
+            --regions-viruses {input.regions_viruses} \
+            --output {output.summary}
+        """
+
 rule rseqc_geneBody_coverage:
     input:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),

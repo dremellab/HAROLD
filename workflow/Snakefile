@@ -92,6 +92,7 @@ rule all:
         join(RESULTSDIR,"counts","counts_matrix.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.rpkm.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.tpm.tsv"),
+        join(RESULTSDIR, "alignmentqc", "alignment_summary.tsv"),
 
         # transcript quantification with rseqc
         expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.rseqc_fpkm_tpm.tsv")                        ,sample=SAMPLES),

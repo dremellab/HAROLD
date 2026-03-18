@@ -8,6 +8,7 @@ rule star_align_two_pass:
         bam = temp(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.out.bam")),
         counts = join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab"),
         splice_junctions = join(RESULTSDIR, "{sample}", "STAR", "{sample}.SJ.out.tab"),
+        log_final = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Log.final.out"),
         transcript_sam = join(RESULTSDIR, "{sample}", "STAR", "Aligned.toTranscriptome.out.bam") if config.get("star_save_transcript_sam", False) else join(RESULTSDIR, "{sample}", "STAR", "{sample}.skip_transcript.out"),
     params:
         sample = "{sample}",

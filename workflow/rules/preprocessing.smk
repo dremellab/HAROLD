@@ -71,6 +71,7 @@ rule cutadapt:
     output:
         of1=join(WORKDIR, "results", "{sample}", "trim", "{sample}.R1.trim.fastq.gz"),
         of2=join(WORKDIR, "results", "{sample}", "trim", "{sample}.R2.trim.fastq.gz"),
+        report=join(WORKDIR, "results", "{sample}", "trim", "{sample}.cutadapt.report.txt"),
     params:
         sample="{sample}",
         workdir=WORKDIR,
@@ -97,6 +98,8 @@ rule cutadapt:
         set -exo pipefail
 
         mkdir -p {params.tmpdir}
+        mkdir -p $(dirname {output.of1})
+        exec > >(tee {output.report}) 2>&1
         of1bn=$(basename {output.of1})
         of2bn=$(basename {output.of2})
 
