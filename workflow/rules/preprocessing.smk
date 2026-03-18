@@ -27,17 +27,17 @@ rule fastq_validate_sample:
             fq="$1"
             tmp_report=$(mktemp "{params.outdir}/{wildcards.sample}.XXXXXX.fastq_validator.tmp")
 
-            echo "Validating ${fq}" | tee -a "{output.report}"
+            echo "Validating ${{fq}}" | tee -a "{output.report}"
             if ! fastQValidator --file "$fq" > "$tmp_report" 2>&1; then
                 cat "$tmp_report" >> "{output.report}"
-                echo "ERROR: fastQValidator failed for ${fq}. cutadapt will not run." | tee -a "{output.report}" >&2
+                echo "ERROR: fastQValidator failed for ${{fq}}. cutadapt will not run." | tee -a "{output.report}" >&2
                 exit 1
             fi
 
             cat "$tmp_report" >> "{output.report}"
 
             if ! grep -Fq "Returning: 0 : FASTQ_SUCCESS" "$tmp_report"; then
-                echo "ERROR: FASTQ_SUCCESS not found for ${fq}. The FASTQ may be incomplete or corrupted. cutadapt will not run." | tee -a "{output.report}" >&2
+                echo "ERROR: FASTQ_SUCCESS not found for ${{fq}}. The FASTQ may be incomplete or corrupted. cutadapt will not run." | tee -a "{output.report}" >&2
                 exit 1
             fi
         }}
