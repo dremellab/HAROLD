@@ -23,12 +23,14 @@ rule kraken2:
                 --paired {input.R1} {input.R2} \
                 {params.kraken2_params} \
                 --report {output.kraken2_report} \
+                --output /dev/null \
                 --threads {threads}
         else
             kraken2 --db {params.kraken2_db} \
                 {input.R1} \
                 {params.kraken2_params} \
                 --report {output.kraken2_report} \
+                --output /dev/null \
                 --threads {threads}
         fi
         """

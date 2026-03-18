@@ -56,7 +56,7 @@ default-resources:
   threads: 2 # "__default__.threads"
   mem_mb: 40960 # "__default__.mem" = 40g -> 40*1024 = 40960 MB
   runtime: 240 # "__default__.time" = 4:00:00 -> 240 minutes
-  slurm_partition: standard
+  slurm_partition: standard-rivanna
   slurm_ntasks: 1
 
 # --- Per-rule overrides ---

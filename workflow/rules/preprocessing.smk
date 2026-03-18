@@ -26,10 +26,18 @@ rule fastq_validate_sample:
         run_validator() {{
             fq="$1"
             tmp_report=$(mktemp "{params.outdir}/{wildcards.sample}.XXXXXX.fastq_validator.tmp")
+            tmp_fastq=$(mktemp "{params.outdir}/{wildcards.sample}.XXXXXX.fastq")
 
             echo "Validating ${{fq}}" | tee -a "{output.report}"
-            if ! fastQValidator --file "$fq" > "$tmp_report" 2>&1; then
+            if ! gzip -dc "$fq" > "$tmp_fastq"; then
+                rm -f "$tmp_fastq"
+                echo "ERROR: gzip -d failed for ${{fq}}. fastQValidator will not run." | tee -a "{output.report}" >&2
+                exit 1
+            fi
+
+            if ! fastQValidator --file "$tmp_fastq" > "$tmp_report" 2>&1; then
                 cat "$tmp_report" >> "{output.report}"
+                rm -f "$tmp_fastq"
                 echo "ERROR: fastQValidator failed for ${{fq}}. cutadapt will not run." | tee -a "{output.report}" >&2
                 exit 1
             fi
@@ -37,9 +45,12 @@ rule fastq_validate_sample:
             cat "$tmp_report" >> "{output.report}"
 
             if ! grep -Fq "Returning: 0 : FASTQ_SUCCESS" "$tmp_report"; then
+                rm -f "$tmp_fastq"
                 echo "ERROR: FASTQ_SUCCESS not found for ${{fq}}. The FASTQ may be incomplete or corrupted. cutadapt will not run." | tee -a "{output.report}" >&2
                 exit 1
             fi
+
+            rm -f "$tmp_fastq"
         }}
 
         run_validator "{input.R1}"
