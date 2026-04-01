@@ -56,11 +56,16 @@ rule bam_to_bigwig:
         r"""
         set -exo pipefail
         mkdir -p $(dirname {output.bw})
-        bamCoverage \
-            --bam {input.bam} \
-            --outFileName {output.bw} \
-            --outFileFormat bigwig \
-            --binSize {params.binSize} \
-            --normalizeUsing {params.normalize} \
-            --numberOfProcessors {threads}
+        mapped_reads=$(python -c 'import pysam, sys; bam = pysam.AlignmentFile(sys.argv[1], "rb"); print(sum(stat.mapped for stat in bam.get_index_statistics()))' {input.bam})
+        if [ "$mapped_reads" -eq 0 ]; then
+            touch {output.bw}
+        else
+            bamCoverage \
+                --bam {input.bam} \
+                --outFileName {output.bw} \
+                --outFileFormat bigwig \
+                --binSize {params.binSize} \
+                --normalizeUsing {params.normalize} \
+                --numberOfProcessors {threads}
+        fi
         """
