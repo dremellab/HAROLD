@@ -49,8 +49,13 @@ rule qualimap:
     shell:
         r"""
         set -exo pipefail
+        java_mem_mb=$(( {resources.mem_mb} * 80 / 100 ))
+        java_mem_g=$(( java_mem_mb / 1024 ))
+        if [ "$java_mem_g" -lt 4 ]; then
+            java_mem_g=4
+        fi
         export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
-        qualimap --java-mem-size=4G bamqc \
+        qualimap --java-mem-size="${{java_mem_g}}G" bamqc \
             -bam {input.bam} \
             -outdir {params.outdir} \
             -outformat PDF:HTML \
