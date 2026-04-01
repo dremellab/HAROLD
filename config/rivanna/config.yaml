@@ -110,7 +110,7 @@ set-resources:
     runtime: 480
 
   rseqc_tin:
-    runtime: 720
+    runtime: 2160
 
   kraken2:
     mem_mb: 245760
