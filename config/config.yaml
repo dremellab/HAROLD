@@ -110,9 +110,26 @@ containers:
   mapsplice: "docker://cgrlab/mapsplice2:latest"
   multiqc: "docker://multiqc/multiqc:v1.28"
   picard: "docker://nciccbr/ccbr_picard_2.27.5:v1"
+  py311: "docker://seqinfomics/py311:latest"
+  pysam: "docker://seqinfomics/pysam:0.22.1"
   qualimap: "docker://stjudecloud/qualimap:1.0.3"
   R: "docker://nciccbr/ccbr_r_4.3.0:v1"
   rseqc: "docker://seqinfomics/rseqc:4.0.0"
   samtools: "docker://staphb/samtools:1.21"
   star: "docker://nciccbr/ccbr_star_2.7.6a:latest"
   star_ucsc_cufflinks: "docker://nciccbr/charlie_star_ucsc_cufflinks:v0.4.1"
+  aws: "docker://seqinfomics/aws:1.44.86"
+
+# S3 Transfer Configuration (optional)
+# Set push_to_s3: true to enable automatic S3 transfer at pipeline completion
+push_to_s3: false
+
+# AWS S3 transfer settings
+s3_sample_set_name: ""                                  # required if push_to_s3=true
+s3_aws_credentials_file: "/project/dremel_lab/scripts/aws/credentials"
+s3_bucket: "dremel-lab-bucket"
+s3_output_prefix: "_HTS"
+
+# Storage classes: STANDARD, GLACIER_IR, GLACIER, INTELLIGENT_TIERING
+s3_default_storage_class: "GLACIER_IR"                  # for most files
+s3_large_file_storage_class: "GLACIER"                  # for .bam and .bai files

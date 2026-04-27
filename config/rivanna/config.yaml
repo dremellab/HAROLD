@@ -101,7 +101,7 @@ set-resources:
     runtime: 480
 
   rseqc_geneBody_coverage:
-    runtime: 1440
+    runtime: 2880
 
   rseqc_infer_experiment:
     runtime: 480
@@ -116,3 +116,8 @@ set-resources:
     mem_mb: 245760
     threads: 32
     runtime: 720
+
+  s3_transfer_if_enabled:
+    mem_mb: 4096 # 4 GB (minimal, just AWS CLI)
+    runtime: 480 # 8 hours (for large transfers)
+    threads: 1
