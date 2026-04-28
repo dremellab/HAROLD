@@ -414,16 +414,16 @@ def _normalize_species_label(value):
 
 DIFFEX_HOST = _normalize_species_label(config.get('host'))
 
-INFER_STRANDEDNESS = str(config.get("infer_strandedness", "true")).lower()
+USE_INFER_STRANDEDNESS = str(config.get("use_infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
 STRANDEDNESS_COLUMN = config.get("strandedness_column", "strandedness")
 if STRANDEDNESS_COLUMN in SAMPLESDF.columns:
     # Normalize user-provided labels so validation is case-insensitive.
     SAMPLESDF[STRANDEDNESS_COLUMN] = SAMPLESDF[STRANDEDNESS_COLUMN].astype(str).str.strip().str.lower()
-if INFER_STRANDEDNESS == "false":
+if USE_INFER_STRANDEDNESS == "false":
     # samplesdf then needs to have a column called "strandedness"
     if STRANDEDNESS_COLUMN not in SAMPLESDF.columns:
-        raise ValueError(f"Column '{STRANDEDNESS_COLUMN}' not found in samplesheet but is required when infer_strandedness is set to False.")
+        raise ValueError(f"Column '{STRANDEDNESS_COLUMN}' not found in samplesheet but is required when use_infer_strandedness is set to False.")
     # check if values in that column are valid
     valid_values = {"unstranded", "forward", "reverse"}
     invalid_values = set(SAMPLESDF[STRANDEDNESS_COLUMN].unique()) - valid_values
