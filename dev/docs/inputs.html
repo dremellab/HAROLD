@@ -445,27 +445,27 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td><code>sampleName</code></td>
-<td>A unique identifier for each sample. No duplicates are allowed.</td>
+<td><strong>Required.</strong> Unique identifier for each sample. No duplicates allowed.</td>
 </tr>
 <tr class="even">
 <td><code>groupName</code></td>
-<td>A label representing the biological or experimental group (for example, <code>treated</code>, <code>control</code>, <code>infected</code>).</td>
+<td><strong>Required.</strong> Biological or experimental group label (e.g., <code>treated</code>, <code>control</code>, <code>infected</code>).</td>
 </tr>
 <tr class="odd">
 <td><code>batch</code></td>
-<td>An optional batch identifier if the experiment spans multiple sequencing batches. This helps downstream normalization and batch correction.</td>
+<td><strong>Optional.</strong> Sequencing batch identifier for batch-effect correction. If used, <strong>all samples must have a batch value</strong> (no mixing of filled and empty values).</td>
 </tr>
 <tr class="even">
 <td><code>path_to_R1_fastq</code></td>
-<td>The absolute or relative path to the FASTQ file containing <strong>Read 1</strong> sequences.</td>
+<td><strong>Required.</strong> Path to Read 1 FASTQ file (absolute or relative; must exist and be readable).</td>
 </tr>
 <tr class="odd">
 <td><code>path_to_R2_fastq</code></td>
-<td>The path to the <strong>Read 2</strong> FASTQ file for paired-end libraries. For single-end libraries, this column can be left blank or omitted.</td>
+<td><strong>Required (PE) / Optional (SE).</strong> Path to Read 2 FASTQ file. Leave empty for single-end libraries.</td>
 </tr>
 <tr class="even">
 <td><code>strandedness</code></td>
-<td>(Optional) Library strandedness. Valid values include <code>forward</code>, <code>reverse</code>, or <code>unstranded</code>. If this field is missing or left empty, HAROLD will automatically infer strandedness using <strong>RSeQC</strong> utilities.</td>
+<td><strong>Optional.</strong> Library strandedness (<code>forward</code>, <code>reverse</code>, or <code>unstranded</code>). If omitted or empty, HAROLD infers it automatically via RSeQC (controlled by <code>infer_strandedness</code> config; default: true).</td>
 </tr>
 </tbody>
 </table>
@@ -482,15 +482,15 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 </section>
 <section id="validation-rules" class="level3">
 <h3 class="anchored" data-anchor-id="validation-rules">Validation Rules</h3>
-<p>Before execution, HAROLD validates the manifest automatically to prevent misconfiguration. The validation checks include:</p>
+<p>Before execution, HAROLD validates the manifest automatically to prevent misconfiguration:</p>
 <ul>
-<li>Each <code>sampleName</code> must be unique.</li>
-<li>FASTQ files referenced in <code>path_to_R1_fastq</code> (SE,PE) and <code>path_to_R2_fastq</code> (PE) must exist and be readable.</li>
-<li>Column names must match the expected header structure.</li>
-<li>The strandedness field, if provided, must be one of the accepted values. (forward/reverse/unstranded)</li>
-<li>Group and batch assignments are checked for consistency to avoid missing metadata.</li>
+<li><strong>sampleName:</strong> Must be unique across all samples.</li>
+<li><strong>groupName:</strong> Must be non-empty for all samples.</li>
+<li><strong>Batch consistency:</strong> If any sample has a batch value, <strong>all samples must have one</strong> (no mixing of filled and empty batch cells).</li>
+<li><strong>FASTQ files:</strong> R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).</li>
+<li><strong>Strandedness values:</strong> If provided and <code>infer_strandedness=false</code> in config, must be one of: <code>forward</code>, <code>reverse</code>, <code>unstranded</code>.</li>
 </ul>
-<p>If any issue is detected, HAROLD will stop execution and report the specific error message to guide correction before rerunning initialization.</p>
+<p>If validation fails, HAROLD reports the specific error and stops before initialization.</p>
 <hr>
 </section>
 </section>
