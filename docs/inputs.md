@@ -28,7 +28,7 @@ S3	Control	B2	/data/fastq/S3_R1.fastq.gz		unstranded
 
 ### Supported Library Types
 
-HAROLD supports both **paired-end (PE)** and **single-end (SE)** sequencing data. FASTQ files must be **gzip-compressed** (`.fastq.gz`) and accessible from the file system at runtime. Absolute paths are required.
+HAROLD supports both **paired-end (PE)** and **single-end (SE)** sequencing data. FASTQ files must be **gzip-compressed** (`.fastq.gz`) and accessible from the file system at runtime. Both absolute and relative paths are supported; relative paths are resolved from the working directory.
 
 ### Validation Rules
 
