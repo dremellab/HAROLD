@@ -4,8 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [dev]
 
+### ⚠️ Breaking Changes
+- **Config key renamed:** `infer_strandedness` → `use_infer_strandedness`. Update existing config files to use the new key name for clarity (true = use inferred values, false = use manifest values).
+
+### Added
+- S3 deposit feature — Pipeline outputs can now be transferred to S3 buckets (GitHub #44)
+- Alignment summary report — New QC report in the workflow
+- FASTQ validation gating — Cutadapt can now be gated behind FASTQ validation
+- Host-specific GTF support — Configuration now supports host-specific tRNA/chrR GTF files (removes repeats GTF wiring)
+
 ### Changed
-- TBD
+- rseqc_tin runtime — Increased to 36 hours for longer-running samples
+- Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default
+- Default reference path — Updated fasta_gtf reference path to `/project/dremel_lab/workflows/reference_data/fasta_gtf`
+- Manifest initialization — Strand values now normalized to lowercase during manifest parsing
+- Documentation clarification — Improved strandedness documentation to clarify that HAROLD always infers strandedness and reports it; the config option controls only whether inferred or manifest values are used for count extraction
+
+### Fixed
+- Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads
+- Qualimap Java heap scaling (#42) — Now properly scales from job memory allocation
+- Temporary file staging — STAR sort outputs and split_bam outputs now properly staged in tempdir before moving
+- Validation hardening — Improved input validation and Rivanna submission defaults
+- Fastq validator escaping — Fixed bash variable escaping in FASTQ validation rule
+- Strandedness normalization — Manifest strandedness values now consistently lowercase
 
 ## [1.2.1]
 
