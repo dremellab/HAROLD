@@ -465,7 +465,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 <tr class="even">
 <td><code>strandedness</code></td>
-<td><strong>Required if <code>infer_strandedness=false</code>.</strong> Library strandedness (<code>forward</code>, <code>reverse</code>, or <code>unstranded</code>). HAROLD always infers strandedness via RSeQC and reports it in output. The <code>infer_strandedness</code> config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.</td>
+<td><strong>Required if <code>use_infer_strandedness=false</code>.</strong> Library strandedness (<code>forward</code>, <code>reverse</code>, or <code>unstranded</code>). HAROLD always infers strandedness via RSeQC and reports it in output. The <code>use_infer_strandedness</code> config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.</td>
 </tr>
 </tbody>
 </table>
@@ -488,7 +488,7 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <li><strong>groupName:</strong> Must be non-empty for all samples.</li>
 <li><strong>Batch consistency:</strong> If any sample has a batch value, <strong>all samples must have one</strong> (no mixing of filled and empty batch cells).</li>
 <li><strong>FASTQ files:</strong> R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).</li>
-<li><strong>Strandedness values:</strong> Required and validated (must be <code>forward</code>, <code>reverse</code>, or <code>unstranded</code>) only when <code>infer_strandedness=false</code>. HAROLD always infers strandedness via RSeQC regardless of this setting.</li>
+<li><strong>Strandedness values:</strong> Required and validated (must be <code>forward</code>, <code>reverse</code>, or <code>unstranded</code>) only when <code>use_infer_strandedness=false</code>. HAROLD always infers strandedness via RSeQC regardless of this setting.</li>
 </ul>
 <p>If validation fails, HAROLD reports the specific error and stops before initialization.</p>
 <hr>
