@@ -349,6 +349,14 @@ SAMPLES = list(SAMPLESDF["sampleName"])
 if (SAMPLESDF['groupName'].str.strip() == "").any():
     raise ValueError("Some sampleNames have empty groupName!")
 
+# Step 3b: Validate batch consistency (if batch column exists, all values must be filled or all empty)
+if 'batch' in SAMPLESDF.columns:
+    batch_filled = SAMPLESDF['batch'].str.strip() != ""
+    has_filled = batch_filled.any()
+    has_empty = (~batch_filled).any()
+    if has_filled and has_empty:
+        raise ValueError("Batch column is inconsistently filled. Either all samples must have a batch value, or all must be empty.")
+
 # Step 4: Check if files in R1 and R2 paths exist and are readable
 def check_file(path):
     return path != "" and os.path.isfile(path) and os.access(path, os.R_OK)

@@ -10,12 +10,12 @@ The **sample manifest** (also called `samples.tsv` or `manifest.tsv`) is require
 
 | Column Name        | Description                                                                                                                                                                                                  |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `sampleName`       | A unique identifier for each sample. No duplicates are allowed.                                                                                                                                              |
-| `groupName`        | A label representing the biological or experimental group (for example, `treated`, `control`, `infected`).                                                                                                   |
-| `batch`            | An optional batch identifier if the experiment spans multiple sequencing batches. This helps downstream normalization and batch correction.                                                                  |
-| `path_to_R1_fastq` | The absolute or relative path to the FASTQ file containing **Read 1** sequences.                                                                                                                             |
-| `path_to_R2_fastq` | The path to the **Read 2** FASTQ file for paired-end libraries. For single-end libraries, this column can be left blank or omitted.                                                                          |
-| `strandedness`     | (Optional) Library strandedness. Valid values include `forward`, `reverse`, or `unstranded`. If this field is missing or left empty, HAROLD will automatically infer strandedness using **RSeQC** utilities. |
+| `sampleName`       | **Required.** Unique identifier for each sample. No duplicates allowed.                                                                                                                                      |
+| `groupName`        | **Required.** Biological or experimental group label (e.g., `treated`, `control`, `infected`).                                                                                                              |
+| `batch`            | **Optional.** Sequencing batch identifier for batch-effect correction. If used, **all samples must have a batch value** (no mixing of filled and empty values).                                               |
+| `path_to_R1_fastq` | **Required.** Path to Read 1 FASTQ file (absolute or relative; must exist and be readable).                                                                                                                 |
+| `path_to_R2_fastq` | **Required (PE) / Optional (SE).** Path to Read 2 FASTQ file. Leave empty for single-end libraries.                                                                                                        |
+| `strandedness`     | **Optional.** Library strandedness (`forward`, `reverse`, or `unstranded`). If omitted or empty, HAROLD infers it automatically via RSeQC (controlled by `infer_strandedness` config; default: true).       |
 
 ### Example Sample Manifest
 
@@ -32,15 +32,15 @@ HAROLD supports both **paired-end (PE)** and **single-end (SE)** sequencing data
 
 ### Validation Rules
 
-Before execution, HAROLD validates the manifest automatically to prevent misconfiguration. The validation checks include:
+Before execution, HAROLD validates the manifest automatically to prevent misconfiguration:
 
-- Each `sampleName` must be unique.
-- FASTQ files referenced in `path_to_R1_fastq` (SE,PE) and `path_to_R2_fastq` (PE) must exist and be readable.
-- Column names must match the expected header structure.
-- The strandedness field, if provided, must be one of the accepted values. (forward/reverse/unstranded)
-- Group and batch assignments are checked for consistency to avoid missing metadata.
+- **sampleName:** Must be unique across all samples.
+- **groupName:** Must be non-empty for all samples.
+- **Batch consistency:** If any sample has a batch value, **all samples must have one** (no mixing of filled and empty batch cells).
+- **FASTQ files:** R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).
+- **Strandedness values:** If provided and `infer_strandedness=false` in config, must be one of: `forward`, `reverse`, `unstranded`.
 
-If any issue is detected, HAROLD will stop execution and report the specific error message to guide correction before rerunning initialization.
+If validation fails, HAROLD reports the specific error and stops before initialization.
 
 ---
 
