@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.23">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>prereq – HAROLD — RNA-seq Quantification</title>
+<title>prereq – HAROLD — RNA-seq Quantification &amp; Normalization</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,13 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-7271f29f9498218151f3120baddb7363.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-226bd0f977fa82dfae4534cac220d79a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d8d76ce76e5458b3d8da1cab55fbd639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bd4d327275457fb6652065989184b3fc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-d8d76ce76e5458b3d8da1cab55fbd639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-bfdbc8ba67cd0daf8ab38c98e96eec07.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-2520dda852c924482f9cbd75be708ae4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-bfdbc8ba67cd0daf8ab38c98e96eec07.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -127,7 +131,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         toggleBodyColorMode(bsSheetEl);
       }
     }
-    window.setColorSchemeToggle = (alternate) => {
+    const setColorSchemeToggle = (alternate) => {
       const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
@@ -160,7 +164,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
-      window.setColorSchemeToggle(alternate)
+      setColorSchemeToggle(alternate)
       // Hack to workaround the fact that safari doesn't
       // properly recolor the scrollbar when toggling (#1455)
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
@@ -200,7 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     const isFileUrl = () => {
       return window.location.protocol === 'file:';
     }
-    window.hasAlternateSentinel = () => {
+    const hasAlternateSentinel = () => {
       let styleSentinel = getColorSchemeSentinel();
       if (styleSentinel !== null) {
         return styleSentinel === "alternate";
@@ -228,7 +232,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
       const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
       let newTheme = '';
-      if(darkModeDefault) {
+      if(authorPrefersDark) {
         newTheme = isAlternate ? baseTheme : alternateTheme;
       } else {
         newTheme = isAlternate ? alternateTheme : baseTheme;
@@ -251,19 +255,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         changeGiscusTheme();
       }
     };
-    const darkModeDefault = false;
-    document.querySelector('link.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
     let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
     // Dark / light mode switch
     window.quartoToggleColorScheme = () => {
       // Read the current dark / light value
-      let toAlternate = !window.hasAlternateSentinel();
+      let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
     };
     // Switch to dark mode if need be
-    if (window.hasAlternateSentinel()) {
+    if (hasAlternateSentinel()) {
       toggleColorMode(true);
     } else {
       toggleColorMode(false);
@@ -276,7 +283,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
-    <span class="navbar-title">HAROLD — RNA-seq Quantification</span>
+    <span class="navbar-title">HAROLD — RNA-seq Quantification &amp; Normalization</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -290,13 +297,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Docs</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Version</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version-dev" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Version: dev</span>
     </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version">    
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version-dev">    
         <li>
     <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/dev/">
- <span class="dropdown-text">Latest (dev)</span></a>
+ <span class="dropdown-text">dev (current)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/1.2.1/">
+ <span class="dropdown-text">1.2.1</span></a>
   </li>  
     </ul>
   </li>
@@ -378,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../docs/pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">📥 HAROLD Workflow Diagram</span></a>
+ <span class="menu-text">📥 HAROLD Workflow diagram</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -429,6 +440,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#accessing-rivanna-from-the-command-line" id="toc-accessing-rivanna-from-the-command-line" class="nav-link" data-scroll-target="#accessing-rivanna-from-the-command-line">3. Accessing Rivanna from the Command Line</a></li>
   <li><a href="#load-the-mamba-environment" id="toc-load-the-mamba-environment" class="nav-link" data-scroll-target="#load-the-mamba-environment">4. Load the Mamba Environment</a></li>
   <li><a href="#verify-harold-installation" id="toc-verify-harold-installation" class="nav-link" data-scroll-target="#verify-harold-installation">5. Verify HAROLD Installation</a></li>
+  <li><a href="#shared-apptainer-images-and-cache-layout" id="toc-shared-apptainer-images-and-cache-layout" class="nav-link" data-scroll-target="#shared-apptainer-images-and-cache-layout">6. Shared Apptainer Images and Cache Layout</a></li>
+  <li><a href="#reference-bundle-created-inside-each-work-directory" id="toc-reference-bundle-created-inside-each-work-directory" class="nav-link" data-scroll-target="#reference-bundle-created-inside-each-work-directory">7. Reference bundle created inside each work directory</a></li>
+  <li><a href="#understanding-snakemake-dry-run-output" id="toc-understanding-snakemake-dry-run-output" class="nav-link" data-scroll-target="#understanding-snakemake-dry-run-output">8. Understanding Snakemake dry-run output</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -458,22 +472,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="accessing-rivanna-from-the-command-line">3. Accessing Rivanna from the Command Line</h2>
 <p>You will need a terminal interface (such as Terminal on macOS, Command Prompt or PowerShell on Windows, or any Linux shell). This environment allows you to use SSH to connect to Rivanna and run the HAROLD command-line interface.</p>
 <p>Once the VPN connection is active, open your terminal and log in to Rivanna:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="op">&lt;</span>your_computing_id<span class="op">&gt;</span>@login.hpc.virginia.edu</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="op">&lt;</span>your_computing_id<span class="op">&gt;</span>@login.hpc.virginia.edu</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
 <section id="load-the-mamba-environment" class="level2">
 <h2 class="anchored" data-anchor-id="load-the-mamba-environment">4. Load the Mamba Environment</h2>
 <p>Once connected to Rivanna, load the shared configuration and activate the <strong>pipelines</strong> conda environment used by HAROLD.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load mamba and activate environment</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> /standard/dremel_lab/scripts/.sh_common</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> activate pipelines</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load mamba and activate environment</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> /project/dremel_lab/scripts/.sh_common</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> activate pipelines</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This prepares the environment with all required dependencies, including Snakemake, Python, and the HAROLD executable.</p>
 <hr>
 </section>
 <section id="verify-harold-installation" class="level2">
 <h2 class="anchored" data-anchor-id="verify-harold-installation">5. Verify HAROLD Installation</h2>
 <p>Typing <code>harold</code> by itself will not display the full help message. To confirm that HAROLD is properly installed, use the <code>--help</code> flag:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">harold</span> <span class="at">--help</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">harold</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>When executed correctly, you should see output similar to the following:</p>
 <pre><code>##########################################################################################
 
@@ -546,13 +560,79 @@ Example commands:
 VersionInfo:
   python          : 3.11
   snakemake       : 9.8.1
-  pipeline_home   : /sfs/ceph/standard/dremel_lab/workflows/pipelines/HAROLD/v1.0.0
-  git commit/tag  : 2156e6eb4b142f74dc5ae2d65f3bca4159574eda v1.0.0
-  pipeline version: v1.0.0
+  pipeline_home   : /sfs/ceph/project/dremel_lab/workflows/pipelines/HAROLD/v1.2.0
+  git commit/tag  : f8b62bb1596e2c91587921849ab47f3e8b2a8ab8 v1.2.0
+  pipeline version: v1.2.1
   cluster_name    : shen
 
 ##########################################################################################</code></pre>
 <p>If you see this output, HAROLD is ready to run.</p>
+<hr>
+</section>
+<section id="shared-apptainer-images-and-cache-layout" class="level2">
+<h2 class="anchored" data-anchor-id="shared-apptainer-images-and-cache-layout">6. Shared Apptainer Images and Cache Layout</h2>
+<p>HAROLD uses Apptainer/Singularity containers for every Snakemake rule. To reduce duplicate pulls, the wrapper now points to the lab-managed image repository at <code>/project/dremel_lab/workflows/singularity_images</code> by default. All cached SIF files in that directory are shared read-only across Rivanna users.</p>
+<p>During runtime HAROLD also prepares a per-user scratch workspace under <code>/scratch/$USER/singularity/</code>:</p>
+<ul>
+<li><code>cache/</code> – Apptainer layer cache used while pulling from Docker/OCI registries.</li>
+<li><code>tmp/</code> – temporary directory exported as <code>APPTAINER_TMPDIR</code>/<code>SINGULARITY_TMPDIR</code>.</li>
+<li><code>images/</code> – default pull location (<code>APPTAINER_PULLDIR</code>) when a container does not already exist in the shared SIF directory.</li>
+</ul>
+<p>When you run <code>harold --runmode init</code>, the wrapper now echoes the locations it will use, for example:</p>
+<pre><code>Singularity Cache Dir: /scratch/cud2td/singularity/cache
+Singularity Tmp Dir: /scratch/cud2td/singularity/tmp
+Singularity Pull Dir: /scratch/cud2td/singularity/images</code></pre>
+<p>The <code>Singularity Image Dir</code> line that appears in later Snakemake logs refers to the <code>--sifdir</code> setting (the shared <code>/project/dremel_lab/workflows/singularity_images</code> by default). The printed “Pull Dir” is the scratch location where new <code>.sif</code> files will be written when an image is missing from that shared tree, so you should always see three separate directories: cache, tmp, and pull.</p>
+<p>If a requested SIF is missing from the shared repository, the wrapper prints a warning and Apptainer automatically pulls it into your scratch cache when the rule executes. You can override the defaults with:</p>
+<ul>
+<li><code>--sifdir /path/to/sif</code> to point at a different image directory (for example, a personal mirror).</li>
+<li><code>--singcache /path/to/cache</code> to control where cache layers and temporary files are written.</li>
+</ul>
+<p>The wrapper also honors pre-set environment variables (<code>SINGULARITY_CACHEDIR</code>, <code>SINGULARITY_TMPDIR</code>, and <code>SINGULARITY_PULLFOLDER</code>) so site administrators can direct HAROLD to lab-managed storage via login scripts.</p>
+<p>When the shared <code>/project/.../singularity_images</code> tree is used for read-only access, new pulls automatically fall back to <code>/scratch/$USER/singularity/images</code>, ensuring jobs can still run without trying to write to the shared mount. The runtime warning</p>
+<pre><code>Singularity image docker://&lt;repo&gt;:&lt;tag&gt; will be pulled.</code></pre>
+<p>is expected the first time each container is staged to scratch.</p>
+<p>On compute nodes, the jobscript reuses the shared image directory when available and transparently falls back to <code>/scratch/$USER/singularity/sif</code> if the shared path is not accessible, ensuring every rule can still run.</p>
+<hr>
+</section>
+<section id="reference-bundle-created-inside-each-work-directory" class="level2">
+<h2 class="anchored" data-anchor-id="reference-bundle-created-inside-each-work-directory">7. Reference bundle created inside each work directory</h2>
+<p>When you run <code>harold -m init</code>, the wrapper stages a full copy of <code>config/</code> plus your <code>samples.tsv</code> under the new working directory. The first Snakemake jobs (<code>create_index</code>, <code>gtf_to_bed</code>, and friends) then build a composite reference bundle under:</p>
+<pre><code>$WORKDIR/ref/
+├── ref.fa                         # combined host + additives + virus FASTA
+├── ref.fa.regions                 # BED-like regions file used for per-genome splitting
+├── ref.fa.regions.host(.*)        # host-only slices for BAM splitting
+├── ref.fa.regions.viruses(.*)     # virus-only slices
+├── ref.gtf                        # concatenated transcript annotation
+├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake consume
+├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC
+├── ref.genes.(bed|bed12)          # BED exports for GTF → BED jobs
+└── STAR_no_GTF/                   # STAR genome index</code></pre>
+<p>These files are built entirely inside the work directory so multiple HAROLD runs cannot interfere with each other. Re-running <code>harold -m dryrun</code> or <code>harold -m run</code> in the same directory will skip any reference assets that already exist unless you remove the files manually or use <code>harold -m reset</code>.</p>
+<hr>
+</section>
+<section id="understanding-snakemake-dry-run-output" class="level2">
+<h2 class="anchored" data-anchor-id="understanding-snakemake-dry-run-output">8. Understanding Snakemake dry-run output</h2>
+<p><code>harold -m dryrun</code> invokes Snakemake with <code>--dry-run</code>, <code>--printshellcmds</code>, and Rivanna’s profile so you can inspect the entire DAG without consuming compute time. A typical snippet looks like:</p>
+<pre><code>Need to rerun job cutadapt because of missing output required by all.
+Need to rerun job create_index because of missing output required by all.
+Singularity image docker://seqinfomics/rseqc:4.0.0 will be pulled.
+FILE /path/to/workdir/ref/ref.fa does not exist! Creating it!
+Job stats:
+job                    count
+---------------------  -----
+cutadapt                   8
+create_index               1
+...
+total                    162</code></pre>
+<p>Key things to know:</p>
+<ul>
+<li>Every <code>Need to rerun job ...</code> line simply means the corresponding rule has missing outputs in this new work directory. That is expected on the first run because nothing has been produced yet.</li>
+<li>The <code>FILE ... does not exist! Creating it!</code> messages come from HAROLD helper scripts that pre-create composite files such as <code>ref.fa</code>, <code>ref.fa.regions</code>, and the derived <code>.gtf</code> artifacts listed above.</li>
+<li><code>Singularity image ... will be pulled.</code> is informative only; no containers are fetched during a dry run. The warning tells you which rules will contact Docker Hub the first time you do a real <code>run</code>/<code>runlocal</code>.</li>
+<li>The final “Job stats” table is Snakemake’s count of how many times each rule would execute. This lets you gauge how much work is queued before launching a real run.</li>
+</ul>
+<p>Because <code>--dry-run</code> never touches data, you can use it freely after editing <code>config.yaml</code> or <code>samples.tsv</code> to confirm HAROLD recognizes the changes. Once you are satisfied with the dry-run summary, re-run <code>harold -m run</code> (or <code>runlocal</code>) from the same work directory to start the actual workflow.</p>
 
 
 </section>
@@ -573,7 +653,7 @@ VersionInfo:
       a.appendChild(i);
       window.document.body.appendChild(a);
     }
-    window.setColorSchemeToggle(window.hasAlternateSentinel())
+    setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
     const anchorJS = new window.AnchorJS();
     anchorJS.options = {
@@ -623,13 +703,14 @@ VersionInfo:
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -644,7 +725,7 @@ VersionInfo:
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/");
+        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/dev\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }

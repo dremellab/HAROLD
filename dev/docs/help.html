@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.23">
+<meta name="generator" content="quarto-1.9.37">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>help – HAROLD — RNA-seq Quantification</title>
+<title>help – HAROLD — RNA-seq Quantification &amp; Normalization</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,13 +73,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-7271f29f9498218151f3120baddb7363.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-226bd0f977fa82dfae4534cac220d79a.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d0ae9245876894da5ac7e18953ecc5cc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d8d76ce76e5458b3d8da1cab55fbd639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-bd4d327275457fb6652065989184b3fc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-d8d76ce76e5458b3d8da1cab55fbd639.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-bfdbc8ba67cd0daf8ab38c98e96eec07.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-2520dda852c924482f9cbd75be708ae4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-bfdbc8ba67cd0daf8ab38c98e96eec07.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -127,7 +131,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         toggleBodyColorMode(bsSheetEl);
       }
     }
-    window.setColorSchemeToggle = (alternate) => {
+    const setColorSchemeToggle = (alternate) => {
       const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
@@ -160,7 +164,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
-      window.setColorSchemeToggle(alternate)
+      setColorSchemeToggle(alternate)
       // Hack to workaround the fact that safari doesn't
       // properly recolor the scrollbar when toggling (#1455)
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
@@ -200,7 +204,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     const isFileUrl = () => {
       return window.location.protocol === 'file:';
     }
-    window.hasAlternateSentinel = () => {
+    const hasAlternateSentinel = () => {
       let styleSentinel = getColorSchemeSentinel();
       if (styleSentinel !== null) {
         return styleSentinel === "alternate";
@@ -228,7 +232,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
       const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
       let newTheme = '';
-      if(darkModeDefault) {
+      if(authorPrefersDark) {
         newTheme = isAlternate ? baseTheme : alternateTheme;
       } else {
         newTheme = isAlternate ? alternateTheme : baseTheme;
@@ -251,19 +255,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         changeGiscusTheme();
       }
     };
-    const darkModeDefault = false;
-    document.querySelector('link.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
     let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
     // Dark / light mode switch
     window.quartoToggleColorScheme = () => {
       // Read the current dark / light value
-      let toAlternate = !window.hasAlternateSentinel();
+      let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
     };
     // Switch to dark mode if need be
-    if (window.hasAlternateSentinel()) {
+    if (hasAlternateSentinel()) {
       toggleColorMode(true);
     } else {
       toggleColorMode(false);
@@ -276,7 +283,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
-    <span class="navbar-title">HAROLD — RNA-seq Quantification</span>
+    <span class="navbar-title">HAROLD — RNA-seq Quantification &amp; Normalization</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -290,13 +297,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Docs</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Version</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version-dev" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Version: dev</span>
     </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version">    
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version-dev">    
         <li>
     <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/dev/">
- <span class="dropdown-text">Latest (dev)</span></a>
+ <span class="dropdown-text">dev (current)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/1.2.1/">
+ <span class="dropdown-text">1.2.1</span></a>
   </li>  
     </ul>
   </li>
@@ -378,7 +389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../docs/pipeline.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">📥 HAROLD Workflow Diagram</span></a>
+ <span class="menu-text">📥 HAROLD Workflow diagram</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -449,8 +460,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>3. Unsupported host or virus identifiers</strong> If HAROLD returns an error related to unsupported genomes, confirm that the host, additives, and viral accessions match the list of supported references. Refer to the <a href="../docs/inputs.html">Inputs</a> page for the complete list.</p>
 <p><strong>4. Pipeline fails after submission to SLURM</strong> Check the <code>logs/</code> subdirectory in your working directory. Each rule in Snakemake generates its own log file, which records errors and resource usage. You can also use <code>squeue -u $USER</code> to monitor job status.</p>
 <p><strong>5. Configuration or environment errors</strong> If you see errors related to missing conda environments or software dependencies, verify that you have activated the correct environment using:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> /standard/dremel_lab/scripts/.sh_common</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> activate pipelines</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> /project/dremel_lab/scripts/.sh_common</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mamba</span> activate pipelines</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
 <section id="getting-help" class="level2">
@@ -495,7 +506,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       a.appendChild(i);
       window.document.body.appendChild(a);
     }
-    window.setColorSchemeToggle(window.hasAlternateSentinel())
+    setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
     const anchorJS = new window.AnchorJS();
     anchorJS.options = {
@@ -545,13 +556,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -566,7 +578,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/");
+        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/dev\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
