@@ -15,7 +15,7 @@ The **sample manifest** (also called `samples.tsv` or `manifest.tsv`) is require
 | `batch`            | **Optional.** Sequencing batch identifier for batch-effect correction. If used, **all samples must have a batch value** (no mixing of filled and empty values).                                               |
 | `path_to_R1_fastq` | **Required.** Path to Read 1 FASTQ file (absolute or relative; must exist and be readable).                                                                                                                 |
 | `path_to_R2_fastq` | **Required (PE) / Optional (SE).** Path to Read 2 FASTQ file. Leave empty for single-end libraries.                                                                                                        |
-| `strandedness`     | **Optional.** Library strandedness (`forward`, `reverse`, or `unstranded`). If omitted or empty, HAROLD infers it automatically via RSeQC (controlled by `infer_strandedness` config; default: true).       |
+| `strandedness`     | **Required if `infer_strandedness=false`.** Library strandedness (`forward`, `reverse`, or `unstranded`). HAROLD always infers strandedness via RSeQC and reports it in output. The `infer_strandedness` config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.       |
 
 ### Example Sample Manifest
 
@@ -38,7 +38,7 @@ Before execution, HAROLD validates the manifest automatically to prevent misconf
 - **groupName:** Must be non-empty for all samples.
 - **Batch consistency:** If any sample has a batch value, **all samples must have one** (no mixing of filled and empty batch cells).
 - **FASTQ files:** R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).
-- **Strandedness values:** If provided and `infer_strandedness=false` in config, must be one of: `forward`, `reverse`, `unstranded`.
+- **Strandedness values:** Required and validated (must be `forward`, `reverse`, or `unstranded`) only when `infer_strandedness=false`. HAROLD always infers strandedness via RSeQC regardless of this setting.
 
 If validation fails, HAROLD reports the specific error and stops before initialization.
 
