@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads
 - Qualimap Java heap scaling (#42) — Now properly scales from job memory allocation
+- kraken2 verbose output (#41) — Suppressed excessive per-read classification output to reduce log verbosity
 - Temporary file staging — STAR sort outputs and split_bam outputs now properly staged in tempdir before moving
 - Validation hardening — Improved input validation and Rivanna submission defaults
 - Fastq validator escaping — Fixed bash variable escaping in FASTQ validation rule
