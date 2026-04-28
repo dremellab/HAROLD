@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://dremellab.github.io/HAROLD/dev/docs/prereq.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
+    <loc>https://dremellab.github.io/HAROLD/dev/CHANGELOG.html</loc>
+    <lastmod>2026-04-28T19:29:46.381Z</lastmod>
   </url>
   <url>
     <loc>https://dremellab.github.io/HAROLD/dev/docs/inputs.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
   </url>
   <url>
     <loc>https://dremellab.github.io/HAROLD/dev/docs/usage.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
-  </url>
-  <url>
-    <loc>https://dremellab.github.io/HAROLD/dev/docs/help.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
-  </url>
-  <url>
-    <loc>https://dremellab.github.io/HAROLD/dev/CHANGELOG.html</loc>
-    <lastmod>2026-04-28T19:28:10.444Z</lastmod>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
   </url>
   <url>
     <loc>https://dremellab.github.io/HAROLD/dev/docs/pipeline.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
-  </url>
-  <url>
-    <loc>https://dremellab.github.io/HAROLD/dev/docs/outputs.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
   </url>
   <url>
     <loc>https://dremellab.github.io/HAROLD/dev/docs/index.html</loc>
-    <lastmod>2026-04-28T19:28:10.445Z</lastmod>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
+  </url>
+  <url>
+    <loc>https://dremellab.github.io/HAROLD/dev/docs/prereq.html</loc>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
+  </url>
+  <url>
+    <loc>https://dremellab.github.io/HAROLD/dev/docs/outputs.html</loc>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
+  </url>
+  <url>
+    <loc>https://dremellab.github.io/HAROLD/dev/docs/help.html</loc>
+    <lastmod>2026-04-28T19:29:46.382Z</lastmod>
   </url>
 </urlset>
