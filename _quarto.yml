@@ -4,7 +4,7 @@ project:
 
 website:
   title: "HAROLD — RNA-seq Quantification & Normalization"
-  site-url: https://dremellab.github.io/HAROLD/
+  site-url: https://dremellab.github.io/HAROLD/dev/
   repo-url: https://github.com/dremellab/HAROLD
 
   navbar:
@@ -12,10 +12,12 @@ website:
     right:
       - text: "Docs"
         href: docs/index.md
-      - text: "Version"
+      - text: "Version: dev"
         menu:
-          - text: "Latest (dev)"
-            href: https://dremellab.github.io/HAROLD/latest/
+          - text: "dev (current)"
+            href: https://dremellab.github.io/HAROLD/dev/
+          - text: "1.2.1"
+            href: https://dremellab.github.io/HAROLD/1.2.1/
       - icon: github
         href: https://github.com/dremellab/HAROLD
 
@@ -34,7 +36,6 @@ website:
           - docs/pipeline.md
           - docs/inputs.md
           - docs/outputs.md
-          - docs/parameters.md
       - section: "Help"
         contents:
           - docs/help.md
@@ -49,4 +50,4 @@ format:
     smooth-scroll: true
 
 metadata:
-  version: "1.2.1"
+  version: "dev"
