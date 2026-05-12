@@ -293,7 +293,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/outputs.html">📊 HAROLD Outputs (Coming Soon)</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/outputs.html">📊 HAROLD Output Files</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -366,7 +366,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../docs/outputs.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">📊 HAROLD Outputs (Coming Soon)</span></a>
+ <span class="menu-text">📊 HAROLD Output Files</span></a>
   </div>
 </li>
       </ul>
@@ -398,29 +398,1507 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#harold-outputs-coming-soon" id="toc-harold-outputs-coming-soon" class="nav-link active" data-scroll-target="#harold-outputs-coming-soon">📊 HAROLD Outputs (Coming Soon)</a></li>
+  <li><a href="#harold-output-files" id="toc-harold-output-files" class="nav-link active" data-scroll-target="#harold-output-files">📊 HAROLD Output Files</a>
+  <ul class="collapse">
+  <li><a href="#output-directory-structure" id="toc-output-directory-structure" class="nav-link" data-scroll-target="#output-directory-structure">Output Directory Structure</a></li>
+  <li><a href="#reference-files" id="toc-reference-files" class="nav-link" data-scroll-target="#reference-files">Reference Files</a></li>
+  <li><a href="#per-sample-output-files" id="toc-per-sample-output-files" class="nav-link" data-scroll-target="#per-sample-output-files">Per-Sample Output Files</a>
+  <ul class="collapse">
+  <li><a href="#trimmed-reads" id="toc-trimmed-reads" class="nav-link" data-scroll-target="#trimmed-reads">Trimmed Reads</a></li>
+  <li><a href="#alignment-files" id="toc-alignment-files" class="nav-link" data-scroll-target="#alignment-files">Alignment Files</a></li>
+  <li><a href="#normalization-and-coverage-tracks-bigwig-files" id="toc-normalization-and-coverage-tracks-bigwig-files" class="nav-link" data-scroll-target="#normalization-and-coverage-tracks-bigwig-files">Normalization and Coverage Tracks: BigWig Files</a></li>
+  <li><a href="#quality-control" id="toc-quality-control" class="nav-link" data-scroll-target="#quality-control">Quality Control</a></li>
+  <li><a href="#optional-fastq-validation" id="toc-optional-fastq-validation" class="nav-link" data-scroll-target="#optional-fastq-validation">Optional: FASTQ Validation</a></li>
+  </ul></li>
+  <li><a href="#aggregate-output-files" id="toc-aggregate-output-files" class="nav-link" data-scroll-target="#aggregate-output-files">Aggregate Output Files</a>
+  <ul class="collapse">
+  <li><a href="#count-matrices" id="toc-count-matrices" class="nav-link" data-scroll-target="#count-matrices">Count Matrices</a></li>
+  <li><a href="#alignment-quality-summary-alignmentqcalignment_summary.tsv" id="toc-alignment-quality-summary-alignmentqcalignment_summary.tsv" class="nav-link" data-scroll-target="#alignment-quality-summary-alignmentqcalignment_summary.tsv">Alignment Quality Summary: <code>alignmentqc/alignment_summary.tsv</code></a></li>
+  <li><a href="#rna-quality-transcript-integrity-number-aggregate" id="toc-rna-quality-transcript-integrity-number-aggregate" class="nav-link" data-scroll-target="#rna-quality-transcript-integrity-number-aggregate">RNA Quality: Transcript Integrity Number Aggregate</a></li>
+  <li><a href="#multiqc-report" id="toc-multiqc-report" class="nav-link" data-scroll-target="#multiqc-report">MultiQC Report</a></li>
+  </ul></li>
+  <li><a href="#optional-outputs" id="toc-optional-outputs" class="nav-link" data-scroll-target="#optional-outputs">Optional Outputs</a>
+  <ul class="collapse">
+  <li><a href="#normalized-count-matrices-diffex-integration" id="toc-normalized-count-matrices-diffex-integration" class="nav-link" data-scroll-target="#normalized-count-matrices-diffex-integration">Normalized Count Matrices (DiffEx Integration)</a></li>
+  <li><a href="#s3-transfer-sentinel" id="toc-s3-transfer-sentinel" class="nav-link" data-scroll-target="#s3-transfer-sentinel">S3 Transfer Sentinel</a></li>
+  </ul></li>
+  <li><a href="#output-naming-conventions" id="toc-output-naming-conventions" class="nav-link" data-scroll-target="#output-naming-conventions">Output Naming Conventions</a>
+  <ul class="collapse">
+  <li><a href="#sample-names" id="toc-sample-names" class="nav-link" data-scroll-target="#sample-names">Sample Names</a></li>
+  <li><a href="#genomic-region-names" id="toc-genomic-region-names" class="nav-link" data-scroll-target="#genomic-region-names">Genomic Region Names</a></li>
+  </ul></li>
+  <li><a href="#how-to-use-these-outputs" id="toc-how-to-use-these-outputs" class="nav-link" data-scroll-target="#how-to-use-these-outputs">How to Use These Outputs</a>
+  <ul class="collapse">
+  <li><a href="#for-differential-expression-analysis" id="toc-for-differential-expression-analysis" class="nav-link" data-scroll-target="#for-differential-expression-analysis">For Differential Expression Analysis</a></li>
+  <li><a href="#for-quality-assessment" id="toc-for-quality-assessment" class="nav-link" data-scroll-target="#for-quality-assessment">For Quality Assessment</a></li>
+  <li><a href="#for-visualization" id="toc-for-visualization" class="nav-link" data-scroll-target="#for-visualization">For Visualization</a></li>
+  <li><a href="#for-downstream-integration" id="toc-for-downstream-integration" class="nav-link" data-scroll-target="#for-downstream-integration">For Downstream Integration</a></li>
+  </ul></li>
+  <li><a href="#frequently-asked-questions" id="toc-frequently-asked-questions" class="nav-link" data-scroll-target="#frequently-asked-questions">Frequently Asked Questions</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/outputs.html">📊 HAROLD Outputs (Coming Soon)</a></li></ol></nav></header>
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/outputs.html">📊 HAROLD Output Files</a></li></ol></nav></header>
 
 
 
 
 
-<section id="harold-outputs-coming-soon" class="level1">
-<h1>📊 HAROLD Outputs (Coming Soon)</h1>
-<p>This section will describe the files and directories generated by HAROLD upon successful completion of a run. It will include detailed explanations of result types, such as:</p>
-<ul>
-<li><strong>Count Matrices:</strong> Raw and normalized count tables for host and viral genes.</li>
-<li><strong>QC Reports:</strong> MultiQC summary reports combining results from various quality-control tools.</li>
-<li><strong>Alignment Files:</strong> BAM and BAI files for read alignments, plus bigWig and junction bigBed files for visualization.</li>
-<li><strong>Configuration and Logs:</strong> Metadata, logs, and configuration files saved for reproducibility.</li>
-</ul>
-<p>Documentation for this page is under development and will be expanded soon to include file structure diagrams, naming conventions, and data interpretation guidance.</p>
+<section id="harold-output-files" class="level1">
+<h1>📊 HAROLD Output Files</h1>
+<p>HAROLD produces a comprehensive set of outputs organized into clearly structured directories within your working directory. This page describes all output types, their locations, file formats, and how to interpret them.</p>
+<hr>
+<section id="output-directory-structure" class="level2">
+<h2 class="anchored" data-anchor-id="output-directory-structure">Output Directory Structure</h2>
+<p>After a successful run, your HAROLD working directory will contain:</p>
+<pre><code>workdir/
+├── ref/                              # Reference files created during initialization
+│   ├── ref.fa                        # Combined host + additives + viral FASTA
+│   ├── ref.fa.fai                    # FASTA index
+│   ├── ref.gtf                       # Concatenated GTF annotation
+│   ├── ref.fixed.gtf                 # Cleaned GTF for Snakemake
+│   ├── ref.genes.bed                 # Gene regions in BED format
+│   ├── ref.genes.bed12               # Gene regions in BED12 format
+│   ├── ref.genes.genepred            # GenePred format annotation
+│   ├── ref.genes.genepred_w_geneid   # GenePred with gene IDs
+│   ├── STAR_no_GTF/                  # STAR genome index directory
+│   ├── ref.fa.regions                # Genome regions metadata
+│   ├── ref.fa.regions.host           # Host genome regions
+│   └── ref.fa.regions.viruses        # Viral genome regions
+│
+├── results/
+│   ├── {sample}/
+│   │   ├── trim/                     # Adapter-trimmed FASTQ files
+│   │   ├── STAR/                     # Alignment BAM files and metrics
+│   │   ├── bigwigs/                  # Normalized coverage tracks
+│   │   ├── qualimap/                 # Quality-mapping reports
+│   │   ├── rseqc/                    # RNA-seq QC metrics
+│   │   ├── kraken2/                  # Pathogen detection reports
+│   │   ├── counts/                   # Per-sample count matrices
+│   │   └── fastq_validation/         # (Optional) FASTQ validation logs
+│   │
+│   ├── counts/                       # Aggregate count matrices
+│   ├── alignmentqc/                  # Alignment summary statistics
+│   ├── multiqc_report.html           # Interactive QC dashboard
+│   └── multiqc_data/                 # MultiQC data tables
+│
+├── samples.tsv                       # Copy of input sample manifest
+├── config.yaml                       # Pipeline configuration file
+├── .snakemake/                       # Snakemake metadata
+└── logs/                             # Rule-specific SLURM job logs</code></pre>
+<hr>
+</section>
+<section id="reference-files" class="level2">
+<h2 class="anchored" data-anchor-id="reference-files">Reference Files</h2>
+<p>Created during the first Snakemake run and reused across all subsequent runs in the same work directory.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ref/ref.fa</code></td>
+<td><strong>Combined reference FASTA</strong> containing host genome, additives (ERCC, BAC16Insert), and all selected viral sequences. Single source of truth for all alignments.</td>
+</tr>
+<tr class="even">
+<td><code>ref/ref.gtf</code></td>
+<td><strong>Concatenated GTF</strong> with annotations from host, viruses, and optional tRNA/repeats GTF files.</td>
+</tr>
+<tr class="odd">
+<td><code>ref/ref.fixed.gtf</code></td>
+<td><strong>Cleaned GTF</strong> with normalized formatting for Snakemake compatibility.</td>
+</tr>
+<tr class="even">
+<td><code>ref/ref.genes.bed</code> / <code>.bed12</code></td>
+<td><strong>BED format gene annotations</strong> derived from GTF. Used by RSeQC tools for read distribution analysis and junction detection.</td>
+</tr>
+<tr class="odd">
+<td><code>ref/ref.genes.genepred</code> / <code>.genepred_w_geneid</code></td>
+<td><strong>GenePred format</strong> used by RSeQC for transcript quantification (FPKM/TPM calculation).</td>
+</tr>
+<tr class="even">
+<td><code>ref/ref.fa.regions*</code></td>
+<td><strong>Metadata files</strong> tracking which genomic regions belong to host vs.&nbsp;viruses. Used internally for splitting alignments.</td>
+</tr>
+<tr class="odd">
+<td><code>ref/STAR_no_GTF/</code></td>
+<td><strong>STAR genome index</strong> directory with all pre-built index files (SA, SAindex, chrLength.txt, etc.). Index is created once and reused for all samples.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="per-sample-output-files" class="level2">
+<h2 class="anchored" data-anchor-id="per-sample-output-files">Per-Sample Output Files</h2>
+<p>Each sample produces the following files under <code>results/{sample}/</code>:</p>
+<section id="trimmed-reads" class="level3">
+<h3 class="anchored" data-anchor-id="trimmed-reads">Trimmed Reads</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>trim/{sample}.R1.trim.fastq.gz</code></td>
+<td><strong>Read 1 FASTQ</strong> after adapter removal by Cutadapt. Quality-filtered and trimmed.</td>
+</tr>
+<tr class="even">
+<td><code>trim/{sample}.R2.trim.fastq.gz</code></td>
+<td><strong>Read 2 FASTQ</strong> (paired-end only) after trimming.</td>
+</tr>
+<tr class="odd">
+<td><code>trim/{sample}.cutadapt.report.txt</code></td>
+<td><strong>Cutadapt statistics</strong> report showing bases trimmed, reads discarded, and adapter detection rates.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="alignment-files" class="level3">
+<h3 class="anchored" data-anchor-id="alignment-files">Alignment Files</h3>
+<section id="starsample.aligned.sortedbycoord.out.bam" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.aligned.sortedbycoord.out.bam"><code>STAR/{sample}.Aligned.sortedByCoord.out.bam</code></h4>
+<p><strong>Format:</strong> BAM (binary SAM) file, coordinate-sorted <strong>Index:</strong> <code>.bai</code> file (must exist for IGV/Samtools random access)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Header (<span class="citation" data-cites="SQ">@SQ</span>)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SN (sequence name)</td>
+<td>Chromosome/contig ID from reference FASTA (e.g., chr1, NC_009333.1:1-137895).</td>
+</tr>
+<tr class="even">
+<td>LN (sequence length)</td>
+<td>Length in bp.</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Alignment Field</th>
+<th>Standard BAM Semantics</th>
+<th>HAROLD Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>QNAME</td>
+<td>Read name.</td>
+<td>As-is from FASTQ.</td>
+</tr>
+<tr class="even">
+<td>FLAG</td>
+<td>Bitwise flags (unmapped, secondary, supplementary, etc.).</td>
+<td>Secondary (256) and supplementary (2048) alignments <strong>excluded</strong> from count matrices; only primary alignments (FLAG ≤ 127) counted.</td>
+</tr>
+<tr class="odd">
+<td>RNAME</td>
+<td>Reference sequence (chromosome).</td>
+<td>Genomic contig from header.</td>
+</tr>
+<tr class="even">
+<td>POS</td>
+<td>1-based leftmost mapping position.</td>
+<td>Genomic coordinate.</td>
+</tr>
+<tr class="odd">
+<td>MAPQ</td>
+<td>Mapping quality. STAR uses: 255 = uniquely mapped, &lt; 255 = multi-mapped (not in counts).</td>
+<td>Only MAPQ=255 reads used for quantification.</td>
+</tr>
+<tr class="even">
+<td>CIGAR</td>
+<td>Alignment operations (M, I, D, N, S, H).</td>
+<td>Used by RSeQC, bedtools for exon overlap.</td>
+</tr>
+<tr class="odd">
+<td>RNEXT, PNEXT</td>
+<td>Mate reference and position (paired-end only).</td>
+<td>Standard BAM.</td>
+</tr>
+<tr class="even">
+<td>TLEN</td>
+<td>Template length (inferred insert size, paired-end only).</td>
+<td>Used for strand inference validation.</td>
+</tr>
+<tr class="odd">
+<td>SEQ</td>
+<td>Read sequence.</td>
+<td>Standard BAM.</td>
+</tr>
+<tr class="even">
+<td>QUAL</td>
+<td>Base qualities (Phred-scaled).</td>
+<td>Standard BAM.</td>
+</tr>
+<tr class="odd">
+<td>Optional tags</td>
+<td>AS:i (alignment score), NM:i (edit distance), jM/jI (intron coords), etc.</td>
+<td>STAR-specific tags for advanced filtering.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key filtering in HAROLD:</strong> Reads with MAPQ &lt; 255 OR FLAG ≥ 256 (secondary/supplementary) are silently excluded from all downstream analyses (counting, visualization, etc.). Use <code>samtools view -F 256 -F 2048</code> to count unique primary alignments.</p>
+<hr>
+</section>
+<section id="starsample.aligned.sortedbycoord.out.bam.bai" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.aligned.sortedbycoord.out.bam.bai"><code>STAR/{sample}.Aligned.sortedByCoord.out.bam.bai</code></h4>
+<p><strong>Format:</strong> BAM index (binary, BAI format) <strong>Purpose:</strong> Random-access index for fast <code>samtools view -b chr1:100-1000</code> queries in BAM file. Auto-generated by STAR. <strong>Required for:</strong> IGV, Samtools, bedtools operations on large BAM files.</p>
+<hr>
+</section>
+<section id="starsample.aligned.totranscriptome.out.bam-optional" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.aligned.totranscriptome.out.bam-optional"><code>STAR/{sample}.Aligned.toTranscriptome.out.bam</code> (Optional)</h4>
+<p><strong>Format:</strong> BAM, transcript-coordinate sorted <strong>Condition:</strong> Only created if <code>star_save_transcript_sam: true</code> in config.yaml (default: false). <strong>Contents:</strong> Same reads as coordinate-sorted BAM, but aligned to transcript coordinates (position within transcript, not genomic position). Useful for quantification tools like Kallisto/Salmon, RSEM. Not used by HAROLD.</p>
+<hr>
+</section>
+<section id="starsample.readspergene.out.tab" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.readspergene.out.tab"><code>STAR/{sample}.ReadsPerGene.out.tab</code></h4>
+<p><strong>Format:</strong> Tab-separated text file (no header) <strong>Rows:</strong> One per gene/feature from GTF + metadata rows</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>String</td>
+<td><strong>Gene ID</strong> (from GTF gene_id). First few rows are metadata: <code>N_unmapped</code>, <code>N_multimapping</code>, <code>N_noFeature</code>, <code>N_ambiguous</code>.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Integer</td>
+<td><strong>Count (unstranded)</strong>: All reads overlapping this gene (regardless of strand).</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Integer</td>
+<td><strong>Count (forward strand)</strong>: Reads on forward strand only.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Integer</td>
+<td><strong>Count (reverse strand)</strong>: Reads on reverse strand only.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<pre><code>N_unmapped  100000  NA  NA
+N_multimapping  50000   NA  NA
+ENSG00000000003 1000    400 600
+ENSG00000000005 500 100 400</code></pre>
+<p><strong>HAROLD usage:</strong> Rows starting with <code>N_</code> are discarded. Columns 3–4 are selected by strandedness (forward-strand = use column 3, reverse-strand = use column 4, unstranded = use column 2). Result is the input to count matrix aggregation.</p>
+<hr>
+</section>
+<section id="starsample.sj.out.tab" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.sj.out.tab"><code>STAR/{sample}.SJ.out.tab</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per detected splice junction (exon-exon boundary)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>String</td>
+<td>Chromosome/contig.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Integer</td>
+<td>Intron start (1-based, position of last base of upstream exon).</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Integer</td>
+<td>Intron end (1-based, position of first base of downstream exon).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>String</td>
+<td>Intron strand (<code>+</code> or <code>-</code>).</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Integer</td>
+<td>Intron motif (1=GT/AG canonical, 2=CT/AC, 3=GC/AG, 4=AT/AC, 0=non-canonical).</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Integer</td>
+<td>Annotated in GTF? (0=no, 1=yes).</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Integer</td>
+<td>Unique read count supporting junction (reads with MAPQ &gt; 0).</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Integer</td>
+<td>Multi-mapped read count (MAPQ = 0).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> QC check for unannotated junctions (potential artifact, virus, or novel isoform). High count of non-canonical (motif=0) junctions suggests contamination or technical error.</p>
+<hr>
+</section>
+<section id="starsample.log.final.out" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.log.final.out"><code>STAR/{sample}.Log.final.out</code></h4>
+<p><strong>Format:</strong> Key-value text file (used by alignment_summary.py script)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Sample Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Number of input reads</td>
+<td>50000000</td>
+<td>Total reads after trimming (from Cutadapt).</td>
+</tr>
+<tr class="even">
+<td>Uniquely mapped reads number</td>
+<td>48000000</td>
+<td>Primary alignments (MAPQ=255).</td>
+</tr>
+<tr class="odd">
+<td>Number of reads mapped to multiple loci</td>
+<td>1200000</td>
+<td>Multi-mapped reads (excluded from counts).</td>
+</tr>
+<tr class="even">
+<td>Number of reads mapped to too many loci</td>
+<td>300000</td>
+<td>Reads mapping to &gt; 250 loci (excluded).</td>
+</tr>
+<tr class="odd">
+<td>Number of reads unmapped: too many mismatches</td>
+<td>200000</td>
+<td>Quality filter.</td>
+</tr>
+<tr class="even">
+<td>Number of reads unmapped: too short</td>
+<td>150000</td>
+<td>Min length filter.</td>
+</tr>
+<tr class="odd">
+<td>Uniquely mapped reads %</td>
+<td>96.00</td>
+<td>(uniquely_mapped / input) × 100.</td>
+</tr>
+<tr class="even">
+<td>Average mapped length</td>
+<td>150.5</td>
+<td>Mean insert size (PE) or read length (SE).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> Quickly parse mapping metrics without re-scanning BAM: <code>grep "Uniquely mapped" {sample}.Log.final.out</code>.</p>
+<hr>
+</section>
+<section id="starsample.regionname.bam-split-bams" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.regionname.bam-split-bams"><code>STAR/{sample}.{regionname}.bam</code> (Split BAMs)</h4>
+<p><strong>Format:</strong> BAM, coordinate-sorted, subset of main BAM</p>
+<p><strong>Contents:</strong> Reads with <strong>primary alignment</strong> to chromosomes/contigs for this region only. - <code>{sample}.hg38.bam</code> = only reads aligning to host chr1–chrY (or chrM, etc. for selected host) - <code>{sample}.NC_009333.1.bam</code> = only reads aligning to KSHV genome - etc. for all hosts, additives, and viruses</p>
+<p><strong>Creation:</strong> After primary BAM generation, reads are split by <code>samtools view</code> using reference regions from <code>ref.fa.regions.{host,viruses}</code> files.</p>
+<p><strong>Use case:</strong> Downstream tools that require single-reference BAMs (e.g., MACS2 peak calling per-virus, ataqv per-region).</p>
+</section>
+</section>
+<section id="normalization-and-coverage-tracks-bigwig-files" class="level3">
+<h3 class="anchored" data-anchor-id="normalization-and-coverage-tracks-bigwig-files">Normalization and Coverage Tracks: BigWig Files</h3>
+<section id="bigwigssample.regionname.bw" class="level4">
+<h4 class="anchored" data-anchor-id="bigwigssample.regionname.bw"><code>bigwigs/{sample}.{regionname}.bw</code></h4>
+<p><strong>Format:</strong> BigWig (binary, indexed), compressed WIG format <strong>Source:</strong> Generated from split BAM files via <code>bedtools genomecov</code> + <code>wigToBigWig</code> conversion <strong>Signal values:</strong> RPM-normalized (reads per million)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Data type</td>
+<td>Float (read depth per genomic position)</td>
+</tr>
+<tr class="even">
+<td>Normalization</td>
+<td>RPM = (read count at position / total_aligned_reads_in_region) × 1e6</td>
+</tr>
+<tr class="odd">
+<td>Coverage</td>
+<td>Positive strand shown as positive, negative strand as negative (signed strand info).</td>
+</tr>
+<tr class="even">
+<td>Resolution</td>
+<td>Per-base (1 bp precision) for regions with reads; sparse for zero-coverage regions.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example regions in filename:</strong> - <code>{sample}.hg38.bw</code> = host genome coverage (non-viral reads) - <code>{sample}.NC_009333.1.bw</code> = KSHV-specific coverage (reads aligning only to KSHV) - <code>{sample}.ERCC.bw</code> = ERCC spike-in coverage (if ERCC added to reference)</p>
+<p><strong>Use case:</strong> Load all <code>.bw</code> files for a sample into IGV alongside the primary BAM for integrated visualization. Useful for spotting coverage biases, unimodal peaks (POI), GC-correlated coverage dropouts.</p>
+<p><strong>Interpretation:</strong> Peak height (RPM units) directly comparable within region but NOT across regions (each region normalized independently by its own total reads). For cross-region comparisons, normalize BigWigs by region-specific mapping statistics.</p>
+</section>
+</section>
+<section id="quality-control" class="level3">
+<h3 class="anchored" data-anchor-id="quality-control">Quality Control</h3>
+<section id="qualimap-reports-qualimapqualimapreport.html" class="level4">
+<h4 class="anchored" data-anchor-id="qualimap-reports-qualimapqualimapreport.html">Qualimap Reports: <code>qualimap/qualimapReport.html</code></h4>
+<p><strong>Format:</strong> Self-contained HTML with embedded JavaScript and CSS <strong>Tool:</strong> Qualimap <code>bamqc</code> module <strong>Contents:</strong> Interactive QC dashboard</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tab / Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Coverage Profile</strong></td>
+<td>Distribution of read depths (median, Q1/Q3 per contig). Red flag: bimodal/skewed distributions suggest coverage dropout, SVs, or amplification bias.</td>
+</tr>
+<tr class="even">
+<td><strong>GC Content Bias</strong></td>
+<td>X: GC%, Y: read count. Ideal: flat line. Red flag: V-shaped curve indicates uncorrected GC bias (Illumina-specific).</td>
+</tr>
+<tr class="odd">
+<td><strong>Mismatches</strong></td>
+<td>Error rate per read position. Ideal: ≤ 2%. Red flag: 3’ end elevation suggests quality issues in later sequencing cycles.</td>
+</tr>
+<tr class="even">
+<td><strong>Chromosome Stats</strong></td>
+<td>Per-contig mean coverage, stdev, % mapped. Use for sex-chr imbalance detection (XX vs.&nbsp;XY), mitochondrial enrichment checks.</td>
+</tr>
+<tr class="odd">
+<td><strong>Insert Size</strong> (PE)</td>
+<td>Distribution of fragment lengths (TLEN field). Mode reflects library prep protocol (typically 200–800 bp WGS, 100–400 bp low-input). Red flag: multimodal or extreme outliers → contamination/artifacts.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="per-sample-rseqc-metrics" class="level4">
+<h4 class="anchored" data-anchor-id="per-sample-rseqc-metrics">Per-Sample RSeQC Metrics</h4>
+<section id="rseqcsample.read_distribution.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.read_distribution.txt"><code>rseqc/{sample}.read_distribution.txt</code></h5>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC output) <strong>Contents:</strong> Read distribution across gene features from <code>read_distribution.py</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CDS_exon</td>
+<td>Reads overlapping protein-coding exons (by any base). Count + percentage of total aligned reads.</td>
+</tr>
+<tr class="even">
+<td>5’UTR_exon</td>
+<td>Reads in 5’ untranslated region.</td>
+</tr>
+<tr class="odd">
+<td>3’UTR_exon</td>
+<td>Reads in 3’ untranslated region.</td>
+</tr>
+<tr class="even">
+<td>Intron</td>
+<td>Reads spanning intronic regions (indicates potential 3’ bias or protocol artifacts if high).</td>
+</tr>
+<tr class="odd">
+<td>Intergenic</td>
+<td>Reads in intergenic space (potential contamination or chimeric sequences if high).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Well-sequenced mRNA-seq should show majority of reads in exons (CDS + UTRs); high intronic/intergenic reads suggest issues.</p>
+<hr>
+</section>
+<section id="rseqcsample.strandedness.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.strandedness.txt"><code>rseqc/{sample}.strandedness.txt</code></h5>
+<p><strong>Format:</strong> Raw text output from RSeQC <code>infer_experiment.py</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Content</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Fraction of reads explained by "1++,1--,2+-,2-+": X</code></td>
+<td><strong>Forward strand fraction</strong> (paired-end). Reads pair orientation consistent with forward strand.</td>
+</tr>
+<tr class="even">
+<td><code>Fraction of reads explained by "1+-,1-+,2++,2--": Y</code></td>
+<td><strong>Reverse strand fraction</strong> (paired-end). Reads pair orientation consistent with reverse strand.</td>
+</tr>
+<tr class="odd">
+<td><code>Fraction of reads explained by other: Z</code></td>
+<td>Ambiguous/unstranded reads.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> HAROLD uses this to infer strand (&gt; 0.8 fraction = confident; otherwise unstranded). Value is <strong>the source of truth</strong> for strand inference; manifest values override only if <code>use_infer_strandedness: false</code>.</p>
+<hr>
+</section>
+<section id="rseqcsample.genebodycoverage.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.genebodycoverage.txt"><code>rseqc/{sample}.geneBodyCoverage.txt</code></h5>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC output)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Percentile</td>
+<td>Position along normalized gene body (0–100).</td>
+</tr>
+<tr class="even">
+<td>Read Count</td>
+<td>Mean read coverage at this percentile (normalized to 1x).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Uniform coverage across all percentiles (flat line) = good quality. 5’ or 3’ skew (elevation at ends) suggests RNA degradation or protocol bias.</p>
+<hr>
+</section>
+<section id="rseqcsample.aligned.sortedbycoord.out.summary.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.aligned.sortedbycoord.out.summary.txt"><code>rseqc/{sample}.Aligned.sortedByCoord.out.summary.txt</code></h5>
+<p><strong>Format:</strong> Single-line text file with semicolon-delimited metrics</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Total Exons</td>
+<td>Count of exonic regions evaluated.</td>
+</tr>
+<tr class="even">
+<td>Mean TIN</td>
+<td><strong>Mean Transcript Integrity Number</strong> (0–100). Single-number quality metric. &gt; 80 = excellent; 60–80 = acceptable; &lt; 60 = degraded.</td>
+</tr>
+<tr class="odd">
+<td>Median TIN</td>
+<td>Median TIN across transcripts (robust to outliers).</td>
+</tr>
+<tr class="even">
+<td>StdDev TIN</td>
+<td>Standard deviation of TIN scores.</td>
+</tr>
+<tr class="odd">
+<td>Min TIN, Max TIN</td>
+<td>Range of per-transcript TIN values.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> Quick per-sample RNA quality check from command line: <code>grep "Mean TIN" {sample}.Aligned.sortedByCoord.out.summary.txt</code></p>
+<hr>
+</section>
+<section id="rseqcsample.regionname.gc.xls-optional" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.regionname.gc.xls-optional"><code>rseqc/{sample}.{regionname}.GC.xls</code> (Optional)</h5>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per GC% bin (0%, 10%, …, 100%)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GC%</td>
+<td>GC content bin.</td>
+</tr>
+<tr class="even">
+<td>Read Count</td>
+<td>Number of reads with this GC content.</td>
+</tr>
+<tr class="odd">
+<td>Expected</td>
+<td>Expected count under uniform distribution.</td>
+</tr>
+<tr class="even">
+<td>Ratio</td>
+<td>(Observed / Expected). Values &gt;&gt; 1 indicate GC bias (Illumina reads show GC bias at extremes).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Ratio ≈ 1.0 across all bins = no GC bias (good). Ratio &gt; 1.5 at GC extremes = strong GC bias (may need GC correction in normalization).</p>
+<hr>
+</section>
+<section id="rseqcsample.regionname.junction.bb-optional" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.regionname.junction.bb-optional"><code>rseqc/{sample}.{regionname}.junction.bb</code> (Optional)</h5>
+<p><strong>Format:</strong> UCSC BigBed format (binary, compressed BED) <strong>Contents:</strong> Splice junctions detected in this sample for this region</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>chrom</td>
+<td>Chromosome/contig.</td>
+</tr>
+<tr class="even">
+<td>chromStart</td>
+<td>Junction start (0-based).</td>
+</tr>
+<tr class="odd">
+<td>chromEnd</td>
+<td>Junction end.</td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td>Junction ID.</td>
+</tr>
+<tr class="odd">
+<td>score</td>
+<td>Junction read count (used for coloring in browser; capped at 1000).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> Load in IGV or UCSC Genome Browser to visualize expressed junctions region-by-region (host vs.&nbsp;per-virus).</p>
+</section>
+</section>
+<section id="pathogen-detection-kraken2sample.kraken2.report.txt" class="level4">
+<h4 class="anchored" data-anchor-id="pathogen-detection-kraken2sample.kraken2.report.txt">Pathogen Detection: <code>kraken2/{sample}.kraken2.report.txt</code></h4>
+<p><strong>Format:</strong> Kraken2 standard tab-separated report (hierarchical taxonomy) <strong>Source:</strong> Classification of reads unmapped to primary reference (pass-through from alignment) <strong>Rows:</strong> Each NCBI taxon ID represented in classified reads</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Float</td>
+<td><strong>% reads in clade</strong> (sum ≈ 100 at root). Includes all subordinate taxa.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Integer</td>
+<td><strong>Read count in clade</strong>. Direct count (not percentage).</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Integer</td>
+<td><strong>Reads assigned directly</strong> to this taxon (not inherited from parent).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>String</td>
+<td>Rank: superkingdom, phylum, class, order, family, genus, species.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Integer</td>
+<td>NCBI taxonomy ID.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>String</td>
+<td>Scientific name (indented by phylogenetic depth).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<pre><code>100.00  1000000 0   R   1   root
+98.50   985000  0   D   2157    Archaea
+0.50    5000    5000    S   9606    Homo sapiens</code></pre>
+<p><strong>Red flags:</strong> - <strong>High unclassified reads</strong> (no taxon assigned) → novel sequences, low-complexity regions, or contaminating low-quality bases - <strong>Unexpected pathogens</strong> → cross-contamination (note: intended viral targets should align to primary reference) - <strong>Unexpectedly high host (Homo sapiens)</strong> → sample mix-up or contamination - <strong>Kit-specific contaminants</strong> (common lab bacteria) → reagent contamination</p>
+</section>
+<section id="per-sample-transcript-quantification-countssample.rseqc_fpkm_tpm.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="per-sample-transcript-quantification-countssample.rseqc_fpkm_tpm.tsv">Per-Sample Transcript Quantification: <code>counts/{sample}.rseqc_fpkm_tpm.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Source:</strong> RSeQC <code>FPKM_count.py</code> per-transcript quantification</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>String</td>
+<td><strong>Transcript ID</strong> from reference GTF (ENST accession).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Float</td>
+<td><strong>FPKM</strong> (Fragments Per Kilobase per Million mapped reads). Strand-aware fragment count divided by transcript length and library depth. Comparable across samples (unlike raw counts). May have decimal places.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Float</td>
+<td><strong>TPM</strong> (Transcripts Per Million). Sum of TPM across all transcripts in sample = 1e6. More stable than FPKM across library depth variations.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Transformations:</strong> No log transformation. Raw FPKM/TPM output from RSeQC, computed using only primary alignments (MAPQ &gt; 0) overlapping transcript exons, strand-aware.</p>
+<p><strong>Use case:</strong> Aggregated per-sample files are merged into transcript-level count matrices (<code>counts_matrix.transcript_level.tsv</code>, etc.) with FPKM/TPM values aggregated across samples.</p>
+</section>
+</section>
+<section id="optional-fastq-validation" class="level3">
+<h3 class="anchored" data-anchor-id="optional-fastq-validation">Optional: FASTQ Validation</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>fastq_validation/{sample}.fastq_validator.txt</code></td>
+<td><strong>FASTQ validation log</strong> (only if FASTQ validation gating is enabled). Reports any formatting issues with input FASTQ files detected by FastQValidator.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="aggregate-output-files" class="level2">
+<h2 class="anchored" data-anchor-id="aggregate-output-files">Aggregate Output Files</h2>
+<p>Located in <code>results/counts/</code> and <code>results/</code>:</p>
+<section id="count-matrices" class="level3">
+<h3 class="anchored" data-anchor-id="count-matrices">Count Matrices</h3>
+<p>Count matrices are the primary output for downstream analysis. All are <strong>tab-separated text files</strong> with rows = genes/transcripts and columns = metadata + sample counts.</p>
+<section id="gene-level-counts-counts_matrix.tsv-raw-counts" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.tsv-raw-counts">Gene-Level Counts: <code>counts_matrix.tsv</code> (Raw Counts)</h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per gene/feature (rows are indexed with gene_id|gene_name format) <strong>Columns:</strong> Metadata columns + one column per sample</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column Position</th>
+<th>Column Name</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>(index)</code></td>
+<td>String</td>
+<td><strong>Gene identifier</strong> in format <code>ENSG00000123456.11\|BRCA1</code> (gene_id|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or “NA” if unavailable).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>species</code></td>
+<td>String</td>
+<td><strong>Genome origin</strong>: <code>hg38</code>, <code>mm39</code>, or viral accession ID (e.g., <code>NC_009333.1</code>). Identifies which reference genome this gene belongs to.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>gene_chr</code></td>
+<td>String</td>
+<td><strong>Chromosome/contig</strong> where gene is located (e.g., <code>chr1</code>, <code>NC_009333.1:1-137895</code>).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>gene_start</code></td>
+<td>Integer</td>
+<td><strong>0-based gene start coordinate</strong> in the reference genome.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>gene_end</code></td>
+<td>Integer</td>
+<td><strong>0-based gene end coordinate</strong> (exclusive).</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>gene_strand</code></td>
+<td>String</td>
+<td><strong>Strand orientation</strong>: <code>+</code> (forward) or <code>-</code> (reverse).</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><code>gene_length_kb</code></td>
+<td>Float</td>
+<td><strong>Gene length in kilobases</strong> (kb). Calculated as sum of exon lengths per gene (spliced length, not genomic span). <strong>Used for RPKM/TPM normalization.</strong> Units: kilobases, 3 decimal places.</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td><code>gene_type</code></td>
+<td>String</td>
+<td><strong>Gene biotype</strong> from GTF: <code>protein_coding</code>, <code>lncRNA</code>, <code>miRNA</code>, <code>tRNA</code>, <code>rRNA</code>, etc.</td>
+</tr>
+<tr class="odd">
+<td>9+</td>
+<td><code>{sample_name}</code></td>
+<td>Integer</td>
+<td><strong>Raw read count</strong> for this gene in this sample. Counts are the number of uniquely mapped reads (MAPQ ≥ 255) that overlap the gene’s exons. <strong>NOT log-transformed; directly from STAR ReadsPerGene.out.tab after strand selection.</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>ENSG00000000003.15|ENSG00000000003  hg38    chrX    99883667    99894976    -   11.31   protein_coding  42  58  101 73</code></pre>
+<p>Interpretation: Gene ENSG00000000003 on chrX, 11.31 kb, 42 reads in sample 1, 58 in sample 2, etc.</p>
+<p><strong>Transformations applied:</strong> None. Raw counts directly from STAR, selected by strand (inferred or from manifest), with STAR’s “N_” metadata rows (unmapped, ambiguous) removed.</p>
+<hr>
+</section>
+<section id="gene-level-counts-counts_matrix.rpkm.tsv-rpkm-normalized" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.rpkm.tsv-rpkm-normalized">Gene-Level Counts: <code>counts_matrix.rpkm.tsv</code> (RPKM Normalized)</h4>
+<p><strong>Format:</strong> Tab-separated text file (same column structure as <code>counts_matrix.tsv</code>) <strong>Normalization:</strong> RPKM = (ReadCount / GeneLength_kb) / (Total_Mapped_Millions)</p>
+<p><strong>Formula per sample:</strong></p>
+<pre><code>RPKM[gene][sample] = (Count[gene][sample] / gene_length_kb) / (sum_all_genes(Count[gene][sample]) / 1e6)</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–8</td>
+<td><em>Same as raw counts</em></td>
+<td>Metadata columns identical to <code>counts_matrix.tsv</code>.</td>
+</tr>
+<tr class="even">
+<td>9+</td>
+<td>Float</td>
+<td><strong>RPKM-normalized counts</strong>. Accounts for gene length and sequencing depth. Range: 0–10000+ (no fixed upper bound). <strong>Not recommended for statistical testing</strong>, but useful for qualitative comparisons. Can be small (&lt; 0.1) for lowly expressed genes.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong> RPKM = 5.23 means 5.23 reads per kilobase of gene per million mapped reads in that sample.</p>
+<hr>
+</section>
+<section id="gene-level-counts-counts_matrix.tpm.tsv-tpm-normalized" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.tpm.tsv-tpm-normalized">Gene-Level Counts: <code>counts_matrix.tpm.tsv</code> (TPM Normalized)</h4>
+<p><strong>Format:</strong> Tab-separated text file (same column structure as <code>counts_matrix.tsv</code>) <strong>Normalization:</strong> TPM = (RPKM / sum_all_genes(RPKM)) × 1e6</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–8</td>
+<td><em>Same as raw counts</em></td>
+<td>Metadata columns identical to <code>counts_matrix.tsv</code>.</td>
+</tr>
+<tr class="even">
+<td>9+</td>
+<td>Float</td>
+<td><strong>TPM-normalized counts</strong>. Transcripts Per Million. <strong>Sum of all TPM values in a sample = 1,000,000 by definition.</strong> Easier to interpret than RPKM: “per gene, out of 1 million transcripts in the cell, how many are from this gene?” Range: 0–10000+ with sum = 1M per sample. Not recommended for statistical testing.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong> TPM = 250.5 means 250.5 genes per million transcripts in that sample (roughly 1 in 4000 total transcripts).</p>
+<hr>
+</section>
+<section id="gene-level-sample-strandedness-sample_strandedness.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-sample-strandedness-sample_strandedness.tsv">Gene-Level Sample Strandedness: <code>sample_strandedness.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file, no index column <strong>Rows:</strong> One row per sample (in order of input samples)</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>sample</code></td>
+<td>String</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>inferred_strand</code></td>
+<td>String</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>used_strand</code></td>
+<td>String</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>inference_fraction</code></td>
+<td>Float</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>sample_A    forward forward 0.95
+sample_B    unstranded  unstranded  0.52</code></pre>
+<p>Interpretation: Sample A confidently forward-stranded (95% of pairs); Sample B ambiguous (only 52% show any bias).</p>
+<hr>
+</section>
+<section id="transcript-level-counts-counts_matrix.transcript_level.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="transcript-level-counts-counts_matrix.transcript_level.tsv">Transcript-Level Counts: <code>counts_matrix.transcript_level.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per unique transcript (from GTF transcript_id) <strong>Columns:</strong> Metadata + per-sample counts</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column Position</th>
+<th>Column Name</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>(index)</code></td>
+<td>String</td>
+<td><strong>Transcript identifier</strong> in format <code>ENST00000456328.2\|RP11-34P13.7</code> (transcript_id|gene_name).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>gene_id</code></td>
+<td>String</td>
+<td>Parent gene ID for this transcript.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>gene_name</code></td>
+<td>String</td>
+<td>Human-readable gene name.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>chrom</code></td>
+<td>String</td>
+<td><strong>Chromosome</strong> where transcript is located.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>tx_start</code></td>
+<td>Integer</td>
+<td><strong>0-based transcript start</strong> coordinate.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>tx_end</code></td>
+<td>Integer</td>
+<td><strong>0-based transcript end coordinate</strong> (exclusive).</td>
+</tr>
+<tr class="odd">
+<td>7+</td>
+<td><code>{sample_name}</code></td>
+<td>Integer</td>
+<td><strong>Per-transcript read count</strong> from RSeQC FPKM_count output. Reads that overlap exons of this transcript (strand-aware). Lower values than gene-level counts due to no aggregation.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Transformations applied:</strong> Raw counts from RSeQC’s FPKM_count per-transcript output, aggregated across all samples.</p>
+<hr>
+</section>
+<section id="transcript-level-counts-normalized-counts_matrix.transcript_level.rpkm.tsv-.tpm.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="transcript-level-counts-normalized-counts_matrix.transcript_level.rpkm.tsv-.tpm.tsv">Transcript-Level Counts (Normalized): <code>counts_matrix.transcript_level.rpkm.tsv</code> &amp; <code>.tpm.tsv</code></h4>
+<p><strong>Format:</strong> Same structure as transcript-level raw counts, but with RPKM / TPM normalization applied</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–6</td>
+<td><em>Same as raw</em></td>
+<td>Metadata columns.</td>
+</tr>
+<tr class="even">
+<td>7+</td>
+<td>Float</td>
+<td><strong>RPKM or TPM normalized</strong> using same formulas as gene-level counts (normalize by transcript length).</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="alignment-quality-summary-alignmentqcalignment_summary.tsv" class="level3">
+<h3 class="anchored" data-anchor-id="alignment-quality-summary-alignmentqcalignment_summary.tsv">Alignment Quality Summary: <code>alignmentqc/alignment_summary.tsv</code></h3>
+<p><strong>Format:</strong> Tab-separated text file with header row <strong>Rows:</strong> One row per sample (in directory scan order, typically alphabetical)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sample</code></td>
+<td>String</td>
+<td><strong>Sample name</strong> from directory name.</td>
+<td>Sample directory listing</td>
+</tr>
+<tr class="even">
+<td><code>library_type</code></td>
+<td>String</td>
+<td><strong>Sequencing library type</strong>: <code>PE</code> (paired-end) or <code>SE</code> (single-end). Inferred from Cutadapt output.</td>
+<td>Cutadapt report</td>
+</tr>
+<tr class="odd">
+<td><code>total_reads</code></td>
+<td>Integer</td>
+<td><strong>Total number of reads</strong> in input FASTQ file(s) before trimming. For PE: total read PAIRS (counts as 1); for SE: read count directly.</td>
+<td>FastQValidator report</td>
+</tr>
+<tr class="even">
+<td><code>trimmed_reads</code></td>
+<td>Integer</td>
+<td><strong>Reads passing Cutadapt</strong> after quality/adapter trimming. Same definition as total_reads (pairs for PE, reads for SE). To get trimming rate: (trimmed_reads / total_reads) × 100.</td>
+<td>Cutadapt report</td>
+</tr>
+<tr class="odd">
+<td><code>reads_mapped_to_assembly</code></td>
+<td>Integer</td>
+<td><strong>Total reads mapped</strong> to the reference assembly (uniquely + multi-mapped + too_many_loci). Calculated as sum of: uniquely_mapped + multi_mapped + too_many_loci. For PE libraries, multiplied by 2 (each pair = 2 reads).</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="even">
+<td><code>uniquely_mapped_reads</code></td>
+<td>Integer</td>
+<td><strong>Uniquely mapped reads</strong> (MAPQ ≥ 255, no secondary/supplementary alignments). These are the reads used in count matrices. For PE: multiplied by 2.</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="odd">
+<td><code>multi_mapped_reads</code></td>
+<td>Integer</td>
+<td><strong>Multi-mapped reads</strong> (mapped to 2–249 loci equally). Not used in counts. For PE: multiplied by 2.</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="even">
+<td><code>too_many_loci_reads</code></td>
+<td>Integer</td>
+<td><strong>Reads mapping to too many loci</strong> (250+). Filtered out. For PE: multiplied by 2.</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="odd">
+<td><code>host_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to host genome</strong> (e.g., hg38, mm39). Counted from BAM file primary alignment flag.</td>
+<td>BAM analysis</td>
+</tr>
+<tr class="even">
+<td><code>chrR_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to chrR regions</strong> (repeats, rRNA, etc.) if present. Subset of host_mapped.</td>
+<td>BAM analysis</td>
+</tr>
+<tr class="odd">
+<td><code>{virus_accession}_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to each virus</strong> (one column per virus, e.g., NC_009333.1_mapped, NC_045512.2_mapped). Named by RefSeq accession ID.</td>
+<td>BAM analysis</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>sample_A    PE  50000000    48000000    47500000    46000000    1200000 300000  45000000    5000    2500000 250000  150000</code></pre>
+<p>Interpretation: Sample A, paired-end, 50M raw pairs → 48M trimmed (96% pass) → 47.5M mapped → 46M unique (96.8% uniquely map). 45M map to host, 2.5M to virus1, 250K to virus2.</p>
+<p><strong>Mapping rate calculation:</strong> (reads_mapped_to_assembly / trimmed_reads) × 100 <strong>Unique mapping rate:</strong> (uniquely_mapped_reads / reads_mapped_to_assembly) × 100</p>
+<hr>
+</section>
+<section id="rna-quality-transcript-integrity-number-aggregate" class="level3">
+<h3 class="anchored" data-anchor-id="rna-quality-transcript-integrity-number-aggregate">RNA Quality: Transcript Integrity Number Aggregate</h3>
+<section id="per-transcript-tin-details-samplesample.aligned.sortedbycoord.out.tin.xls" class="level4">
+<h4 class="anchored" data-anchor-id="per-transcript-tin-details-samplesample.aligned.sortedbycoord.out.tin.xls">Per-Transcript TIN Details: <code>{sample}/{sample}.Aligned.sortedByCoord.out.tin.xls</code></h4>
+<p><strong>Format:</strong> Tab-separated text file with header row (generated by RSeQC) <strong>Rows:</strong> One row per transcript detected in the BAM file</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>geneID</code></td>
+<td>String</td>
+<td><strong>Transcript ID</strong> from reference GTF.</td>
+</tr>
+<tr class="even">
+<td><code>chrom</code></td>
+<td>String</td>
+<td><strong>Chromosome</strong> where transcript is located.</td>
+</tr>
+<tr class="odd">
+<td><code>tx_start</code></td>
+<td>Integer</td>
+<td><strong>Transcript start</strong> coordinate (0-based).</td>
+</tr>
+<tr class="even">
+<td><code>tx_end</code></td>
+<td>Integer</td>
+<td><strong>Transcript end</strong> coordinate (exclusive).</td>
+</tr>
+<tr class="odd">
+<td><code>TIN</code></td>
+<td>Integer</td>
+<td><strong>Transcript Integrity Number</strong> (0–100 scale). Measures read coverage uniformity across transcript body. Higher = more uniform coverage = better RNA quality. Interpretation: &gt; 80 = excellent, 60–80 = acceptable, &lt; 60 = degraded/non-uniform.</td>
+</tr>
+<tr class="even">
+<td>Additional columns</td>
+<td></td>
+<td>RSeQC includes other metrics (median_cv, min_cv, etc.); the TIN column is the primary metric for quality assessment.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="aggregate-tin-summary-countsaggregate_tin.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="aggregate-tin-summary-countsaggregate_tin.tsv">Aggregate TIN Summary: <code>counts/aggregate_tin.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file with header row <strong>Rows:</strong> One row per transcript (merged across all samples)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>geneID</code></td>
+<td>String</td>
+<td><strong>Transcript ID</strong> from GTF.</td>
+</tr>
+<tr class="even">
+<td><code>chrom</code></td>
+<td>String</td>
+<td><strong>Chromosome</strong> where transcript is located.</td>
+</tr>
+<tr class="odd">
+<td><code>tx_start</code></td>
+<td>Integer</td>
+<td><strong>Transcript start coordinate</strong> (0-based).</td>
+</tr>
+<tr class="even">
+<td><code>tx_end</code></td>
+<td>Integer</td>
+<td><strong>Transcript end coordinate</strong> (exclusive).</td>
+</tr>
+<tr class="odd">
+<td><code>{sample_name}</code></td>
+<td>Integer or NaN</td>
+<td><strong>TIN score for this transcript in this sample</strong> (0–100), or NaN if transcript not covered in that sample.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>ENST00000456328.2   chr1    100000  101000  85  79  82  NaN 88</code></pre>
+<p>Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5 (TIN ≥ 79); not detected in sample 4.</p>
+<p><strong>Quality assessment:</strong> Calculate mean TIN per sample across all rows: - <strong>Mean TIN &gt; 80:</strong> Excellent RNA quality - <strong>Mean TIN 60–80:</strong> Acceptable quality - <strong>Mean TIN &lt; 60:</strong> Poor RNA quality; consider re-extraction - <strong>Many NaN values:</strong> Sample has low coverage; may not be representative</p>
+</section>
+</section>
+<section id="multiqc-report" class="level3">
+<h3 class="anchored" data-anchor-id="multiqc-report">MultiQC Report</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>multiqc_report.html</code></td>
+<td><strong>Interactive HTML dashboard</strong> aggregating QC metrics from FastQC, Cutadapt, STAR, RSeQC, Qualimap, and Kraken2 across all samples. <strong>Start here for a high-level overview of experiment quality.</strong> Open in any web browser; includes interactive plots, tables, and cross-sample comparisons.</td>
+</tr>
+<tr class="even">
+<td><code>multiqc_data/</code></td>
+<td><strong>Data tables and configuration files</strong> backing the MultiQC report. JSON and YAML files that can be parsed programmatically if needed.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="optional-outputs" class="level2">
+<h2 class="anchored" data-anchor-id="optional-outputs">Optional Outputs</h2>
+<section id="normalized-count-matrices-diffex-integration" class="level3">
+<h3 class="anchored" data-anchor-id="normalized-count-matrices-diffex-integration">Normalized Count Matrices (DiffEx Integration)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>counts/normalized_counts/normalize.html</code></td>
+<td><strong>DiffEx-normalized count matrix report</strong> (only if <code>diffex_normalized_counts: true</code> in config). HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.). Requires DiffEx configuration in <code>config.yaml</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="s3-transfer-sentinel" class="level3">
+<h3 class="anchored" data-anchor-id="s3-transfer-sentinel">S3 Transfer Sentinel</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.s3_transfer.done</code></td>
+<td><strong>Marker file</strong> (created only if <code>push_to_s3: true</code> AND <code>s3_sample_set_name</code> is non-empty in config). Indicates that all outputs have been successfully uploaded to the configured S3 bucket. Check <code>results/logs/</code> for detailed upload logs if transfer fails.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="output-naming-conventions" class="level2">
+<h2 class="anchored" data-anchor-id="output-naming-conventions">Output Naming Conventions</h2>
+<section id="sample-names" class="level3">
+<h3 class="anchored" data-anchor-id="sample-names">Sample Names</h3>
+<p>All per-sample files use the exact sample name from your <code>samples.tsv</code> manifest. Ensure sample names are: - <strong>Unique</strong> across the experiment - <strong>URL-safe</strong> (avoid spaces, special characters, or use underscores/hyphens) - <strong>Consistent case</strong> (e.g., all lowercase or CapitalCase)</p>
+</section>
+<section id="genomic-region-names" class="level3">
+<h3 class="anchored" data-anchor-id="genomic-region-names">Genomic Region Names</h3>
+<p>Files containing region-specific outputs use region identifiers: - <strong>Host:</strong> <code>hg38</code> or <code>mm39</code> (depending on your host genome) - <strong>Viruses:</strong> RefSeq accession IDs (e.g., <code>NC_009333.1</code> for KSHV, <code>NC_045512.2</code> for SARS-CoV-2) - <strong>Additives:</strong> <code>ERCC</code>, <code>BAC16Insert</code> (if included)</p>
+<p>Example: <code>{sample}.NC_009333.1.bam</code> contains only reads mapped to KSHV.</p>
+<hr>
+</section>
+</section>
+<section id="how-to-use-these-outputs" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-use-these-outputs">How to Use These Outputs</h2>
+<section id="for-differential-expression-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="for-differential-expression-analysis">For Differential Expression Analysis</h3>
+<ol type="1">
+<li><strong>Start with:</strong> <code>counts/counts_matrix.tsv</code> (raw counts)</li>
+<li><strong>Input to:</strong> DESeq2 (R/Bioconductor) or edgeR</li>
+<li><strong>Reference:</strong> <code>counts_matrix.rpkm.tsv</code> or <code>.tpm.tsv</code> for qualitative interpretation</li>
+</ol>
+</section>
+<section id="for-quality-assessment" class="level3">
+<h3 class="anchored" data-anchor-id="for-quality-assessment">For Quality Assessment</h3>
+<ol type="1">
+<li><strong>Quick overview:</strong> Open <code>multiqc_report.html</code> in a web browser</li>
+<li><strong>Sample-level detail:</strong> Check <code>results/{sample}/rseqc/{sample}.Aligned.sortedByCoord.out.summary.txt</code> for TIN scores</li>
+<li><strong>Alignment stats:</strong> Review <code>alignmentqc/alignment_summary.tsv</code> for mapping rates and trimming statistics</li>
+</ol>
+</section>
+<section id="for-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="for-visualization">For Visualization</h3>
+<ol type="1">
+<li><strong>Browser-based (UCSC, IGV):</strong> Use <code>results/{sample}/bigwigs/{sample}.*.bw</code> files</li>
+<li><strong>R/Bioconductor:</strong> Load BAM files with Rsamtools; use coverage functions with BigWig tracks</li>
+<li><strong>Custom analysis:</strong> BAM files (<code>results/{sample}/STAR/{sample}.Aligned.sortedByCoord.out.bam</code>) are standard SAM-format files compatible with any alignment analysis tool</li>
+</ol>
+</section>
+<section id="for-downstream-integration" class="level3">
+<h3 class="anchored" data-anchor-id="for-downstream-integration">For Downstream Integration</h3>
+<ol type="1">
+<li><strong>DiffEx pipeline:</strong> Supply <code>counts/counts_matrix.tsv</code> and <code>samples.tsv</code></li>
+<li><strong>SEQC-compatible:</strong> All outputs follow standard naming and location conventions</li>
+<li><strong>Custom scripts:</strong> Manifest (<code>samples.tsv</code>), counts (TSV), and configuration (<code>config.yaml</code>) are human-readable for parsing</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="frequently-asked-questions" class="level2">
+<h2 class="anchored" data-anchor-id="frequently-asked-questions">Frequently Asked Questions</h2>
+<p><strong>Q: Which count matrix should I use for differential expression?</strong> A: Use <code>counts_matrix.tsv</code> (raw counts). Pass this directly to DESeq2 or edgeR, which apply their own normalization internally. Do NOT use RPKM or TPM counts for statistical testing.</p>
+<p><strong>Q: What does TIN (Transcript Integrity Number) mean?</strong> A: TIN scores range 0–100, where higher = better RNA quality. Samples with mean TIN &gt; 80 have excellent RNA; 60–80 is acceptable; &lt; 60 suggests RNA degradation. Check <code>counts/aggregate_tin.tsv</code> for quick assessment.</p>
+<p><strong>Q: Why do some reads map to multiple regions (host + viruses)?</strong> A: Some sequences (e.g., highly conserved genes) may have homology across regions. STAR reports primary alignment; split BAM files (<code>{sample}.{region}.bam</code>) contain only reads with unique primary alignment to that region. Multi-mapped reads may appear in multiple region-specific files.</p>
+<p><strong>Q: Can I use BigWig files in IGV?</strong> A: Yes. Download all <code>.bw</code> files from <code>results/{sample}/bigwigs/</code> and load them into IGV alongside the corresponding BAM file for integrated visualization of coverage and reads.</p>
+<p><strong>Q: How do I know if strandedness was correctly inferred?</strong> A: Check <code>results/{sample}/rseqc/{sample}.strandedness.txt</code>. If one strand shows &gt; 80% bias, inference is confident. If percentages are ~50/50, the library is unstranded or sense/antisense assignments are ambiguous. Review the manifest if known strandedness differs from inferred values.</p>
+<hr>
+</section>
+<section id="troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
+<p><strong>Missing outputs:</strong> - Check logs under <code>logs/</code> for rule-specific errors. Search for the output name in the log tree: <code>find logs -name "*outputname*"</code> - Verify input files exist and are readable: <code>ls -la results/{sample}/STAR/</code> - Re-run a dry-run to identify missing dependencies: <code>harold -w &lt;workdir&gt; -m dryrun</code></p>
+<p><strong>Unexpected file sizes:</strong> - Large BAM files (&gt; 50 GB) are normal for high-coverage samples. Use <code>samtools stats</code> to verify integrity. - Small or empty count matrices may indicate low mapping rates. Check <code>alignment_summary.tsv</code> for mapping statistics.</p>
+<p><strong>Quality concerns:</strong> - Low TIN scores → RNA degradation (consider re-extracting RNA) - Low mapping rate → check Cutadapt report for contamination; verify reference selection - Unexpected viral reads → cross-check with Kraken2 report; may indicate contamination or novel sequences</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
