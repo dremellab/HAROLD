@@ -27,36 +27,44 @@ jobs:
 
       - name: Patch _quarto.yml for release
         run: |
-          VERSION=${{ steps.version.outputs.VERSION }}
-          sed -i "s|site-url: https://dremellab.github.io/HAROLD/dev/|site-url: https://dremellab.github.io/HAROLD/${VERSION}/|" _quarto.yml
-          sed -i "s|version: \"dev\"|version: \"${VERSION}\"|" _quarto.yml
-          sed -i "s|text: \"Version: dev\"|text: \"Version: ${VERSION}\"|" _quarto.yml
+          python3 - "${{ steps.version.outputs.VERSION }}" <<'PYTHON_SCRIPT'
+          import yaml, sys
 
-          # Update version menu to reflect the released version as current
-          python3 - <<'PYTHON_SCRIPT'
-          import yaml
+          version = sys.argv[1]
+          base_url = "https://dremellab.github.io/HAROLD"
+
           with open('_quarto.yml', 'r') as f:
               config = yaml.safe_load(f)
 
-          version = "${{ steps.version.outputs.VERSION }}"
+          # Always set the correct site-url for the versioned deployment
+          config['website']['site-url'] = f"{base_url}/{version}/"
 
-          # Find and update the version menu in navbar
-          if 'website' in config and 'navbar' in config['website']:
-              for item in config['website']['navbar']['right']:
-                  if isinstance(item, dict) and 'menu' in item and item['text'].startswith('Version:'):
-                      item['menu'] = [
-                          {
-                              'text': f'{version} (current)',
-                              'href': f'https://dremellab.github.io/HAROLD/{version}/'
-                          },
-                          {
-                              'text': 'dev',
-                              'href': 'https://dremellab.github.io/HAROLD/dev/'
-                          }
-                      ]
+          # Update version metadata
+          if 'metadata' not in config:
+              config['metadata'] = {}
+          config['metadata']['version'] = version
+
+          # Update navbar: set version text and rebuild version menu
+          navbar = config.get('website', {}).get('navbar', {})
+          right_items = navbar.get('right', [])
+          for item in right_items:
+              if isinstance(item, dict) and 'menu' in item:
+                  item['text'] = f"Version: {version}"
+                  item['menu'] = [
+                      {
+                          'text': f'{version} (current)',
+                          'href': f'{base_url}/{version}/'
+                      },
+                      {
+                          'text': 'dev',
+                          'href': f'{base_url}/dev/'
+                      }
+                  ]
 
           with open('_quarto.yml', 'w') as f:
               yaml.dump(config, f, default_flow_style=False)
+
+          print(f"Patched _quarto.yml: site-url={config['website']['site-url']}, version={version}")
           PYTHON_SCRIPT
 
       - name: Render site
