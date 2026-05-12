@@ -374,12 +374,29 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Help</span></a>
+ <span class="menu-text">Cloud &amp; Storage</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/s3_configuration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">☁️ S3 Output Deposition</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Help</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../docs/help.html" class="sidebar-item-text sidebar-link">
@@ -1833,11 +1850,21 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <h2 class="anchored" data-anchor-id="output-naming-conventions">Output Naming Conventions</h2>
 <section id="sample-names" class="level3">
 <h3 class="anchored" data-anchor-id="sample-names">Sample Names</h3>
-<p>All per-sample files use the exact sample name from your <code>samples.tsv</code> manifest. Ensure sample names are: - <strong>Unique</strong> across the experiment - <strong>URL-safe</strong> (avoid spaces, special characters, or use underscores/hyphens) - <strong>Consistent case</strong> (e.g., all lowercase or CapitalCase)</p>
+<p>All per-sample files use the exact sample name from your <code>samples.tsv</code> manifest. Ensure sample names are:</p>
+<ul>
+<li><strong>Unique</strong> across the experiment</li>
+<li><strong>URL-safe</strong> (avoid spaces, special characters, or use underscores/hyphens)</li>
+<li><strong>Consistent case</strong> (e.g., all lowercase or CapitalCase)</li>
+</ul>
 </section>
 <section id="genomic-region-names" class="level3">
 <h3 class="anchored" data-anchor-id="genomic-region-names">Genomic Region Names</h3>
-<p>Files containing region-specific outputs use region identifiers: - <strong>Host:</strong> <code>hg38</code> or <code>mm39</code> (depending on your host genome) - <strong>Viruses:</strong> RefSeq accession IDs (e.g., <code>NC_009333.1</code> for KSHV, <code>NC_045512.2</code> for SARS-CoV-2) - <strong>Additives:</strong> <code>ERCC</code>, <code>BAC16Insert</code> (if included)</p>
+<p>Files containing region-specific outputs use region identifiers:</p>
+<ul>
+<li><strong>Host:</strong> <code>hg38</code> or <code>mm39</code> (depending on your host genome)</li>
+<li><strong>Viruses:</strong> RefSeq accession IDs (e.g., <code>NC_009333.1</code> for KSHV, <code>NC_045512.2</code> for SARS-CoV-2)</li>
+<li><strong>Additives:</strong> <code>ERCC</code>, <code>BAC16Insert</code> (if included)</li>
+</ul>
 <p>Example: <code>{sample}.NC_009333.1.bam</code> contains only reads mapped to KSHV.</p>
 <hr>
 </section>

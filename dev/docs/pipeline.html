@@ -374,12 +374,29 @@ ul.task-list li input[type="checkbox"] {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Help</span></a>
+ <span class="menu-text">Cloud &amp; Storage</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/s3_configuration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">☁️ S3 Output Deposition</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Help</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../docs/help.html" class="sidebar-item-text sidebar-link">
@@ -474,7 +491,7 @@ ul.task-list li input[type="checkbox"] {
     
     H --&gt; I["MultiQC Report&lt;br/&gt;(integrated QC dashboard)"]
     
-    G1 --&gt; J{{"S3 Push&lt;br/&gt;Enabled?"}}
+    G1 --&gt; J{"S3 Push&lt;br/&gt;Enabled?"}
     J --&gt;|Yes| K["☁️ S3 Deposition&lt;br/&gt;(optional)"]
     J --&gt;|No| L["✅ Pipeline Complete"]
     K --&gt; L</code></pre>
@@ -485,25 +502,70 @@ ul.task-list li input[type="checkbox"] {
 <section id="stage-1-reference-creation" class="level3">
 <h3 class="anchored" data-anchor-id="stage-1-reference-creation"><strong>Stage 1: Reference Creation</strong></h3>
 <p><strong>Trigger:</strong> First run in a working directory (or <code>harold -m reset</code>) <strong>Duration:</strong> 10–30 minutes (depends on reference size)</p>
-<p><strong>What happens:</strong> 1. Concatenate host genome FASTA + additives (ERCC, BAC16Insert) + selected viral genomes into single composite <code>ref.fa</code> 2. Merge gene annotations (GTF) from all selected genomes into <code>ref.gtf</code> 3. Build STAR genome index on composite reference (2-pass mode enabled) 4. Generate BED files and GenePred annotations for downstream QC tools 5. Create metadata files tracking genome regions (host vs.&nbsp;per-virus)</p>
-<p><strong>Outputs created:</strong> - <code>ref/ref.fa</code> — Composite FASTA (multi-gigabyte for large references) - <code>ref/ref.gtf</code>, <code>ref/ref.fixed.gtf</code> — Merged annotations - <code>ref/STAR_no_GTF/</code> — STAR index directory (SA, SAindex, chrNameLength.txt, etc.) - <code>ref/ref.fa.regions.*</code> — Region metadata for BAM splitting</p>
+<p><strong>What happens:</strong></p>
+<ol type="1">
+<li>Concatenate host genome FASTA + additives (ERCC, BAC16Insert) + selected viral genomes into single composite <code>ref.fa</code></li>
+<li>Merge gene annotations (GTF) from all selected genomes into <code>ref.gtf</code></li>
+<li>Build STAR genome index on composite reference (2-pass mode enabled)</li>
+<li>Generate BED files and GenePred annotations for downstream QC tools</li>
+<li>Create metadata files tracking genome regions (host vs.&nbsp;per-virus)</li>
+</ol>
+<p><strong>Outputs created:</strong></p>
+<ul>
+<li><code>ref/ref.fa</code> — Composite FASTA (multi-gigabyte for large references)</li>
+<li><code>ref/ref.gtf</code>, <code>ref/ref.fixed.gtf</code> — Merged annotations</li>
+<li><code>ref/STAR_no_GTF/</code> — STAR index directory (SA, SAindex, chrNameLength.txt, etc.)</li>
+<li><code>ref/ref.fa.regions.*</code> — Region metadata for BAM splitting</li>
+</ul>
 <p><strong>Key insight:</strong> Reference is built once per work directory and reused for all samples, so index building overhead is amortized across the run.</p>
 <hr>
 </section>
 <section id="stage-2-preprocessing" class="level3">
 <h3 class="anchored" data-anchor-id="stage-2-preprocessing"><strong>Stage 2: Preprocessing (Cutadapt Trimming)</strong></h3>
 <p><strong>Per-sample duration:</strong> 30 minutes – 2 hours (depends on read count, data rate) <strong>Parallelization:</strong> Full parallelization across all samples</p>
-<p><strong>What happens:</strong> 1. Cutadapt removes 3’ and 5’ Illumina adapters (or custom adapters via config) 2. Low-quality bases trimmed (default: Q &lt; 20 at 3’ end) 3. Short reads filtered (default: &lt; 20 bp after trimming) 4. Gzip compression of output FASTQ files</p>
-<p><strong>Outputs per sample:</strong> - <code>{sample}.R1.trim.fastq.gz</code>, <code>{sample}.R2.trim.fastq.gz</code> — Trimmed reads - <code>{sample}.cutadapt.report.txt</code> — Statistics (reads discarded, adapters detected)</p>
-<p><strong>QC checks:</strong> - Trimming rate: typically 95–99% of reads pass (loss of 1–5% normal) - Adapter detection: if &lt; 5% of reads have adapters, verify correct adapter sequences in config</p>
+<p><strong>What happens:</strong></p>
+<ol type="1">
+<li>Cutadapt removes 3’ and 5’ Illumina adapters (or custom adapters via config)</li>
+<li>Low-quality bases trimmed (default: Q &lt; 20 at 3’ end)</li>
+<li>Short reads filtered (default: &lt; 20 bp after trimming)</li>
+<li>Gzip compression of output FASTQ files</li>
+</ol>
+<p><strong>Outputs per sample:</strong></p>
+<ul>
+<li><code>{sample}.R1.trim.fastq.gz</code>, <code>{sample}.R2.trim.fastq.gz</code> — Trimmed reads</li>
+<li><code>{sample}.cutadapt.report.txt</code> — Statistics (reads discarded, adapters detected)</li>
+</ul>
+<p><strong>QC checks:</strong></p>
+<ul>
+<li>Trimming rate: typically 95–99% of reads pass (loss of 1–5% normal)</li>
+<li>Adapter detection: if &lt; 5% of reads have adapters, verify correct adapter sequences in config</li>
+</ul>
 <hr>
 </section>
 <section id="stage-3-alignment" class="level3">
 <h3 class="anchored" data-anchor-id="stage-3-alignment"><strong>Stage 3: Alignment (STAR 2-Pass)</strong></h3>
 <p><strong>Per-sample duration:</strong> 1–8 hours (depends on read count, reference size, hardware) <strong>Parallelization:</strong> Full sample-level parallelization; uses multi-threaded STAR (default: 8 threads per sample)</p>
-<p><strong>What happens:</strong> 1. <strong>Pass 1:</strong> Coarse alignment to detect splice junctions 2. <strong>Intermediate:</strong> Update splice site database with detected junctions 3. <strong>Pass 2:</strong> Re-align using updated splice annotation (improves novel junction detection) 4. Assign reads to primary alignments (MAPQ ≥ 255 = unique; &lt; 255 = multi-mapped) 5. Generate per-gene read counts (unstranded, forward, reverse counts per gene)</p>
-<p><strong>Outputs per sample:</strong> - <code>{sample}.Aligned.sortedByCoord.out.bam</code> — Primary BAM (coordinate-sorted, indexed) - <code>{sample}.ReadsPerGene.out.tab</code> — Gene-level read counts (strand-aware) - <code>{sample}.SJ.out.tab</code> — Splice junction coordinates detected - <code>{sample}.Log.final.out</code> — Mapping statistics (uniquely mapped %, multi-mapped %, etc.)</p>
-<p><strong>Key metrics to monitor:</strong> - Uniquely mapped reads: typically 70–95% of trimmed reads - Multi-mapped reads: typically 2–10% (higher = repetitive transcriptome or contamination) - Unmapped reads (too many mismatches, too short): typically 2–20%</p>
+<p><strong>What happens:</strong></p>
+<ol type="1">
+<li><strong>Pass 1:</strong> Coarse alignment to detect splice junctions</li>
+<li><strong>Intermediate:</strong> Update splice site database with detected junctions</li>
+<li><strong>Pass 2:</strong> Re-align using updated splice annotation (improves novel junction detection)</li>
+<li>Assign reads to primary alignments (MAPQ ≥ 255 = unique; &lt; 255 = multi-mapped)</li>
+<li>Generate per-gene read counts (unstranded, forward, reverse counts per gene)</li>
+</ol>
+<p><strong>Outputs per sample:</strong></p>
+<ul>
+<li><code>{sample}.Aligned.sortedByCoord.out.bam</code> — Primary BAM (coordinate-sorted, indexed)</li>
+<li><code>{sample}.ReadsPerGene.out.tab</code> — Gene-level read counts (strand-aware)</li>
+<li><code>{sample}.SJ.out.tab</code> — Splice junction coordinates detected</li>
+<li><code>{sample}.Log.final.out</code> — Mapping statistics (uniquely mapped %, multi-mapped %, etc.)</li>
+</ul>
+<p><strong>Key metrics to monitor:</strong></p>
+<ul>
+<li>Uniquely mapped reads: typically 70–95% of trimmed reads</li>
+<li>Multi-mapped reads: typically 2–10% (higher = repetitive transcriptome or contamination)</li>
+<li>Unmapped reads (too many mismatches, too short): typically 2–20%</li>
+</ul>
 <hr>
 </section>
 <section id="stage-4-parallel-qc" class="level3">
@@ -611,22 +673,50 @@ ul.task-list li input[type="checkbox"] {
 <section id="stage-6-visualization" class="level3">
 <h3 class="anchored" data-anchor-id="stage-6-visualization"><strong>Stage 6: Visualization &amp; Bigwig Generation</strong></h3>
 <p><strong>Per-sample duration:</strong> 30 minutes – 2 hours <strong>Parallelization:</strong> Full sample parallelization</p>
-<p><strong>What happens:</strong> 1. Generate BigWig coverage tracks from split BAM files (one per genomic region) 2. Normalize coverage to RPM (reads per million) per region 3. Create BigBed junction tracks from RSeQC output</p>
-<p><strong>Outputs per sample:</strong> - <code>bigwigs/{sample}.{regionname}.bw</code> — RPM-normalized coverage tracks - <code>rseqc/{sample}.{regionname}.junction.bb</code> — Splice junction coordinates (UCSC format)</p>
+<p><strong>What happens:</strong></p>
+<ol type="1">
+<li>Generate BigWig coverage tracks from split BAM files (one per genomic region)</li>
+<li>Normalize coverage to RPM (reads per million) per region</li>
+<li>Create BigBed junction tracks from RSeQC output</li>
+</ol>
+<p><strong>Outputs per sample:</strong></p>
+<ul>
+<li><code>bigwigs/{sample}.{regionname}.bw</code> — RPM-normalized coverage tracks</li>
+<li><code>rseqc/{sample}.{regionname}.junction.bb</code> — Splice junction coordinates (UCSC format)</li>
+</ul>
 <p><strong>Use case:</strong> Load into IGV or UCSC Genome Browser for manual inspection, snapshot generation</p>
 <hr>
 </section>
 <section id="stage-7-reporting" class="level3">
 <h3 class="anchored" data-anchor-id="stage-7-reporting"><strong>Stage 7: Report Generation (MultiQC)</strong></h3>
 <p><strong>Duration:</strong> 5–15 minutes <strong>Inputs:</strong> All QC outputs from stages 4–6</p>
-<p><strong>What happens:</strong> 1. Aggregate QC metrics from Cutadapt, STAR, Qualimap, RSeQC, FastQValidator, Kraken2 2. Generate interactive HTML dashboard with: - Per-sample summary tables (QC stats, mapping rates, strandedness) - Cross-sample comparison plots (coverage distribution, adapter content, strandedness consistency) - Per-rule logs and sample-level drill-down</p>
-<p><strong>Output:</strong> - <code>multiqc_report.html</code> — Main QC dashboard (start here for experiment-wide QC overview) - <code>multiqc_data/</code> — Underlying data tables (JSON, YAML, CSV)</p>
+<p><strong>What happens:</strong></p>
+<ol type="1">
+<li>Aggregate QC metrics from Cutadapt, STAR, Qualimap, RSeQC, FastQValidator, Kraken2</li>
+<li>Generate interactive HTML dashboard with:
+<ul>
+<li>Per-sample summary tables (QC stats, mapping rates, strandedness)</li>
+<li>Cross-sample comparison plots (coverage distribution, adapter content, strandedness consistency)</li>
+<li>Per-rule logs and sample-level drill-down</li>
+</ul></li>
+</ol>
+<p><strong>Output:</strong></p>
+<ul>
+<li><code>multiqc_report.html</code> — Main QC dashboard (start here for experiment-wide QC overview)</li>
+<li><code>multiqc_data/</code> — Underlying data tables (JSON, YAML, CSV)</li>
+</ul>
 <hr>
 </section>
 <section id="stage-8-s3" class="level3">
 <h3 class="anchored" data-anchor-id="stage-8-s3"><strong>Stage 8: Optional S3 Deposition</strong></h3>
 <p><strong>Duration:</strong> 5–60 minutes (depends on output size and network bandwidth) <strong>Condition:</strong> Only runs if <code>push_to_s3: true</code> AND <code>s3_sample_set_name</code> non-empty in config</p>
-<p><strong>What happens:</strong> 1. Transfer count matrices, BAM files, BigWigs, QC reports to configured S3 bucket 2. Organize outputs in hierarchical S3 path: <code>s3://{bucket}/{prefix}/{pipeline_name}/{sample_set}/{output_type}/</code> 3. Set S3 storage class (GLACIER for large files like BAMs, GLACIER_IR for metadata/reports) 4. Sentinel file <code>.s3_transfer.done</code> created on success</p>
+<p><strong>What happens:</strong></p>
+<ol type="1">
+<li>Transfer count matrices, BAM files, BigWigs, QC reports to configured S3 bucket</li>
+<li>Organize outputs in hierarchical S3 path: <code>s3://{bucket}/{prefix}/{pipeline_name}/{sample_set}/{output_type}/</code></li>
+<li>Set S3 storage class (GLACIER for large files like BAMs, GLACIER_IR for metadata/reports)</li>
+<li>Sentinel file <code>.s3_transfer.done</code> created on success</li>
+</ol>
 <p><strong>Outputs:</strong> All results uploaded to S3 with metadata tags and versioning</p>
 <hr>
 </section>
