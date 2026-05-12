@@ -111,6 +111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -529,6 +530,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="configuration-details" class="level3">
 <h3 class="anchored" data-anchor-id="configuration-details"><strong>Configuration Details</strong></h3>
+<div class="scrollable-table">
 <table class="caption-top table">
 <colgroup>
 <col style="width: 20%">
@@ -605,6 +607,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+</div>
 <hr>
 </section>
 </section>
@@ -625,7 +628,11 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.rpkm.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tpm.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...</code></pre>
-<p><strong>Namespace benefits:</strong> - <strong>Scoping:</strong> Each pipeline (HAROLD, CHROMA, etc.) isolated; multiple runs grouped by sample_set_name - <strong>Organizing:</strong> Outputs are easily located within the bucket structure</p>
+<p><strong>Namespace benefits:</strong></p>
+<ul>
+<li><strong>Scoping:</strong> Each pipeline (HAROLD, CHROMA, etc.) isolated; multiple runs grouped by sample_set_name</li>
+<li><strong>Organizing:</strong> Outputs are easily located within the bucket structure</li>
+</ul>
 <hr>
 </section>
 <section id="files-transferred-to-s3" class="level2">
@@ -722,7 +729,13 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...</code></pre>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">harold</span> <span class="at">-w</span><span class="op">=</span>/scratch/<span class="va">$USER</span>/harold_run <span class="at">-m</span><span class="op">=</span>dryrun</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">harold</span> <span class="at">-w</span><span class="op">=</span>/scratch/<span class="va">$USER</span>/harold_run <span class="at">-m</span><span class="op">=</span>run</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>What happens:</strong> - Pipeline runs as normal - Upon successful completion of all prior stages, S3 transfer rule (<code>s3_transfer_if_enabled</code>) is triggered - Outputs transferred to S3 with configured storage classes - Sentinel file <code>.s3_transfer.done</code> created in work directory on success</p>
+<p><strong>What happens:</strong></p>
+<ul>
+<li>Pipeline runs as normal</li>
+<li>Upon successful completion of all prior stages, S3 transfer rule (<code>s3_transfer_if_enabled</code>) is triggered</li>
+<li>Outputs transferred to S3 with configured storage classes</li>
+<li>Sentinel file <code>.s3_transfer.done</code> created in work directory on success</li>
+</ul>
 </section>
 <section id="step-3-verify-transfer" class="level3">
 <h3 class="anchored" data-anchor-id="step-3-verify-transfer"><strong>Step 3: Verify Transfer</strong></h3>
@@ -742,7 +755,12 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...</code></pre>
 <h3 class="anchored" data-anchor-id="transfer-failed-or-hung"><strong>Transfer Failed or Hung</strong></h3>
 <p><strong>Symptom:</strong> Snakemake rule <code>s3_transfer_if_enabled</code> fails or times out</p>
 <p><strong>Debug steps:</strong> 1. Check Snakemake logs: <code>cat logs/rule_s3_transfer_if_enabled/*/7*.log</code> (substitute SLURM job ID) 2. Verify credentials: <code>aws sts get-caller-identity</code> (should print your AWS account) 3. Test manual S3 upload: <code>bash    echo "test" | aws s3 cp - s3://dremel-lab-bucket/test.txt    aws s3 rm s3://dremel-lab-bucket/test.txt</code> 4. Check network connectivity: <code>ping -c 1 s3.amazonaws.com</code></p>
-<p><strong>Common issues:</strong> - <strong>Credentials not found:</strong> Check <code>s3_aws_credentials_file</code> in config.yaml - <strong>Access denied:</strong> Email the lab for credential updates or verification - <strong>Network timeout:</strong> Check Rivanna outbound S3 access (may require VPN or firewall exception)</p>
+<p><strong>Common issues:</strong></p>
+<ul>
+<li><strong>Credentials not found:</strong> Check <code>s3_aws_credentials_file</code> in config.yaml</li>
+<li><strong>Access denied:</strong> Email the lab for credential updates or verification</li>
+<li><strong>Network timeout:</strong> Check Rivanna outbound S3 access (may require VPN or firewall exception)</li>
+</ul>
 </section>
 <section id="partial-transfer-some-files-missing" class="level3">
 <h3 class="anchored" data-anchor-id="partial-transfer-some-files-missing"><strong>Partial Transfer (Some Files Missing)</strong></h3>

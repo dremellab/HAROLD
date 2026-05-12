@@ -111,6 +111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -520,7 +521,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p><strong>Important:</strong> HAROLD <strong>always infers and reports</strong> strandedness via RSeQC regardless of this setting. The config key only controls which strand assignment is <strong>used for quantification</strong>: - <strong><code>use_infer_strandedness: true</code></strong> (default) — Manifest <code>strandedness</code> column ignored; RSeQC inference is authoritative. - <strong><code>use_infer_strandedness: false</code></strong> — Manifest <code>strandedness</code> column required and used; overrides RSeQC inference.</p>
+<p><strong>Important:</strong> HAROLD <strong>always infers and reports</strong> strandedness via RSeQC regardless of this setting. The config key only controls which strand assignment is <strong>used for quantification</strong>:</p>
+<ul>
+<li><strong><code>use_infer_strandedness: true</code></strong> (default) — Manifest <code>strandedness</code> column ignored; RSeQC inference is authoritative.</li>
+<li><strong><code>use_infer_strandedness: false</code></strong> — Manifest <code>strandedness</code> column required and used; overrides RSeQC inference.</li>
+</ul>
 <p><strong>Migration:</strong> If you have existing <code>config.yaml</code> files with <code>infer_strandedness</code>, rename the key. The behavior remains the same; this is purely a naming clarification.</p>
 <hr>
 </section>
@@ -664,7 +669,12 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 </table>
 <p>To use custom reference paths, edit the <code>config.yaml</code> key:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fastas_gtfs_dir</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/custom/references"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Available reference files in the default location include FASTA and GTF for: - Host genomes: <code>hg38</code>, <code>mm39</code> (with comprehensive gene annotations) - Viral references: All supported accessions (KSHV, SARS-CoV-2, HSV-1, etc.) - Additives: ERCC control sequences, BAC16Insert</p>
+<p>Available reference files in the default location include FASTA and GTF for:</p>
+<ul>
+<li>Host genomes: <code>hg38</code>, <code>mm39</code> (with comprehensive gene annotations)</li>
+<li>Viral references: All supported accessions (KSHV, SARS-CoV-2, HSV-1, etc.)</li>
+<li>Additives: ERCC control sequences, BAC16Insert</li>
+</ul>
 <hr>
 </section>
 <section id="host-specific-gtf-files-trna-and-repeats" class="level3">
@@ -677,7 +687,12 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">trnas_gtf</span><span class="kw">:</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/hg38.tRNAs.hg38chroms.gtf"</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/mm39.tRNAs.mm39chroms.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>When to use:</strong> - If your experiment has tRNA-focused analysis (e.g., tRNA quantification, tRNA fragment analysis) - tRNA GTF is separate because genomic tRNA databases (tRNAscan-SE, GtRNAdb) differ from NCBI standard annotations - Leave empty or commented if tRNA quantification not needed</p>
+<p><strong>When to use:</strong></p>
+<ul>
+<li>If your experiment has tRNA-focused analysis (e.g., tRNA quantification, tRNA fragment analysis)</li>
+<li>tRNA GTF is separate because genomic tRNA databases (tRNAscan-SE, GtRNAdb) differ from NCBI standard annotations</li>
+<li>Leave empty or commented if tRNA quantification not needed</li>
+</ul>
 <p><strong>Expected format:</strong> GTF file with <code>gene_type = tRNA</code> entries, chromosome IDs matching host genome (chr1–chrY, not scaffolds).</p>
 <hr>
 </section>
@@ -688,7 +703,12 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chrr_gtf</span><span class="kw">:</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/hg38.repeats.gtf"</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/mm39.repeats.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>When to use:</strong> - If you want to explicitly quantify rRNA contamination or repeat-associated reads - Repeats GTF is now <strong>included in the default <code>ref.gtf</code> by default</strong> (no longer requires chrR flag) - Useful for multi-genome pipelines where repeat masking is important (e.g., viral integration site analysis)</p>
+<p><strong>When to use:</strong></p>
+<ul>
+<li>If you want to explicitly quantify rRNA contamination or repeat-associated reads</li>
+<li>Repeats GTF is now <strong>included in the default <code>ref.gtf</code> by default</strong> (no longer requires chrR flag)</li>
+<li>Useful for multi-genome pipelines where repeat masking is important (e.g., viral integration site analysis)</li>
+</ul>
 <p><strong>Expected format:</strong> GTF file with repeat annotations (RepBase, rmsk annotations), chromosome IDs matching host genome. Can include rRNA genes, satellite DNA, SINEs, LINEs, etc.</p>
 <p><strong>Note:</strong> Set to empty string or omit if repeat quantification not needed; reference will be built without repeat annotations.</p>
 <hr>
@@ -714,10 +734,21 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <p><strong>Configuration:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">validate_fastq</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">  # default: false</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>When enabled:</strong> 1. FastQValidator analyzes each input FASTQ file (R1 and R2) for format compliance 2. Reports total sequences, line count, and any formatting errors 3. Cutadapt proceeds regardless of validation results (non-blocking)</p>
-<p><strong>Validation checks include:</strong> - Correct FASTQ format (4-line records with @, sequence, +, qualities) - Sequence length consistency - Quality score range validity (Phred 0–93) - Invalid characters in sequence or quality strings</p>
+<p><strong>Validation checks include:</strong></p>
+<ul>
+<li>Correct FASTQ format (4-line records with @, sequence, +, qualities)</li>
+<li>Sequence length consistency</li>
+<li>Quality score range validity (Phred 0–93)</li>
+<li>Invalid characters in sequence or quality strings</li>
+</ul>
 <p><strong>Output:</strong> Validation report in <code>results/{sample}/fastq_validation/{sample}.fastq_validator.txt</code> (included in alignment summary if validation is enabled)</p>
 <p><strong>Use case:</strong> Enable for new or untrusted sample sources to catch obvious formatting or contamination issues early. Validation adds minimal runtime overhead (&lt; 1 min per sample).</p>
-<p><strong>Red flags from validation output:</strong> - Mismatched R1/R2 sequence counts (indicates paired-end mismatch or corruption) - Non-standard quality scores (e.g., raw ASCII instead of Phred+33) - High % low-quality bases (&gt; 50% Q &lt; 20) suggests failed sequencing run</p>
+<p><strong>Red flags from validation output:</strong></p>
+<ul>
+<li>Mismatched R1/R2 sequence counts (indicates paired-end mismatch or corruption)</li>
+<li>Non-standard quality scores (e.g., raw ASCII instead of Phred+33)</li>
+<li>High % low-quality bases (&gt; 50% Q &lt; 20) suggests failed sequencing run</li>
+</ul>
 <hr>
 </section>
 </section>

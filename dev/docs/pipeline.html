@@ -76,6 +76,7 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -828,8 +829,17 @@ Aligned BAM (STAR, 2-pass)
 </section>
 <section id="multi-sample-scaling" class="level3">
 <h3 class="anchored" data-anchor-id="multi-sample-scaling"><strong>Multi-Sample Scaling</strong></h3>
-<p>With full Slurm parallelization (default on Rivanna): - Reference creation: shared once - Per-sample stages (Cutadapt, STAR, QC, quantification): <strong>N samples run in parallel</strong> (limited by Slurm queue and CPU availability) - Aggregation stages: single-threaded, runs after all samples complete</p>
-<p><strong>Example:</strong> 10 samples with 100M reads each: - <strong>With parallelization:</strong> ~24 h wall-clock (all samples overlap in pipeline stages) - <strong>Serial execution:</strong> ~240 h wall-clock (unacceptable)</p>
+<p>With full Slurm parallelization (default on Rivanna):</p>
+<ul>
+<li>Reference creation: shared once</li>
+<li>Per-sample stages (Cutadapt, STAR, QC, quantification): <strong>N samples run in parallel</strong> (limited by Slurm queue and CPU availability)</li>
+<li>Aggregation stages: single-threaded, runs after all samples complete</li>
+</ul>
+<p><strong>Example:</strong> 10 samples with 100M reads each:</p>
+<ul>
+<li><strong>With parallelization:</strong> ~24 h wall-clock (all samples overlap in pipeline stages)</li>
+<li><strong>Serial execution:</strong> ~240 h wall-clock (unacceptable)</li>
+</ul>
 <hr>
 </section>
 </section>

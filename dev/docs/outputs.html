@@ -76,6 +76,7 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="nav-sidebar floating nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -872,7 +873,12 @@ ENSG00000000005 500 100 400</code></pre>
 <section id="starsample.regionname.bam-split-bams" class="level4">
 <h4 class="anchored" data-anchor-id="starsample.regionname.bam-split-bams"><code>STAR/{sample}.{regionname}.bam</code> (Split BAMs)</h4>
 <p><strong>Format:</strong> BAM, coordinate-sorted, subset of main BAM</p>
-<p><strong>Contents:</strong> Reads with <strong>primary alignment</strong> to chromosomes/contigs for this region only. - <code>{sample}.hg38.bam</code> = only reads aligning to host chr1–chrY (or chrM, etc. for selected host) - <code>{sample}.NC_009333.1.bam</code> = only reads aligning to KSHV genome - etc. for all hosts, additives, and viruses</p>
+<p><strong>Contents:</strong> Reads with <strong>primary alignment</strong> to chromosomes/contigs for this region only.</p>
+<ul>
+<li><code>{sample}.hg38.bam</code> = only reads aligning to host chr1–chrY (or chrM, etc. for selected host)</li>
+<li><code>{sample}.NC_009333.1.bam</code> = only reads aligning to KSHV genome</li>
+<li>etc. for all hosts, additives, and viruses</li>
+</ul>
 <p><strong>Creation:</strong> After primary BAM generation, reads are split by <code>samtools view</code> using reference regions from <code>ref.fa.regions.{host,viruses}</code> files.</p>
 <p><strong>Use case:</strong> Downstream tools that require single-reference BAMs (e.g., MACS2 peak calling per-virus, ataqv per-region).</p>
 </section>
@@ -912,7 +918,12 @@ ENSG00000000005 500 100 400</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>Example regions in filename:</strong> - <code>{sample}.hg38.bw</code> = host genome coverage (non-viral reads) - <code>{sample}.NC_009333.1.bw</code> = KSHV-specific coverage (reads aligning only to KSHV) - <code>{sample}.ERCC.bw</code> = ERCC spike-in coverage (if ERCC added to reference)</p>
+<p><strong>Example regions in filename:</strong></p>
+<ul>
+<li><code>{sample}.hg38.bw</code> = host genome coverage (non-viral reads)</li>
+<li><code>{sample}.NC_009333.1.bw</code> = KSHV-specific coverage (reads aligning only to KSHV)</li>
+<li><code>{sample}.ERCC.bw</code> = ERCC spike-in coverage (if ERCC added to reference)</li>
+</ul>
 <p><strong>Use case:</strong> Load all <code>.bw</code> files for a sample into IGV alongside the primary BAM for integrated visualization. Useful for spotting coverage biases, unimodal peaks (POI), GC-correlated coverage dropouts.</p>
 <p><strong>Interpretation:</strong> Peak height (RPM units) directly comparable within region but NOT across regions (each region normalized independently by its own total reads). For cross-region comparisons, normalize BigWigs by region-specific mapping statistics.</p>
 </section>
@@ -1228,7 +1239,13 @@ ENSG00000000005 500 100 400</code></pre>
 <pre><code>100.00  1000000 0   R   1   root
 98.50   985000  0   D   2157    Archaea
 0.50    5000    5000    S   9606    Homo sapiens</code></pre>
-<p><strong>Red flags:</strong> - <strong>High unclassified reads</strong> (no taxon assigned) → novel sequences, low-complexity regions, or contaminating low-quality bases - <strong>Unexpected pathogens</strong> → cross-contamination (note: intended viral targets should align to primary reference) - <strong>Unexpectedly high host (Homo sapiens)</strong> → sample mix-up or contamination - <strong>Kit-specific contaminants</strong> (common lab bacteria) → reagent contamination</p>
+<p><strong>Red flags:</strong></p>
+<ul>
+<li><strong>High unclassified reads</strong> (no taxon assigned) → novel sequences, low-complexity regions, or contaminating low-quality bases</li>
+<li><strong>Unexpected pathogens</strong> → cross-contamination (note: intended viral targets should align to primary reference)</li>
+<li><strong>Unexpectedly high host (Homo sapiens)</strong> → sample mix-up or contamination</li>
+<li><strong>Kit-specific contaminants</strong> (common lab bacteria) → reagent contamination</li>
+</ul>
 </section>
 <section id="per-sample-transcript-quantification-countssample.rseqc_fpkm_tpm.tsv" class="level4">
 <h4 class="anchored" data-anchor-id="per-sample-transcript-quantification-countssample.rseqc_fpkm_tpm.tsv">Per-Sample Transcript Quantification: <code>counts/{sample}.rseqc_fpkm_tpm.tsv</code></h4>
@@ -1774,7 +1791,13 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <p><strong>Example row:</strong></p>
 <pre><code>ENST00000456328.2   chr1    100000  101000  85  79  82  NaN 88</code></pre>
 <p>Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5 (TIN ≥ 79); not detected in sample 4.</p>
-<p><strong>Quality assessment:</strong> Calculate mean TIN per sample across all rows: - <strong>Mean TIN &gt; 80:</strong> Excellent RNA quality - <strong>Mean TIN 60–80:</strong> Acceptable quality - <strong>Mean TIN &lt; 60:</strong> Poor RNA quality; consider re-extraction - <strong>Many NaN values:</strong> Sample has low coverage; may not be representative</p>
+<p><strong>Quality assessment:</strong> Calculate mean TIN per sample across all rows:</p>
+<ul>
+<li><strong>Mean TIN &gt; 80:</strong> Excellent RNA quality</li>
+<li><strong>Mean TIN 60–80:</strong> Acceptable quality</li>
+<li><strong>Mean TIN &lt; 60:</strong> Poor RNA quality; consider re-extraction</li>
+<li><strong>Many NaN values:</strong> Sample has low coverage; may not be representative</li>
+</ul>
 </section>
 </section>
 <section id="multiqc-report" class="level3">
@@ -1916,9 +1939,23 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 </section>
 <section id="troubleshooting" class="level2">
 <h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
-<p><strong>Missing outputs:</strong> - Check logs under <code>logs/</code> for rule-specific errors. Search for the output name in the log tree: <code>find logs -name "*outputname*"</code> - Verify input files exist and are readable: <code>ls -la results/{sample}/STAR/</code> - Re-run a dry-run to identify missing dependencies: <code>harold -w &lt;workdir&gt; -m dryrun</code></p>
-<p><strong>Unexpected file sizes:</strong> - Large BAM files (&gt; 50 GB) are normal for high-coverage samples. Use <code>samtools stats</code> to verify integrity. - Small or empty count matrices may indicate low mapping rates. Check <code>alignment_summary.tsv</code> for mapping statistics.</p>
-<p><strong>Quality concerns:</strong> - Low TIN scores → RNA degradation (consider re-extracting RNA) - Low mapping rate → check Cutadapt report for contamination; verify reference selection - Unexpected viral reads → cross-check with Kraken2 report; may indicate contamination or novel sequences</p>
+<p><strong>Missing outputs:</strong></p>
+<ul>
+<li>Check logs under <code>logs/</code> for rule-specific errors. Search for the output name in the log tree: <code>find logs -name "*outputname*"</code></li>
+<li>Verify input files exist and are readable: <code>ls -la results/{sample}/STAR/</code></li>
+<li>Re-run a dry-run to identify missing dependencies: <code>harold -w &lt;workdir&gt; -m dryrun</code></li>
+</ul>
+<p><strong>Unexpected file sizes:</strong></p>
+<ul>
+<li>Large BAM files (&gt; 50 GB) are normal for high-coverage samples. Use <code>samtools stats</code> to verify integrity.</li>
+<li>Small or empty count matrices may indicate low mapping rates. Check <code>alignment_summary.tsv</code> for mapping statistics.</li>
+</ul>
+<p><strong>Quality concerns:</strong></p>
+<ul>
+<li>Low TIN scores → RNA degradation (consider re-extracting RNA)</li>
+<li>Low mapping rate → check Cutadapt report for contamination; verify reference selection</li>
+<li>Unexpected viral reads → cross-check with Kraken2 report; may indicate contamination or novel sequences</li>
+</ul>
 
 
 </section>
