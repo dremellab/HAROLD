@@ -1,0 +1,99 @@
+name: Deploy Release Docs
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Install PyYAML for config patching
+        run: pip install PyYAML
+
+      - name: Patch _quarto.yml for release
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          sed -i "s|site-url: https://dremellab.github.io/HAROLD/dev/|site-url: https://dremellab.github.io/HAROLD/${VERSION}/|" _quarto.yml
+          sed -i "s|version: \"dev\"|version: \"${VERSION}\"|" _quarto.yml
+          sed -i "s|text: \"Version: dev\"|text: \"Version: ${VERSION}\"|" _quarto.yml
+
+          # Update version menu to reflect the released version as current
+          python3 - <<'PYTHON_SCRIPT'
+          import yaml
+          with open('_quarto.yml', 'r') as f:
+              config = yaml.safe_load(f)
+
+          version = "${{ steps.version.outputs.VERSION }}"
+
+          # Find and update the version menu in navbar
+          if 'website' in config and 'navbar' in config['website']:
+              for item in config['website']['navbar']['right']:
+                  if isinstance(item, dict) and 'menu' in item and item['text'].startswith('Version:'):
+                      item['menu'] = [
+                          {
+                              'text': f'{version} (current)',
+                              'href': f'https://dremellab.github.io/HAROLD/{version}/'
+                          },
+                          {
+                              'text': 'dev',
+                              'href': 'https://dremellab.github.io/HAROLD/dev/'
+                          }
+                      ]
+
+          with open('_quarto.yml', 'w') as f:
+              yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+          PYTHON_SCRIPT
+
+      - name: Render site
+        run: quarto render
+
+      - name: Deploy to versioned path
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          destination_dir: ${{ steps.version.outputs.VERSION }}
+          keep_files: true
+
+      - name: Deploy to /latest/
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          destination_dir: latest
+          keep_files: true
+
+      - name: Update root redirect to /latest/
+        run: |
+          mkdir -p _root
+          cat > _root/index.html << 'EOF'
+          <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+              <title>Redirect to latest docs</title>
+              <meta http-equiv="refresh" content="0;URL='latest/'" />
+            </head>
+            <body></body>
+          </html>
+          EOF
+
+      - name: Deploy root redirect
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_root
+          keep_files: true
