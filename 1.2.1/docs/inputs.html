@@ -258,13 +258,17 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Docs</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Version</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version-1.2.1" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Version: 1.2.1</span>
     </a>
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version">    
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version-1.2.1">    
         <li>
-    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/latest/">
- <span class="dropdown-text">Latest (dev)</span></a>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/1.2.1/">
+ <span class="dropdown-text">1.2.1 (current)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/dev/">
+ <span class="dropdown-text">dev</span></a>
   </li>  
     </ul>
   </li>
@@ -628,7 +632,7 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/");
+        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/1\.2\.1\/");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
