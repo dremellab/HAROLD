@@ -481,7 +481,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="globus-account-and-s3-bucket-access" class="level3">
 <h3 class="anchored" data-anchor-id="globus-account-and-s3-bucket-access"><strong>Globus Account and S3 Bucket Access</strong></h3>
 <p>HAROLD uses a <strong>lab-managed service account</strong> linked to Globus for S3 access. You do <strong>not</strong> need an individual AWS account.</p>
-<p><strong>Requirements:</strong> 1. <strong>Globus Account:</strong> Create a Globus account if you don’t have one (free, institutional login supported) 2. <strong>Globus Connector Access:</strong> The lab’s S3 bucket (<code>dremel-lab-bucket</code>) is accessible via a Globus connector. The S3 bucket will appear in your Globus file browser after your account is linked.</p>
+<p><strong>Requirements:</strong></p>
+<ol type="1">
+<li><strong>Globus Account:</strong> Create a Globus account if you don’t have one (free, institutional login supported)</li>
+<li><strong>Globus Connector Access:</strong> The lab’s S3 bucket (<code>dremel-lab-bucket</code>) is accessible via a Globus connector. The S3 bucket will appear in your Globus file browser after your account is linked.</li>
+</ol>
 <p><strong>If you don’t have Globus access or the S3 bucket doesn’t appear in your Globus:</strong> See the <a href="https://dremellab.github.io/howtos/guides/s3-globus-access/s3_globus_access_guide.html">S3 &amp; Globus Access Guide</a> for instructions on setting up your Globus account and requesting connector access.</p>
 </section>
 <section id="s3-credentials-lab-managed" class="level3">
@@ -538,7 +542,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>String</td>
 <td><code>""</code></td>
 <td><strong>Yes, if push_to_s3=true</strong></td>
-<td><strong>Must match the <code>sampleSetName</code> in lookup.tsv on Rivanna.</strong> <strong>Pipeline will not run if empty and push_to_s3=true.</strong></td>
+<td>Must match <code>sampleSetName</code> in lookup.tsv on Rivanna</td>
 </tr>
 <tr class="odd">
 <td><code>s3_pipeline_name</code></td>
@@ -552,35 +556,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>String</td>
 <td><code>/project/dremel_lab/scripts/aws/credentials</code></td>
 <td>—</td>
-<td>Lab-managed credentials file. <strong>Do not change.</strong> If credentials expire or authentication fails, email the lab and credentials will be updated (renewed every 90 days).</td>
+<td>Lab-managed credentials. <strong>Do not change.</strong> Email lab if expired.</td>
 </tr>
 <tr class="odd">
 <td><code>s3_bucket</code></td>
 <td>String</td>
 <td><code>dremel-lab-bucket</code></td>
 <td>—</td>
-<td>Lab-managed S3 bucket for all pipeline outputs. <strong>Do not change.</strong> Outputs are organized in the <code>_HTS</code> folder with subfolders for each pipeline and sample set.</td>
+<td>Lab S3 bucket for all outputs. <strong>Do not change.</strong></td>
 </tr>
 <tr class="even">
 <td><code>s3_output_prefix</code></td>
 <td>String</td>
 <td><code>_HTS</code></td>
 <td>—</td>
-<td>Bucket prefix where all HTS outputs are stored. <strong>Do not change.</strong></td>
+<td>Bucket prefix. <strong>Do not change.</strong></td>
 </tr>
 <tr class="odd">
 <td><code>s3_default_storage_class</code></td>
 <td>String</td>
 <td><code>GLACIER_IR</code></td>
 <td>—</td>
-<td>Storage class for metadata and reports. <strong>Do not change.</strong></td>
+<td>Storage class for metadata. <strong>Do not change.</strong></td>
 </tr>
 <tr class="even">
 <td><code>s3_large_file_storage_class</code></td>
 <td>String</td>
 <td><code>GLACIER</code></td>
 <td>—</td>
-<td>Storage class for large files (BAMs). <strong>Do not change.</strong></td>
+<td>Storage class for BAM files. <strong>Do not change.</strong></td>
 </tr>
 </tbody>
 </table>
