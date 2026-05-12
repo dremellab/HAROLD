@@ -83,6 +83,7 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...
 ```
 
 **Namespace benefits:**
+
 - **Scoping:** Each pipeline (HAROLD, CHROMA, etc.) isolated; multiple runs grouped by sample_set_name
 - **Organizing:** Outputs are easily located within the bucket structure
 
@@ -130,6 +131,7 @@ harold -w=/scratch/$USER/harold_run -m=run
 ```
 
 **What happens:**
+
 - Pipeline runs as normal
 - Upon successful completion of all prior stages, S3 transfer rule (`s3_transfer_if_enabled`) is triggered
 - Outputs transferred to S3 with configured storage classes
@@ -174,6 +176,7 @@ aws s3 ls s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/ --recursive --summari
 4. Check network connectivity: `ping -c 1 s3.amazonaws.com`
 
 **Common issues:**
+
 - **Credentials not found:** Check `s3_aws_credentials_file` in config.yaml
 - **Access denied:** Email the lab for credential updates or verification
 - **Network timeout:** Check Rivanna outbound S3 access (may require VPN or firewall exception)

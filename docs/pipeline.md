@@ -326,11 +326,13 @@ Aligned BAM (STAR, 2-pass)
 ### **Multi-Sample Scaling**
 
 With full Slurm parallelization (default on Rivanna):
+
 - Reference creation: shared once
 - Per-sample stages (Cutadapt, STAR, QC, quantification): **N samples run in parallel** (limited by Slurm queue and CPU availability)
 - Aggregation stages: single-threaded, runs after all samples complete
 
 **Example:** 10 samples with 100M reads each:
+
 - **With parallelization:** ~24 h wall-clock (all samples overlap in pipeline stages)
 - **Serial execution:** ~240 h wall-clock (unacceptable)
 

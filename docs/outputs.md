@@ -190,6 +190,7 @@ ENSG00000000005	500	100	400
 **Format:** BAM, coordinate-sorted, subset of main BAM
 
 **Contents:** Reads with **primary alignment** to chromosomes/contigs for this region only.
+
 - `{sample}.hg38.bam` = only reads aligning to host chr1–chrY (or chrM, etc. for selected host)
 - `{sample}.NC_009333.1.bam` = only reads aligning to KSHV genome
 - etc. for all hosts, additives, and viruses
@@ -214,6 +215,7 @@ ENSG00000000005	500	100	400
 | Resolution | Per-base (1 bp precision) for regions with reads; sparse for zero-coverage regions. |
 
 **Example regions in filename:**
+
 - `{sample}.hg38.bw` = host genome coverage (non-viral reads)
 - `{sample}.NC_009333.1.bw` = KSHV-specific coverage (reads aligning only to KSHV)
 - `{sample}.ERCC.bw` = ERCC spike-in coverage (if ERCC added to reference)
@@ -354,6 +356,7 @@ ENSG00000000005	500	100	400
 ```
 
 **Red flags:**
+
 - **High unclassified reads** (no taxon assigned) → novel sequences, low-complexity regions, or contaminating low-quality bases
 - **Unexpected pathogens** → cross-contamination (note: intended viral targets should align to primary reference)
 - **Unexpectedly high host (Homo sapiens)** → sample mix-up or contamination
@@ -569,6 +572,7 @@ ENST00000456328.2	chr1	100000	101000	85	79	82	NaN	88
 Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5 (TIN ≥ 79); not detected in sample 4.
 
 **Quality assessment:** Calculate mean TIN per sample across all rows:
+
 - **Mean TIN > 80:** Excellent RNA quality
 - **Mean TIN 60–80:** Acceptable quality
 - **Mean TIN < 60:** Poor RNA quality; consider re-extraction
@@ -671,15 +675,18 @@ A: Check `results/{sample}/rseqc/{sample}.strandedness.txt`. If one strand shows
 ## Troubleshooting
 
 **Missing outputs:**
+
 - Check logs under `logs/` for rule-specific errors. Search for the output name in the log tree: `find logs -name "*outputname*"`
 - Verify input files exist and are readable: `ls -la results/{sample}/STAR/`
 - Re-run a dry-run to identify missing dependencies: `harold -w <workdir> -m dryrun`
 
 **Unexpected file sizes:**
+
 - Large BAM files (> 50 GB) are normal for high-coverage samples. Use `samtools stats` to verify integrity.
 - Small or empty count matrices may indicate low mapping rates. Check `alignment_summary.tsv` for mapping statistics.
 
 **Quality concerns:**
+
 - Low TIN scores → RNA degradation (consider re-extracting RNA)
 - Low mapping rate → check Cutadapt report for contamination; verify reference selection
 - Unexpected viral reads → cross-check with Kraken2 report; may indicate contamination or novel sequences

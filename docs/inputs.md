@@ -15,6 +15,7 @@ HAROLD accepts a small set of clearly defined inputs that ensure each run is rep
 | `infer_strandedness` | `use_infer_strandedness` | Controls whether to use RSeQC-inferred strandedness (`true`, default) or manifest values (`false`) for count extraction. |
 
 **Important:** HAROLD **always infers and reports** strandedness via RSeQC regardless of this setting. The config key only controls which strand assignment is **used for quantification**:
+
 - **`use_infer_strandedness: true`** (default) — Manifest `strandedness` column ignored; RSeQC inference is authoritative.
 - **`use_infer_strandedness: false`** — Manifest `strandedness` column required and used; overrides RSeQC inference.
 
@@ -123,6 +124,7 @@ fastas_gtfs_dir: "/path/to/custom/references"
 ```
 
 Available reference files in the default location include FASTA and GTF for:
+
 - Host genomes: `hg38`, `mm39` (with comprehensive gene annotations)
 - Viral references: All supported accessions (KSHV, SARS-CoV-2, HSV-1, etc.)
 - Additives: ERCC control sequences, BAC16Insert
@@ -145,6 +147,7 @@ trnas_gtf:
 ```
 
 **When to use:**
+
 - If your experiment has tRNA-focused analysis (e.g., tRNA quantification, tRNA fragment analysis)
 - tRNA GTF is separate because genomic tRNA databases (tRNAscan-SE, GtRNAdb) differ from NCBI standard annotations
 - Leave empty or commented if tRNA quantification not needed
@@ -165,6 +168,7 @@ chrr_gtf:
 ```
 
 **When to use:**
+
 - If you want to explicitly quantify rRNA contamination or repeat-associated reads
 - Repeats GTF is now **included in the default `ref.gtf` by default** (no longer requires chrR flag)
 - Useful for multi-genome pipelines where repeat masking is important (e.g., viral integration site analysis)
@@ -204,6 +208,7 @@ validate_fastq: true  # default: false
 3. Cutadapt proceeds regardless of validation results (non-blocking)
 
 **Validation checks include:**
+
 - Correct FASTQ format (4-line records with @, sequence, +, qualities)
 - Sequence length consistency
 - Quality score range validity (Phred 0–93)
@@ -214,6 +219,7 @@ validate_fastq: true  # default: false
 **Use case:** Enable for new or untrusted sample sources to catch obvious formatting or contamination issues early. Validation adds minimal runtime overhead (< 1 min per sample).
 
 **Red flags from validation output:**
+
 - Mismatched R1/R2 sequence counts (indicates paired-end mismatch or corruption)
 - Non-standard quality scores (e.g., raw ASCII instead of Phred+33)
 - High % low-quality bases (> 50% Q < 20) suggests failed sequencing run
