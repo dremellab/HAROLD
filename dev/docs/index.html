@@ -509,6 +509,7 @@ ul.task-list li input[type="checkbox"] {
 <li><p><strong>HAROLD produces a comprehensive MultiQC report.</strong> This report aggregates extensive quality-control metrics, incorporating results from FastQC, FastQ Screen, RSeQC tools such as tin.py, and other QC modules that evaluate read quality, mapping bias, coverage uniformity, and gene body integrity. The MultiQC report provides an interactive dashboard where users can assess sample-level performance and experiment-wide consistency.</p></li>
 <li><p><strong>HAROLD is designed for direct downstream compatibility.</strong> The pipeline produces raw count matrices and an input sample manifest that are ready for import into <strong>DiffEx</strong> or other RNA-seq analysis frameworks.</p></li>
 <li><p><strong>HAROLD can autodetect strandedness.</strong> Users can specify strandedness directly in the sample manifest if it is known, or let HAROLD infer it automatically using RSeQC utilities, ensuring accurate quantification across diverse library preparation protocols.</p></li>
+<li><p><strong>HAROLD supports optional S3 cloud deposition.</strong> Outputs can be automatically transferred to Amazon S3 buckets for cloud storage, collaboration, and downstream analysis without local disk overhead. Configurable storage classes optimize costs (GLACIER for BAMs, GLACIER_IR for metadata/reports).</p></li>
 </ul>
 <hr>
 </section>

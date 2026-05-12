@@ -442,6 +442,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#step-2-dry-run-runmodedryrun" id="toc-step-2-dry-run-runmodedryrun" class="nav-link" data-scroll-target="#step-2-dry-run-runmodedryrun">Step 2: Dry Run (<code>runmode=dryrun</code>)</a></li>
   <li><a href="#step-3-execution-runmoderun" id="toc-step-3-execution-runmoderun" class="nav-link" data-scroll-target="#step-3-execution-runmoderun">Step 3: Execution (<code>runmode=run</code>)</a></li>
+  <li><a href="#step-4-optional-s3-deposition" id="toc-step-4-optional-s3-deposition" class="nav-link" data-scroll-target="#step-4-optional-s3-deposition">Step 4 (Optional): S3 Deposition</a></li>
   <li><a href="#monitoring-slurm-jobs-and-locating-rule-specific-logs" id="toc-monitoring-slurm-jobs-and-locating-rule-specific-logs" class="nav-link" data-scroll-target="#monitoring-slurm-jobs-and-locating-rule-specific-logs">Monitoring SLURM jobs and locating rule-specific logs</a></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul></li>
@@ -509,6 +510,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">harold</span> <span class="at">-w</span><span class="op">=</span>/scratch/<span class="va">$USER</span>/harold_test <span class="at">-m</span><span class="op">=</span>run</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The workflow will now begin executing on Rivanna’s compute nodes. Each rule (step of the pipeline) will produce a corresponding log file stored under the <code>logs/</code> subdirectory within your working directory. You can monitor progress by examining these log files or by using standard SLURM commands such as <code>squeue -u $USER</code> to check job status.</p>
 <p>When the pipeline finishes, the working directory will contain organized subfolders for <code>counts</code>, <code>alignment</code>, <code>logs</code>, and <code>reports</code>. The main outputs include raw count matrices, sample manifest copies, BAM/BAI alignment files, bigWig coverage tracks, and the MultiQC report summarizing quality control results.</p>
+<hr>
+</section>
+<section id="step-4-optional-s3-deposition" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-optional-s3-deposition">Step 4 (Optional): S3 Deposition</h2>
+<p>HAROLD can automatically upload results to Amazon S3 for cloud storage and sharing. This step is <strong>optional</strong> and requires prior configuration.</p>
+<p>To enable S3 transfer: 1. Ensure you have AWS credentials and access to an S3 bucket (see <a href="https://dremellab.github.io/howtos/guides/s3-globus-access/s3_globus_access_guide.html">S3/Globus Access Guide</a> if needed) 2. Update your <code>config.yaml</code>: <code>yaml    push_to_s3: true    s3_sample_set_name: "my_exp_batch1"  # Choose a meaningful name</code> 3. Re-run the pipeline (S3 transfer will execute automatically upon successful completion of all other stages)</p>
+<p>See the <a href="../docs/s3_configuration.html">S3 Configuration Guide</a> for detailed instructions on setup, cost estimation, storage classes, and troubleshooting.</p>
 <hr>
 </section>
 <section id="monitoring-slurm-jobs-and-locating-rule-specific-logs" class="level2">
