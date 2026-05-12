@@ -12,6 +12,9 @@ website:
     right:
       - text: "Docs"
         href: docs/index.md
+      # Version menu: automatically patched during release builds (docs-release.yml)
+      # For dev docs, this shows dev as current; for release docs, it shows the release version as current
+      # and links to dev. Do not manually edit the menu items below—they are auto-updated during releases.
       - text: "Version: dev"
         menu:
           - text: "dev (current)"
