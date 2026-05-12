@@ -604,6 +604,7 @@ Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5
 ### Sample Names
 
 All per-sample files use the exact sample name from your `samples.tsv` manifest. Ensure sample names are:
+
 - **Unique** across the experiment
 - **URL-safe** (avoid spaces, special characters, or use underscores/hyphens)
 - **Consistent case** (e.g., all lowercase or CapitalCase)
@@ -611,6 +612,7 @@ All per-sample files use the exact sample name from your `samples.tsv` manifest.
 ### Genomic Region Names
 
 Files containing region-specific outputs use region identifiers:
+
 - **Host:** `hg38` or `mm39` (depending on your host genome)
 - **Viruses:** RefSeq accession IDs (e.g., `NC_009333.1` for KSHV, `NC_045512.2` for SARS-CoV-2)
 - **Additives:** `ERCC`, `BAC16Insert` (if included)

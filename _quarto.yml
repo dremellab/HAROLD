@@ -39,6 +39,9 @@ website:
           - docs/pipeline.md
           - docs/inputs.md
           - docs/outputs.md
+      - section: "Cloud & Storage"
+        contents:
+          - docs/s3_configuration.md
       - section: "Help"
         contents:
           - docs/help.md

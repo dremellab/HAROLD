@@ -41,7 +41,7 @@ graph TD
     
     H --> I["MultiQC Report<br/>(integrated QC dashboard)"]
     
-    G1 --> J{{"S3 Push<br/>Enabled?"}}
+    G1 --> J{"S3 Push<br/>Enabled?"}
     J -->|Yes| K["☁️ S3 Deposition<br/>(optional)"]
     J -->|No| L["✅ Pipeline Complete"]
     K --> L
@@ -57,6 +57,7 @@ graph TD
 **Duration:** 10–30 minutes (depends on reference size)
 
 **What happens:**
+
 1. Concatenate host genome FASTA + additives (ERCC, BAC16Insert) + selected viral genomes into single composite `ref.fa`
 2. Merge gene annotations (GTF) from all selected genomes into `ref.gtf`
 3. Build STAR genome index on composite reference (2-pass mode enabled)
@@ -64,6 +65,7 @@ graph TD
 5. Create metadata files tracking genome regions (host vs. per-virus)
 
 **Outputs created:**
+
 - `ref/ref.fa` — Composite FASTA (multi-gigabyte for large references)
 - `ref/ref.gtf`, `ref/ref.fixed.gtf` — Merged annotations
 - `ref/STAR_no_GTF/` — STAR index directory (SA, SAindex, chrNameLength.txt, etc.)
@@ -79,16 +81,19 @@ graph TD
 **Parallelization:** Full parallelization across all samples
 
 **What happens:**
+
 1. Cutadapt removes 3' and 5' Illumina adapters (or custom adapters via config)
 2. Low-quality bases trimmed (default: Q < 20 at 3' end)
 3. Short reads filtered (default: < 20 bp after trimming)
 4. Gzip compression of output FASTQ files
 
 **Outputs per sample:**
+
 - `{sample}.R1.trim.fastq.gz`, `{sample}.R2.trim.fastq.gz` — Trimmed reads
 - `{sample}.cutadapt.report.txt` — Statistics (reads discarded, adapters detected)
 
 **QC checks:**
+
 - Trimming rate: typically 95–99% of reads pass (loss of 1–5% normal)
 - Adapter detection: if < 5% of reads have adapters, verify correct adapter sequences in config
 
@@ -100,6 +105,7 @@ graph TD
 **Parallelization:** Full sample-level parallelization; uses multi-threaded STAR (default: 8 threads per sample)
 
 **What happens:**
+
 1. **Pass 1:** Coarse alignment to detect splice junctions
 2. **Intermediate:** Update splice site database with detected junctions
 3. **Pass 2:** Re-align using updated splice annotation (improves novel junction detection)
@@ -107,12 +113,14 @@ graph TD
 5. Generate per-gene read counts (unstranded, forward, reverse counts per gene)
 
 **Outputs per sample:**
+
 - `{sample}.Aligned.sortedByCoord.out.bam` — Primary BAM (coordinate-sorted, indexed)
 - `{sample}.ReadsPerGene.out.tab` — Gene-level read counts (strand-aware)
 - `{sample}.SJ.out.tab` — Splice junction coordinates detected
 - `{sample}.Log.final.out` — Mapping statistics (uniquely mapped %, multi-mapped %, etc.)
 
 **Key metrics to monitor:**
+
 - Uniquely mapped reads: typically 70–95% of trimmed reads
 - Multi-mapped reads: typically 2–10% (higher = repetitive transcriptome or contamination)
 - Unmapped reads (too many mismatches, too short): typically 2–20%
@@ -127,10 +135,12 @@ graph TD
 **Subprocesses:**
 
 #### **4a. Qualimap (Coverage Profiling)**
+
 - Comprehensive alignment QC: coverage distribution, GC bias, insert size, mismatch rates
 - Output: `qualimap/qualimapReport.html` (interactive HTML report)
 
 #### **4b. RSeQC Metrics**
+
 - `read_distribution.py` — Reads per gene feature (CDS, UTR, intron, intergenic)
 - `infer_experiment.py` — Strandedness inference from read pair orientation
 - `geneBodyCoverage.py` — Coverage uniformity across transcript body (detect 3' bias)
@@ -139,11 +149,13 @@ graph TD
 - Outputs: `rseqc/{sample}.*` (various text/xls files, `junction.bb` files)
 
 #### **4c. Kraken2 (Pathogen Detection)**
+
 - Classify unmapped reads against NCBI taxonomy
 - Detect contamination or unexpected pathogens
 - Output: `kraken2/{sample}.kraken2.report.txt` (hierarchical taxonomy report)
 
 #### **4d. BAM Splitting**
+
 - Extract primary alignments for each genomic region (host, per-virus)
 - Create region-specific BAM files (used for downstream tools)
 - Output: `STAR/{sample}.{regionname}.bam` (one per genomic region)
@@ -158,10 +170,12 @@ graph TD
 **What happens:**
 
 #### **5a. Per-Sample Quantification**
+
 - RSeQC FPKM_count: transcript-level quantification per sample
 - Output: `counts/{sample}.rseqc_fpkm_tpm.tsv`
 
 #### **5b. Gene-Level Count Aggregation**
+
 - Aggregate STAR `ReadsPerGene.out.tab` files across all samples
 - Strand selection (inferred or manifest-based per config)
 - Annotate with gene metadata (chr, coordinates, length, biotype, species)
@@ -169,25 +183,30 @@ graph TD
 - Output: `counts/counts_matrix.tsv` (raw gene-level counts)
 
 #### **5c. Transcript-Level Count Aggregation**
+
 - Aggregate per-sample `rseqc_fpkm_tpm.tsv` files
 - Output: `counts/counts_matrix.transcript_level.tsv`
 
 #### **5d. Normalization (RPKM, TPM)**
+
 - Calculate RPKM: (count / gene_length_kb) / (total_mapped_millions)
 - Calculate TPM: (RPKM / sum_RPKM) × 1e6
 - Preserve all metadata columns in normalized matrices
 - Outputs: `counts/counts_matrix.rpkm.tsv`, `counts/counts_matrix.tpm.tsv` (and transcript-level versions)
 
 #### **5e. Alignment Summary Aggregation**
+
 - Compile mapping statistics from all samples into single summary table
 - Per-sample: total reads, trimmed reads, mapped reads, unique/multi/unmapped breakdown, per-region alignment counts
 - Output: `alignmentqc/alignment_summary.tsv`
 
 #### **5f. TIN Aggregation**
+
 - Merge per-sample TIN scores into aggregate table (one row per transcript, one column per sample)
 - Output: `counts/aggregate_tin.tsv`
 
 #### **5g. Optional: DiffEx Normalization**
+
 - If `diffex_normalized_counts: true` in config
 - Run DiffEx R package for batch-effect correction, ERCC normalization, etc.
 - Output: `counts/normalized_counts/normalize.html` (interactive report)
@@ -200,11 +219,13 @@ graph TD
 **Parallelization:** Full sample parallelization
 
 **What happens:**
+
 1. Generate BigWig coverage tracks from split BAM files (one per genomic region)
 2. Normalize coverage to RPM (reads per million) per region
 3. Create BigBed junction tracks from RSeQC output
 
 **Outputs per sample:**
+
 - `bigwigs/{sample}.{regionname}.bw` — RPM-normalized coverage tracks
 - `rseqc/{sample}.{regionname}.junction.bb` — Splice junction coordinates (UCSC format)
 
@@ -218,6 +239,7 @@ graph TD
 **Inputs:** All QC outputs from stages 4–6
 
 **What happens:**
+
 1. Aggregate QC metrics from Cutadapt, STAR, Qualimap, RSeQC, FastQValidator, Kraken2
 2. Generate interactive HTML dashboard with:
    - Per-sample summary tables (QC stats, mapping rates, strandedness)
@@ -225,6 +247,7 @@ graph TD
    - Per-rule logs and sample-level drill-down
 
 **Output:**
+
 - `multiqc_report.html` — Main QC dashboard (start here for experiment-wide QC overview)
 - `multiqc_data/` — Underlying data tables (JSON, YAML, CSV)
 
@@ -236,6 +259,7 @@ graph TD
 **Condition:** Only runs if `push_to_s3: true` AND `s3_sample_set_name` non-empty in config
 
 **What happens:**
+
 1. Transfer count matrices, BAM files, BigWigs, QC reports to configured S3 bucket
 2. Organize outputs in hierarchical S3 path: `s3://{bucket}/{prefix}/{pipeline_name}/{sample_set}/{output_type}/`
 3. Set S3 storage class (GLACIER for large files like BAMs, GLACIER_IR for metadata/reports)
