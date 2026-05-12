@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Host-specific GTF support — Configuration now supports host-specific tRNA/chrR GTF files (removes repeats GTF wiring)
 
 ### Changed
+- S3 namespace hierarchy — Updated `s3_transfer_harold.py` to include pipeline-name in S3 path hierarchy (`_HTS/HAROLD/sample_set/...`) for consistency with Chroma 2; added `s3_pipeline_name` config key (default: `HAROLD`)
 - rseqc_tin runtime — Increased to 36 hours for longer-running samples
 - Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default
 - Default reference path — Updated fasta_gtf reference path to `/project/dremel_lab/workflows/reference_data/fasta_gtf`

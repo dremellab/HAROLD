@@ -8,6 +8,7 @@ with all config provided via command-line arguments. No external lookup tables.
 Usage:
   s3_transfer_harold.py \\
     --workdir /path/to/pipeline/workdir \\
+    --pipeline-name HAROLD \\
     --sample-set-name myrun \\
     --bucket dremel-lab-bucket \\
     --s3-prefix _HTS \\
@@ -20,7 +21,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
 # Transfer rules for HAROLD outputs
@@ -48,7 +49,7 @@ HAROLD_RULES = [
 ]
 
 
-def match_rule(relpath: str, rule: dict) -> str | None:
+def match_rule(relpath: str, rule: dict) -> Optional[str]:
     """Check if a relative path matches a rule and return the S3 destination."""
     kind = rule.get("kind")
 
@@ -120,6 +121,7 @@ def get_storage_class(dest_path: str, default_class: str, large_file_class: str)
 
 def run_transfer(
     workdir: Path,
+    pipeline_name: str,
     sample_set: str,
     bucket: str,
     s3_prefix: str,
@@ -139,7 +141,7 @@ def run_transfer(
 
     for src_relpath, s3_dest_path in entries:
         src_file = workdir / src_relpath
-        s3_path = f"s3://{bucket}/{s3_prefix}/{sample_set}/{s3_dest_path}"
+        s3_path = f"s3://{bucket}/{s3_prefix}/{pipeline_name}/{sample_set}/{s3_dest_path}"
         storage_cls = get_storage_class(s3_dest_path, storage_class, large_file_storage_class)
 
         cmd = [
@@ -183,6 +185,11 @@ def main():
         help="Pipeline working directory (default: current directory)",
     )
     parser.add_argument(
+        "--pipeline-name",
+        default="HAROLD",
+        help="Pipeline name for S3 path (default: HAROLD)",
+    )
+    parser.add_argument(
         "--sample-set-name",
         required=True,
         help="Sample set name (used in S3 path)",
@@ -222,6 +229,7 @@ def main():
 
     return run_transfer(
         workdir=workdir,
+        pipeline_name=args.pipeline_name,
         sample_set=args.sample_set_name,
         bucket=args.bucket,
         s3_prefix=args.s3_prefix,

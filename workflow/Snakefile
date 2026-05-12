@@ -20,43 +20,32 @@ pd.set_option("display.max_colwidth", None)
 min_version("5.24")
 
 def oncomplete():
-    from datetime import datetime
     import subprocess
     import shutil
 
-    # Get timestamp
-    now = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-    log_copy = f"snakemake.{now}.log"
-    # jobby_output = f"{log_copy}.jobby.tsv"
-
     try:
-        # Step 1: Copy the log file
-        shutil.copyfile("snakemake.log", log_copy)
-        print(f"📁 Copied snakemake.log to {log_copy}")
-
-        # Step 2: Run jobby on the copied log
-        jobby_bin = shutil.which("jobby")
-        if not jobby_bin:
-            raise FileNotFoundError("jobby not found in PATH")
-
         log_dir = Path(".snakemake/log")
         latest = max(log_dir.glob("*.snakemake.log"), key=lambda p: p.stat().st_mtime)
         print(f"Using log file: {latest}")
-        jobby_output = f"{latest}.jobby.tsv"
-        print(f"Running jobby command: {jobby_bin} {latest} --tsv > {jobby_output}")
+        jobbyplus_bin = shutil.which("jobbyplus")
+        if not jobbyplus_bin:
+            raise FileNotFoundError("jobbyplus not found in PATH")
+
+        jobby_output = f"{latest}.jobbyplus"
+        print(f"Running jobbyplus command: {jobbyplus_bin} {latest} > {jobby_output}")
         with open(jobby_output, "w") as f:
-            result = subprocess.run(
-                [jobby_bin, latest, "--tsv"],
+            subprocess.run(
+                [jobbyplus_bin, str(latest)],
                 stdout=f,
-                stderr=subprocess.PIPE,  # still capture errors
+                stderr=subprocess.PIPE,
                 text=True,
                 check=True
             )
 
-        print(f"✅ jobby output saved to {jobby_output}")
+        print(f"✅ jobbyplus output saved to {jobby_output}")
 
     except subprocess.CalledProcessError as e:
-        print("❌ jobby command failed!")
+        print("❌ jobbyplus command failed!")
         print(f"Return code: {e.returncode}")
         print("stderr:", e.stderr.strip())
 
@@ -126,6 +115,9 @@ rule all:
         # multiqc
         join(RESULTSDIR, "multiqc_report.html"),
 
+        # S3 transfer (optional - only if push_to_s3=true AND s3_sample_set_name is set)
+        ".s3_transfer.done" if (config.get("push_to_s3", False) and config.get("s3_sample_set_name", "")) else [],
+
 include: "rules/create_index.smk"
 
 include: "rules/preprocessing.smk"
@@ -137,6 +129,8 @@ include: "rules/visualize.smk"
 include: "rules/quantify.smk"
 
 include: "rules/qc.smk"
+
+include: "rules/s3_transfer.smk"
 
 onsuccess:
     oncomplete()

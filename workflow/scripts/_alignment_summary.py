@@ -8,6 +8,8 @@ import re
 import sys
 from pathlib import Path
 
+import pysam
+
 
 STAR_METRIC_PATTERNS = {
     "uniquely_mapped_reads": "Uniquely mapped reads number",
@@ -54,7 +56,8 @@ def parse_cutadapt_report(path: Path) -> dict[str, int | str]:
                 match = re.search(r"([\d,]+)", line)
                 if match:
                     metrics["library_type"] = library_type
-                    metrics[key] = int(match.group(1).replace(",", ""))
+                    value = int(match.group(1).replace(",", ""))
+                    metrics[key] = value * 2 if library_type == "PE" else value
                 break
 
     return metrics
@@ -62,16 +65,17 @@ def parse_cutadapt_report(path: Path) -> dict[str, int | str]:
 
 def parse_fastqvalidator_report(path: Path) -> int | str:
     pattern = re.compile(r"with\s+\d+\s+lines containing\s+([\d,]+)\s+sequences\.")
-    max_sequences = -1
+    total_sequences = 0
+    seen = False
     with path.open() as handle:
         for raw_line in handle:
             match = pattern.search(raw_line.strip())
             if not match:
                 continue
             sequences = int(match.group(1).replace(",", ""))
-            if sequences > max_sequences:
-                max_sequences = sequences
-    return max_sequences if max_sequences >= 0 else "NA"
+            total_sequences += sequences
+            seen = True
+    return total_sequences if seen else "NA"
 
 
 def parse_star_log(path: Path) -> dict[str, int | str]:
@@ -104,25 +108,15 @@ def parse_star_log(path: Path) -> dict[str, int | str]:
     return metrics
 
 
-def parse_idxstats(path: Path) -> tuple[dict[str, int], int]:
+def count_primary_alignments_by_contig(path: Path) -> dict[str, int]:
     mapped_by_contig: dict[str, int] = {}
-    unmapped = 0
-    with path.open() as handle:
-        for raw_line in handle:
-            line = raw_line.strip()
-            if not line:
+    with pysam.AlignmentFile(path, "rb") as bam:
+        for read in bam.fetch(until_eof=True):
+            if read.is_unmapped or read.is_secondary or read.is_supplementary:
                 continue
-            parts = line.split("\t")
-            if len(parts) < 4:
-                continue
-            contig = parts[0]
-            mapped = int(parts[2])
-            unmapped_reads = int(parts[3])
-            if contig == "*":
-                unmapped += unmapped_reads
-                continue
-            mapped_by_contig[contig] = mapped_by_contig.get(contig, 0) + mapped
-    return mapped_by_contig, unmapped
+            contig = bam.get_reference_name(read.reference_id)
+            mapped_by_contig[contig] = mapped_by_contig.get(contig, 0) + 1
+    return mapped_by_contig
 
 
 def sum_contigs(mapped_by_contig: dict[str, int], contigs: set[str]) -> int:
@@ -131,6 +125,25 @@ def sum_contigs(mapped_by_contig: dict[str, int], contigs: set[str]) -> int:
 
 def int_or_na(value: int | str) -> str:
     return str(value) if isinstance(value, int) else "NA"
+
+
+def scale_star_metrics_for_library_type(
+    metrics: dict[str, int | str], library_type: str
+) -> dict[str, int | str]:
+    if library_type != "PE":
+        return metrics
+
+    scaled = dict(metrics)
+    for key in (
+        "reads_mapped_to_assembly",
+        "uniquely_mapped_reads",
+        "multi_mapped_reads",
+        "too_many_loci_reads",
+    ):
+        value = scaled.get(key)
+        if isinstance(value, int):
+            scaled[key] = value * 2
+    return scaled
 
 
 def main() -> int:
@@ -168,20 +181,23 @@ def main() -> int:
             sample_dir / "fastq_validation" / f"{sample}.fastq_validator.txt"
         )
         star_log = sample_dir / "STAR" / f"{sample}.Log.final.out"
-        idxstats = sample_dir / "STAR" / f"{sample}.Aligned.sortedByCoord.out.bam.idxstats"
+        bam = sample_dir / "STAR" / f"{sample}.Aligned.sortedByCoord.out.bam"
 
         if (
             not cutadapt_report.exists()
             or not fastqvalidator_report.exists()
             or not star_log.exists()
-            or not idxstats.exists()
+            or not bam.exists()
         ):
             continue
 
         cutadapt_metrics = parse_cutadapt_report(cutadapt_report)
         raw_reads = parse_fastqvalidator_report(fastqvalidator_report)
         star_metrics = parse_star_log(star_log)
-        mapped_by_contig, unmapped_reads = parse_idxstats(idxstats)
+        star_metrics = scale_star_metrics_for_library_type(
+            star_metrics, str(cutadapt_metrics["library_type"])
+        )
+        mapped_by_contig = count_primary_alignments_by_contig(bam)
 
         chrr_mapped = sum_contigs(mapped_by_contig, chrr_contigs)
         host_total_mapped = sum_contigs(mapped_by_contig, host_contigs)
@@ -204,7 +220,6 @@ def main() -> int:
             ),
             "multi_mapped_reads": int_or_na(star_metrics["multi_mapped_reads"]),
             "too_many_loci_reads": int_or_na(star_metrics["too_many_loci_reads"]),
-            "idxstats_unmapped_reads": str(unmapped_reads),
             "host_mapped": str(host_mapped),
             "chrR_mapped": str(chrr_mapped),
         }
@@ -223,7 +238,6 @@ def main() -> int:
         "uniquely_mapped_reads",
         "multi_mapped_reads",
         "too_many_loci_reads",
-        "idxstats_unmapped_reads",
         "host_mapped",
         "chrR_mapped",
     ]

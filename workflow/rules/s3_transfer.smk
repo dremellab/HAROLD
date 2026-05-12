@@ -14,6 +14,7 @@ rule s3_transfer_if_enabled:
         config["containers"]["aws"]
     params:
         s3_enabled=config.get("push_to_s3", False),
+        pipeline_name=config.get("s3_pipeline_name", "HAROLD"),
         sample_set=config.get("s3_sample_set_name", ""),
         creds_file=config.get("s3_aws_credentials_file", "/project/dremel_lab/scripts/aws/credentials"),
         bucket=config.get("s3_bucket", "dremel-lab-bucket"),
@@ -32,6 +33,7 @@ rule s3_transfer_if_enabled:
             export AWS_PROFILE=s3-globus-user
             python3 {params.scriptsdir}/s3_transfer_harold.py \\
                 --workdir "$(pwd)" \\
+                --pipeline-name "{params.pipeline_name}" \\
                 --sample-set-name "{params.sample_set}" \\
                 --bucket "{params.bucket}" \\
                 --s3-prefix "{params.s3_prefix}" \\

@@ -154,7 +154,6 @@ rule aggregate_tin:
         python {params.script} {input} > {output.agg_tin}
         """
 
-localrules: alignment_summary
 rule alignment_summary:
     input:
         fastqvalidator_reports=expand(
@@ -174,12 +173,12 @@ rule alignment_summary:
             join(RESULTSDIR, "{sample}", "STAR", "{sample}.Log.final.out"),
             sample=SAMPLES,
         ),
-        idxstats=expand(
+        bams=expand(
             join(
                 RESULTSDIR,
                 "{sample}",
                 "STAR",
-                "{sample}.Aligned.sortedByCoord.out.bam.idxstats",
+                "{sample}.Aligned.sortedByCoord.out.bam",
             ),
             sample=SAMPLES,
         ),
@@ -187,13 +186,16 @@ rule alignment_summary:
         regions_viruses=join(REF_DIR, "ref.fa.regions.viruses"),
     output:
         summary=join(RESULTSDIR, "alignmentqc", "alignment_summary.tsv"),
+    log:
+        join(RESULTSDIR, "alignmentqc", "alignment_summary.log"),
     params:
         script=join(SCRIPTS_DIR, "_alignment_summary.py"),
-    container: config["containers"]["star_ucsc_cufflinks"]
+    container: config["containers"]["pysam"]
     shell:
         r"""
         set -exo pipefail
         mkdir -p $(dirname {output.summary})
+        exec > >(tee {log}) 2>&1
         python {params.script} \
             --results-dir {RESULTSDIR} \
             --regions-host {input.regions_host} \

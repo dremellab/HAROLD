@@ -123,6 +123,7 @@ containers:
 # S3 Transfer Configuration (optional)
 # Set push_to_s3: true to enable automatic S3 transfer at pipeline completion
 push_to_s3: false
+s3_pipeline_name: "HAROLD"                              # pipeline name for S3 path hierarchy
 
 # AWS S3 transfer settings
 s3_sample_set_name: ""                                  # required if push_to_s3=true
