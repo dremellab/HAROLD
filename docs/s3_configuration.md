@@ -11,6 +11,7 @@ HAROLD can automatically deposit pipeline outputs to Amazon S3 buckets, enabling
 HAROLD uses a **lab-managed service account** linked to Globus for S3 access. You do **not** need an individual AWS account.
 
 **Requirements:**
+
 1. **Globus Account:** Create a Globus account if you don't have one (free, institutional login supported)
 2. **Globus Connector Access:** The lab's S3 bucket (`dremel-lab-bucket`) is accessible via a Globus connector. The S3 bucket will appear in your Globus file browser after your account is linked.
 
@@ -47,13 +48,13 @@ s3_large_file_storage_class: "GLACIER"     # Storage class for large files (do n
 | Key | Type | Default | Required? | Description |
 |---|---|---|---|---|
 | `push_to_s3` | Boolean | `false` | No | Enable/disable S3 transfer. If `false`, all other S3 keys ignored. |
-| `s3_sample_set_name` | String | `""` | **Yes, if push_to_s3=true** | **Must match the `sampleSetName` in lookup.tsv on Rivanna.** **Pipeline will not run if empty and push_to_s3=true.** |
+| `s3_sample_set_name` | String | `""` | **Yes, if push_to_s3=true** | Must match `sampleSetName` in lookup.tsv on Rivanna |
 | `s3_pipeline_name` | String | `HAROLD` | — | Pipeline identifier in S3 path. **Do not change.** |
-| `s3_aws_credentials_file` | String | `/project/dremel_lab/scripts/aws/credentials` | — | Lab-managed credentials file. **Do not change.** If credentials expire or authentication fails, email the lab and credentials will be updated (renewed every 90 days). |
-| `s3_bucket` | String | `dremel-lab-bucket` | — | Lab-managed S3 bucket for all pipeline outputs. **Do not change.** Outputs are organized in the `_HTS` folder with subfolders for each pipeline and sample set. |
-| `s3_output_prefix` | String | `_HTS` | — | Bucket prefix where all HTS outputs are stored. **Do not change.** |
-| `s3_default_storage_class` | String | `GLACIER_IR` | — | Storage class for metadata and reports. **Do not change.** |
-| `s3_large_file_storage_class` | String | `GLACIER` | — | Storage class for large files (BAMs). **Do not change.** |
+| `s3_aws_credentials_file` | String | `/project/dremel_lab/scripts/aws/credentials` | — | Lab-managed credentials. **Do not change.** Email lab if expired. |
+| `s3_bucket` | String | `dremel-lab-bucket` | — | Lab S3 bucket for all outputs. **Do not change.** |
+| `s3_output_prefix` | String | `_HTS` | — | Bucket prefix. **Do not change.** |
+| `s3_default_storage_class` | String | `GLACIER_IR` | — | Storage class for metadata. **Do not change.** |
+| `s3_large_file_storage_class` | String | `GLACIER` | — | Storage class for BAM files. **Do not change.** |
 
 ---
 
