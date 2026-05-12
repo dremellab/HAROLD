@@ -71,6 +71,23 @@ When the pipeline finishes, the working directory will contain organized subfold
 
 ---
 
+## Step 4 (Optional): S3 Deposition
+
+HAROLD can automatically upload results to Amazon S3 for cloud storage and sharing. This step is **optional** and requires prior configuration.
+
+To enable S3 transfer:
+1. Ensure you have AWS credentials and access to an S3 bucket (see [S3/Globus Access Guide](https://dremellab.github.io/howtos/guides/s3-globus-access/s3_globus_access_guide.html) if needed)
+2. Update your `config.yaml`:
+   ```yaml
+   push_to_s3: true
+   s3_sample_set_name: "my_exp_batch1"  # Choose a meaningful name
+   ```
+3. Re-run the pipeline (S3 transfer will execute automatically upon successful completion of all other stages)
+
+See the [S3 Configuration Guide](s3_configuration.md) for detailed instructions on setup, cost estimation, storage classes, and troubleshooting.
+
+---
+
 ## Monitoring SLURM jobs and locating rule-specific logs
 
 While `harold -m run` is active, the driver submits one head job plus hundreds of per-rule batch jobs to SLURM. For a detailed status view, use the explicit Rivanna `squeue` binary with a custom format string:

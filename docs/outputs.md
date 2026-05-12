@@ -595,7 +595,7 @@ Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5
 
 | File | Description |
 |------|---|
-| `.s3_transfer.done` | **Marker file** (created only if `push_to_s3: true` AND `s3_sample_set_name` is non-empty in config). Indicates that all outputs have been successfully uploaded to the configured S3 bucket. Check `results/logs/` for detailed upload logs if transfer fails. |
+| `.s3_transfer.done` | **Marker file** (created only if `push_to_s3: true` AND `s3_sample_set_name` is non-empty in config). Indicates that all outputs have been successfully uploaded to the configured S3 bucket. Check `results/logs/` for detailed upload logs if transfer fails. See [S3 Configuration Guide](s3_configuration.md) for setup, cost estimation, and troubleshooting. |
 
 ---
 

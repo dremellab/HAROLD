@@ -43,6 +43,8 @@ HAROLD automates the process from raw FASTQ files to normalized count matrices a
 
 - **HAROLD can autodetect strandedness.** Users can specify strandedness directly in the sample manifest if it is known, or let HAROLD infer it automatically using RSeQC utilities, ensuring accurate quantification across diverse library preparation protocols.
 
+- **HAROLD supports optional S3 cloud deposition.** Outputs can be automatically transferred to Amazon S3 buckets for cloud storage, collaboration, and downstream analysis without local disk overhead. Configurable storage classes optimize costs (GLACIER for BAMs, GLACIER_IR for metadata/reports).
+
 ---
 
 ## 🧬 Workflow Overview

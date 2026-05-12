@@ -51,6 +51,8 @@ format:
     toc: true
     code-copy: true
     smooth-scroll: true
+    mermaid:
+      theme: default
 
 metadata:
   version: "dev"
