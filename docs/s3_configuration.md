@@ -45,6 +45,7 @@ s3_large_file_storage_class: "GLACIER"     # Storage class for large files (do n
 
 ### **Configuration Details**
 
+::: {.scrollable-table}
 | Key | Type | Default | Required? | Description |
 |---|---|---|---|---|
 | `push_to_s3` | Boolean | `false` | No | Enable/disable S3 transfer. If `false`, all other S3 keys ignored. |
@@ -55,6 +56,8 @@ s3_large_file_storage_class: "GLACIER"     # Storage class for large files (do n
 | `s3_output_prefix` | String | `_HTS` | — | Bucket prefix. **Do not change.** |
 | `s3_default_storage_class` | String | `GLACIER_IR` | — | Storage class for metadata. **Do not change.** |
 | `s3_large_file_storage_class` | String | `GLACIER` | — | Storage class for BAM files. **Do not change.** |
+:::
+
 
 ---
 
