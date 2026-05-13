@@ -32,3 +32,23 @@ jobs:
           publish_dir: ./_site
           destination_dir: dev
           keep_files: true
+
+      - name: Update root redirect to dev docs index
+        run: |
+          mkdir -p _root
+          cat > _root/index.html << 'EOF'
+          <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+              <title>Redirect to dev docs</title>
+              <meta http-equiv="refresh" content="0;URL='dev/docs/index.html'" />
+            </head>
+            <body></body>
+          </html>
+          EOF
+
+      - name: Deploy root redirect
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_root
+          keep_files: true

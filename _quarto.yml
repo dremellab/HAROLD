@@ -28,9 +28,9 @@ website:
       - text: "Version: dev"
         menu:
           - text: "dev (current)"
-            href: https://dremellab.github.io/HAROLD/dev/
+            href: https://dremellab.github.io/HAROLD/dev/docs/index.html
           - text: "1.2.1"
-            href: https://dremellab.github.io/HAROLD/1.2.1/
+            href: https://dremellab.github.io/HAROLD/1.2.1/docs/index.html
       - icon: github
         href: https://github.com/dremellab/HAROLD
 
