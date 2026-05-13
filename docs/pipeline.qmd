@@ -6,19 +6,19 @@ HAROLD orchestrates a comprehensive RNA-seq analysis workflow, from raw FASTQ fi
 
 ## Pipeline Overview
 
-```mermaid
+```{mermaid}
 graph TD
-    A["📥 Input FASTQs<br/>(R1, R2 per sample)"] --> B["🔨 Reference Creation<br/>(STAR index, GTF processing)"]
-    B --> C["✂️ Cutadapt<br/>(adapter trimming, QC filtering)"]
-    C --> D["🔗 STAR Alignment<br/>(2-pass mapping, splice detection)"]
-    D --> E["📊 Parallel QC & Processing"]
+    A["Input FASTQs<br/>(R1, R2 per sample)"] --> B["Reference Creation<br/>(STAR index, GTF processing)"]
+    B --> C["Cutadapt<br/>(adapter trimming, QC filtering)"]
+    C --> D["STAR Alignment<br/>(2-pass mapping, splice detection)"]
+    D --> E["Parallel QC & Processing"]
     
     E --> E1["Qualimap<br/>(coverage, GC bias)"]
     E --> E2["RSeQC Metrics<br/>(strandedness, TIN, distribution)"]
     E --> E3["Kraken2<br/>(pathogen detection)"]
     E --> E4["Split BAMs<br/>(per-region extraction)"]
     
-    E1 --> F["📈 Quantification"]
+    E1 --> F["Quantification"]
     E2 --> F
     E3 --> F
     E4 --> F
@@ -26,7 +26,7 @@ graph TD
     F --> F1["Gene-Level Counts<br/>(STAR ReadsPerGene)"]
     F --> F2["Transcript-Level Counts<br/>(RSeQC FPKM_count)"]
     
-    F1 --> G["📊 Normalization & Aggregation"]
+    F1 --> G["Normalization & Aggregation"]
     F2 --> G
     
     G --> G1["Raw Counts Matrix"]
@@ -34,7 +34,7 @@ graph TD
     G --> G3["TPM Normalized"]
     G --> G4["Strandedness Summary"]
     
-    E1 --> H["📋 Report Generation"]
+    E1 --> H["Report Generation"]
     E2 --> H
     E3 --> H
     G1 --> H
@@ -42,8 +42,8 @@ graph TD
     H --> I["MultiQC Report<br/>(integrated QC dashboard)"]
     
     G1 --> J{"S3 Push<br/>Enabled?"}
-    J -->|Yes| K["☁️ S3 Deposition<br/>(optional)"]
-    J -->|No| L["✅ Pipeline Complete"]
+    J -->|Yes| K["S3 Deposition<br/>(optional)"]
+    J -->|No| L["Pipeline Complete"]
     K --> L
 ```
 
@@ -354,4 +354,3 @@ With full Slurm parallelization (default on Rivanna):
 - **Kraken2:** 8–16 GB (depends on database size)
 
 Rivanna job profiles pre-allocate resources; overrides possible via config.
-

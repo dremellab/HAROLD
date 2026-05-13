@@ -1,6 +1,16 @@
 project:
   type: website
   output-dir: _site
+  render:
+    - docs/index.md
+    - docs/prereq.md
+    - docs/usage.md
+    - docs/pipeline.qmd
+    - docs/inputs.md
+    - docs/outputs.md
+    - docs/s3_configuration.md
+    - docs/help.md
+    - CHANGELOG.md
 
 website:
   title: "HAROLD — RNA-seq Quantification & Normalization"
@@ -36,7 +46,7 @@ website:
           - docs/usage.md
       - section: "Pipeline"
         contents:
-          - docs/pipeline.md
+          - docs/pipeline.qmd
           - docs/inputs.md
           - docs/outputs.md
       - section: "Cloud & Storage"
@@ -56,6 +66,7 @@ format:
     smooth-scroll: true
     mermaid:
       theme: default
+    mermaid-format: js
     css: styles.css
 
 metadata:
