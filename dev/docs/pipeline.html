@@ -74,6 +74,10 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<meta name="mermaid-theme" content="default">
+<script src="../site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="../site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="../site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
 
 <link rel="stylesheet" href="../styles.css">
@@ -458,18 +462,23 @@ ul.task-list li input[type="checkbox"] {
 <hr>
 <section id="pipeline-overview" class="level2">
 <h2 class="anchored" data-anchor-id="pipeline-overview">Pipeline Overview</h2>
-<pre class="mermaid"><code>graph TD
-    A["📥 Input FASTQs&lt;br/&gt;(R1, R2 per sample)"] --&gt; B["🔨 Reference Creation&lt;br/&gt;(STAR index, GTF processing)"]
-    B --&gt; C["✂️ Cutadapt&lt;br/&gt;(adapter trimming, QC filtering)"]
-    C --&gt; D["🔗 STAR Alignment&lt;br/&gt;(2-pass mapping, splice detection)"]
-    D --&gt; E["📊 Parallel QC &amp; Processing"]
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph TD
+    A["Input FASTQs&lt;br/&gt;(R1, R2 per sample)"] --&gt; B["Reference Creation&lt;br/&gt;(STAR index, GTF processing)"]
+    B --&gt; C["Cutadapt&lt;br/&gt;(adapter trimming, QC filtering)"]
+    C --&gt; D["STAR Alignment&lt;br/&gt;(2-pass mapping, splice detection)"]
+    D --&gt; E["Parallel QC &amp; Processing"]
     
     E --&gt; E1["Qualimap&lt;br/&gt;(coverage, GC bias)"]
     E --&gt; E2["RSeQC Metrics&lt;br/&gt;(strandedness, TIN, distribution)"]
     E --&gt; E3["Kraken2&lt;br/&gt;(pathogen detection)"]
     E --&gt; E4["Split BAMs&lt;br/&gt;(per-region extraction)"]
     
-    E1 --&gt; F["📈 Quantification"]
+    E1 --&gt; F["Quantification"]
     E2 --&gt; F
     E3 --&gt; F
     E4 --&gt; F
@@ -477,7 +486,7 @@ ul.task-list li input[type="checkbox"] {
     F --&gt; F1["Gene-Level Counts&lt;br/&gt;(STAR ReadsPerGene)"]
     F --&gt; F2["Transcript-Level Counts&lt;br/&gt;(RSeQC FPKM_count)"]
     
-    F1 --&gt; G["📊 Normalization &amp; Aggregation"]
+    F1 --&gt; G["Normalization &amp; Aggregation"]
     F2 --&gt; G
     
     G --&gt; G1["Raw Counts Matrix"]
@@ -485,7 +494,7 @@ ul.task-list li input[type="checkbox"] {
     G --&gt; G3["TPM Normalized"]
     G --&gt; G4["Strandedness Summary"]
     
-    E1 --&gt; H["📋 Report Generation"]
+    E1 --&gt; H["Report Generation"]
     E2 --&gt; H
     E3 --&gt; H
     G1 --&gt; H
@@ -493,9 +502,15 @@ ul.task-list li input[type="checkbox"] {
     H --&gt; I["MultiQC Report&lt;br/&gt;(integrated QC dashboard)"]
     
     G1 --&gt; J{"S3 Push&lt;br/&gt;Enabled?"}
-    J --&gt;|Yes| K["☁️ S3 Deposition&lt;br/&gt;(optional)"]
-    J --&gt;|No| L["✅ Pipeline Complete"]
-    K --&gt; L</code></pre>
+    J --&gt;|Yes| K["S3 Deposition&lt;br/&gt;(optional)"]
+    J --&gt;|No| L["Pipeline Complete"]
+    K --&gt; L
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
 <hr>
 </section>
 <section id="major-pipeline-stages" class="level2">
