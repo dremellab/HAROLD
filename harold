@@ -136,6 +136,68 @@ function require_env() {
   fi
 }
 
+##########################################################################################
+# clean block logging helpers
+##########################################################################################
+
+function log_info()    { echo "INFO  $*"; }
+function log_step()    { echo "STEP  $*"; }
+function log_ok()      { echo "OK    $*"; }
+function log_warn()    { echo "WARN  $*"; }
+function log_error()   { echo "ERROR $*"; }
+function log_next()    { echo "NEXT  $*"; }
+function log_divider() { echo "------------------------------------------------------------------"; }
+
+##########################################################################################
+# pipeline.* run-state markers + status sidecar
+##########################################################################################
+
+function json_escape() {
+# Escape a string for safe embedding in a JSON string value.
+# GIT_COMMIT_TAG embeds a literal tab (gid\ttag), which is an invalid raw
+# control character inside a JSON string, so fold it (and any newline) to a
+# space in addition to the usual backslash/quote escaping.
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n\t' '  '
+}
+
+function write_pipeline_state_marker() {
+# Write a single state marker file (pipeline.<state>) and a JSON status
+# sidecar (pipeline.status.json) in WORKDIR.
+# Args: state reason [job_id]
+  local state="$1"
+  local reason="${2:-}"
+  local job_id="${3:-NA}"
+  local now_utc
+  local host
+  local sidecar
+  local sidecar_tmp
+
+  now_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  host=$(hostname 2>/dev/null || echo "unknown")
+  sidecar="${WORKDIR}/pipeline.status.json"
+  sidecar_tmp="${sidecar}.tmp.$$"
+
+  rm -f "${WORKDIR}/pipeline.running" "${WORKDIR}/pipeline.completed" "${WORKDIR}/pipeline.failed" "${WORKDIR}/pipeline.canceled"
+  : > "${WORKDIR}/pipeline.${state}"
+
+  cat > "$sidecar_tmp" << EOF
+{
+  "pipeline": "HAROLD",
+  "version": "${VERSION}",
+  "git_commit_tag": "$(json_escape "${GIT_COMMIT_TAG}")",
+  "state": "$(json_escape "$state")",
+  "reason": "$(json_escape "$reason")",
+  "runmode": "$(json_escape "${RUNMODE:-unknown}")",
+  "workdir": "$(json_escape "${WORKDIR}")",
+  "slurm_job_id": "$(json_escape "$job_id")",
+  "host": "$(json_escape "$host")",
+  "timestamp_utc": "${now_utc}"
+}
+EOF
+  mv "$sidecar_tmp" "$sidecar"
+  log_info "State marker updated: pipeline.${state} (reason=${reason}, slurm_job_id=${job_id})"
+}
+
 
 ##########################################################################################
 # initial setup
@@ -217,8 +279,7 @@ if [ "$PLATFORM" == "shen" ]; then
   APPTAINER_PULL_DIR="$SINGULARITY_PULLFOLDER"
   APPTAINER_PREFIX_ARG=""
 else
-  echo """WARNING: detected platform is $PLATFORM. Please edit the files in config/unknown/ & config.yaml for compatibility with your computing environment
-    """
+  log_warn "Detected platform is $PLATFORM. Please edit the files in config/unknown/ & config.yaml for compatibility with your computing environment"
 fi
 
 # set defaults
@@ -358,29 +419,27 @@ function init() {
 
 # create output folder
 if [ -d $WORKDIR ];then err "Folder $WORKDIR already exists!"; fi
+log_step "[init] Preparing workdir"
 mkdir -p $WORKDIR
 
 # copy config resources
 cp -r ${PIPELINE_HOME}/config $WORKDIR/
 
-echo "Editing config.yaml with the following parameters:"
-echo ""
-
-echo "Pipeline Dir: $PIPELINE_HOME"
-echo "Git Commit/Tag: $GIT_COMMIT_TAG"
-echo "Work Dir: $WORKDIR"
-echo "Host: $HOST"
-echo "Additives: $ADDITIVES"
-echo "Viruses: $VIRUSES"
-echo "Manifest: $MANIFEST"
-echo "Temp Dir: $TEMP_DIR"
-echo "Refs Dir: $REFS_DIR"
-echo "Cluster Profile: $CLUSTER_PROFILE"
-echo "Singularity Cache Dir: $APPTAINER_CACHE_DIR"
-echo "Singularity Tmp Dir: $APPTAINER_TMP_DIR"
-echo "Singularity Pull Dir: $APPTAINER_PULL_DIR"
-echo "Editing file $WORKDIR/config.yaml"
-echo "..."
+log_info "Editing config.yaml with the following parameters:"
+log_info "Pipeline Dir: $PIPELINE_HOME"
+log_info "Git Commit/Tag: $GIT_COMMIT_TAG"
+log_info "Work Dir: $WORKDIR"
+log_info "Host: $HOST"
+log_info "Additives: $ADDITIVES"
+log_info "Viruses: $VIRUSES"
+log_info "Manifest: $MANIFEST"
+log_info "Temp Dir: $TEMP_DIR"
+log_info "Refs Dir: $REFS_DIR"
+log_info "Cluster Profile: $CLUSTER_PROFILE"
+log_info "Singularity Cache Dir: $APPTAINER_CACHE_DIR"
+log_info "Singularity Tmp Dir: $APPTAINER_TMP_DIR"
+log_info "Singularity Pull Dir: $APPTAINER_PULL_DIR"
+log_info "Editing file $WORKDIR/config.yaml"
 
 # copy config template and samples files
 if [ ! -f $CONFIGFILE ];then
@@ -399,8 +458,7 @@ else
   err "File $WORKDIR/config.yaml already exists!"
 fi
 
-echo "Completed writing $WORKDIR/config.yaml"
-echo ""
+log_ok "Completed writing $WORKDIR/config.yaml"
 
 if [ ! -f $WORKDIR/samples.tsv ];then
 # copy manifest file ... follow symlink
@@ -408,15 +466,11 @@ cp -L $MANIFEST $WORKDIR/samples.tsv
 fi
 
 #create log and stats folders
-if [ ! -d $WORKDIR/logs ]; then mkdir -p $WORKDIR/logs;echo "Logs Dir: $WORKDIR/logs";fi
-if [ ! -d $WORKDIR/stats ];then mkdir -p $WORKDIR/stats;echo "Stats Dir: $WORKDIR/stats";fi
+if [ ! -d $WORKDIR/logs ]; then mkdir -p $WORKDIR/logs;log_ok "Logs Dir: $WORKDIR/logs";fi
+if [ ! -d $WORKDIR/stats ];then mkdir -p $WORKDIR/stats;log_ok "Stats Dir: $WORKDIR/stats";fi
 
-echo "Done Initializing $WORKDIR. !!"
-echo "##########################################################################################"
-echo " You can now edit the following files: "
-echo " $WORKDIR/config.yaml "
-echo " $WORKDIR/samples.tsv"
-echo "##########################################################################################"
+log_ok "Initialization completed for $WORKDIR"
+log_next "Edit $WORKDIR/config.yaml and $WORKDIR/samples.tsv, then run: harold -w=$WORKDIR -m=dryrun"
 
 }
 
@@ -439,6 +493,7 @@ function check_essential_files() {
 function reconfig(){
   # rebuild config file and replace the config.yaml in the WORKDIR
   # this is only for dev purposes when new key-value pairs are being added to the config file
+  log_step "[reconfig] Rebuilding config.yaml"
   check_essential_files
 sed -e "
   s|PIPELINE_HOME|$PIPELINE_HOME|g;
@@ -451,7 +506,7 @@ sed -e "
   s|KRAKEN2_DB|$KRAKEN2_DB|g;
   s|CLUSTER_PROFILE|$CLUSTER_PROFILE|g
 " ${PIPELINE_HOME}/config/config.yaml > $CONFIGFILE
-  echo "$WORKDIR/config.yaml has been updated!"
+  log_ok "$WORKDIR/config.yaml has been updated!"
 }
 
 ##########################################################################################
@@ -461,12 +516,13 @@ sed -e "
 
 function recluster(){
 
+  log_step "[recluster] Syncing cluster config into workdir"
   # copy slurm config files to workdi
   for f in $(find ${PIPELINE_HOME}/config/ -type d -name "slurm*");do
-    echo "Copying $f to $WORKDIR/config/"
+    log_info "Copying $f to $WORKDIR/config/"
     cp -r $f $WORKDIR/config/
   done
-  echo "Done reclustering!"
+  log_ok "Done reclustering!"
 }
 
 
@@ -480,15 +536,16 @@ function check_deps() {
 
 # load modules if available, or check whether they're in the path
 function load_modules() {
-  echo "Loading modules!!"
-  echo "$MODULE_LOAD"
+  log_step "[runcheck] Loading modules"
+  log_info "$MODULE_LOAD"
   eval $MODULE_LOAD
   module list
-  which python
-  which singularity
-  which snakemake
-  echo $PATH
+  log_info "python:      $(which python)"
+  log_info "singularity: $(which singularity)"
+  log_info "snakemake:   $(which snakemake)"
+  log_info "PATH:        $PATH"
   check_deps
+  log_ok "Modules loaded"
 }
 
 ##########################################################################################
@@ -507,8 +564,9 @@ function runcheck(){
 ##########################################################################################
 
 function dryrun() {
+  log_step "[dryrun] Running preflight checks"
   runcheck
-  echo "Done Runcheck!"
+  log_ok "Runcheck completed"
   set_singularity_binds
   timestamp=$(date +"%y%m%d%H%M%S")
   nfiles=$(find ${WORKDIR} -maxdepth 1 -name "dryrun.*.log"|wc -l)
@@ -517,13 +575,19 @@ function dryrun() {
       mv $f ${WORKDIR}/stats/
     done
   fi
+  log_divider
   run "--dry-run" | tee ${WORKDIR}/dryrun.${timestamp}.log
+  log_divider
+  log_ok "Dry-run completed. Log: ${WORKDIR}/dryrun.${timestamp}.log"
+  log_next "Submit run with: harold -w=$WORKDIR -m=run"
 }
 
 function touch() {
+  log_step "[touch] Touching output files"
   runcheck
   timestamp=$(date +"%y%m%d%H%M%S")
   run "--touch" | tee ${WORKDIR}/touch.${timestamp}.log
+  log_ok "Touch completed. Log: ${WORKDIR}/touch.${timestamp}.log"
 }
 
 ##########################################################################################
@@ -531,8 +595,10 @@ function touch() {
 ##########################################################################################
 
 function unlock() {
+  log_step "[unlock] Unlocking workdir"
   runcheck
   run "--unlock"
+  log_ok "Workdir unlocked"
 }
 
 ##########################################################################################
@@ -561,10 +627,21 @@ function printbinds(){
 ##########################################################################################
 
 function runlocal() {
+  log_step "[runlocal] Starting local interactive execution"
   runcheck
   set_singularity_binds
   if [ "$SLURM_JOB_ID" == "" ];then err "runlocal can only be done on an interactive node"; exit 1; fi
-  run "local"
+  log_divider
+  write_pipeline_state_marker running "runlocal_started"
+  if run "local"; then
+    write_pipeline_state_marker completed "runlocal_succeeded"
+    log_ok "Local run completed successfully"
+  else
+    rc=$?
+    write_pipeline_state_marker failed "runlocal_failed"
+    log_error "Local run failed (exit code ${rc})"
+    exit $rc
+  fi
 }
 
 ##########################################################################################
@@ -572,6 +649,7 @@ function runlocal() {
 ##########################################################################################
 
 function runslurm() {
+  log_step "[run] Preparing SLURM submission"
   runcheck
   set_singularity_binds
   timestamp=$(date +"%y%m%d%H%M%S")
@@ -601,6 +679,41 @@ __PART_OPTION__
 
 set -euo pipefail
 
+function _json_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n\t' '  '
+}
+
+function _write_pipeline_state_marker() {
+  local state="$1"
+  local reason="${2:-}"
+  local job_id="${3:-${SLURM_JOB_ID:-NA}}"
+  local now_utc host sidecar sidecar_tmp
+  now_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  host=$(hostname 2>/dev/null || echo "unknown")
+  sidecar="__WORKDIR__/pipeline.status.json"
+  sidecar_tmp="${sidecar}.tmp.$$"
+  rm -f "__WORKDIR__/pipeline.running" "__WORKDIR__/pipeline.completed" "__WORKDIR__/pipeline.failed" "__WORKDIR__/pipeline.canceled"
+  : > "__WORKDIR__/pipeline.${state}"
+  cat > "${sidecar_tmp}" << JSON
+{
+  "pipeline": "HAROLD",
+  "version": "__VERSION__",
+  "git_commit_tag": "__GIT_COMMIT_TAG__",
+  "state": "$(_json_escape "${state}")",
+  "reason": "$(_json_escape "${reason}")",
+  "runmode": "run",
+  "workdir": "__WORKDIR__",
+  "slurm_job_id": "$(_json_escape "${job_id}")",
+  "host": "$(_json_escape "${host}")",
+  "timestamp_utc": "${now_utc}"
+}
+JSON
+  mv "${sidecar_tmp}" "${sidecar}"
+}
+
+trap '_write_pipeline_state_marker canceled "signal_SIGTERM"; exit 130' SIGTERM
+trap '_write_pipeline_state_marker canceled "signal_SIGINT"; exit 130' SIGINT
+
 cd __WORKDIR__
 
 # Export singularity cache dir if configured
@@ -613,8 +726,69 @@ __EXPORT_PROFILE_CMD__
 __MODULE_LOAD_CMD__
 __CONDA_ACTIVATE__
 
+echo "------------------------------------------------------------------"
+echo "STEP  [head_job] Starting Snakemake head process"
+echo "------------------------------------------------------------------"
+
+# ── Progress monitor ─────────────────────────────────────────────────
+# Background loop: waits for this job's own stdout (slurm-<jobid>.out, which
+# is where Snakemake's own "N of M steps (P%) done" lines land), then
+# periodically writes a human-readable progress summary into
+# pipeline.running so `cat pipeline.running` shows live progress.
+_progress_monitor() {
+  local logfile="__WORKDIR__/slurm-${SLURM_JOB_ID}.out"
+  local marker="__WORKDIR__/pipeline.running"
+  local waited=0
+  local max_wait=300
+  local raw done_n total_n pct remaining updated
+
+  while [[ ! -f "$logfile" && "$waited" -lt "$max_wait" ]]; do
+    [[ -f "$marker" ]] || return 0
+    sleep 10
+    waited=$(( waited + 10 ))
+  done
+
+  while true; do
+    [[ -f "$marker" ]] || break
+    if [[ -f "$logfile" ]]; then
+      raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "$logfile" 2>/dev/null | tail -1 || true)
+      if [[ -n "$raw" ]]; then
+        done_n=$(printf '%s' "$raw" | grep -oP '^\d+' || true)
+        total_n=$(printf '%s' "$raw" | grep -oP '(?<=of )\d+' || true)
+        pct=$(printf '%s' "$raw" | grep -oP '\d+(?=%)' || true)
+        if [[ -n "$done_n" && -n "$total_n" && -n "$pct" ]]; then
+          remaining=$(( total_n - done_n ))
+          (( remaining < 0 )) && remaining=0
+          updated=$(date '+%Y-%m-%d %H:%M:%S')
+          printf 'Progress : %s / %s steps complete (%s%%)\nRemaining: %s steps\nUpdated  : %s\n' \
+            "$done_n" "$total_n" "$pct" "$remaining" "$updated" > "$marker"
+        fi
+      fi
+    fi
+    sleep 60
+  done
+}
+_progress_monitor &
+_monitor_pid=$!
+# ─────────────────────────────────────────────────────────────────────
+
 # Run snakemake (head job)
+set +e
 snakemake -s __SNAKEFILE__ --directory __WORKDIR__ -j 100 --verbose __APPTAINER_PREFIX__ --profile config/__CLUSTER_PROFILE__
+snakemake_rc=$?
+set -e
+
+kill "$_monitor_pid" 2>/dev/null || true
+wait "$_monitor_pid" 2>/dev/null || true
+
+if [[ "$snakemake_rc" -eq 0 ]]; then
+  _write_pipeline_state_marker completed "snakemake_succeeded"
+  echo "OK    [head_job] Snakemake completed successfully"
+else
+  _write_pipeline_state_marker failed "snakemake_failed"
+  echo "ERROR [head_job] Snakemake failed (exit code ${snakemake_rc})"
+  exit "$snakemake_rc"
+fi
 SBATCH_EOF
 
   # Replace placeholders with actual values (safe expansion)
@@ -622,6 +796,8 @@ SBATCH_EOF
   sed -i "s|__SNAKEFILE__|${SNAKEFILE}|g" ${SBATCH_SCRIPT}
   sed -i "s|__CLUSTER_PROFILE__|${CLUSTER_PROFILE}|g" ${SBATCH_SCRIPT}
   sed -i "s|__CONDA_ACTIVATE__|${__CONDA_ACTIVATE__}|g" ${SBATCH_SCRIPT}
+  sed -i "s|__VERSION__|${VERSION}|g" ${SBATCH_SCRIPT}
+  sed -i "s|__GIT_COMMIT_TAG__|${GIT_COMMIT_TAG}|g" ${SBATCH_SCRIPT}
   if [[ -n "${APPTAINER_PREFIX_ARG}" ]]; then
     APPTAINER_PREFIX_ESCAPED=$(
       printf "%s" "${APPTAINER_PREFIX_ARG}" | sed -e 's/[&/]/\\&/g' -e 's/\\/\\\\/g' -e 's/"/\\"/g'
@@ -668,11 +844,26 @@ PY
     sed -i "s|__MODULE_LOAD_CMD__||g" ${SBATCH_SCRIPT}
   fi
 
+  log_divider
+  write_pipeline_state_marker running "submission_started"
+
   # Submit the head job to Slurm and capture job id
   if command -v sbatch &> /dev/null; then
-    JOBID=$(sbatch --parsable ${SBATCH_SCRIPT})
-    echo "Submitted head job as sbatch job ${JOBID}. Output: ${WORKDIR}/slurm-${JOBID}.out"
+    if ! JOBID=$(sbatch --parsable ${SBATCH_SCRIPT}); then
+      write_pipeline_state_marker failed "sbatch_submission_failed"
+      log_error "Failed to submit ${SBATCH_SCRIPT}"
+      exit 1
+    fi
+    write_pipeline_state_marker running "sbatch_submitted" "${JOBID}"
+    log_divider
+    log_ok "Submitted head job as sbatch job ${JOBID}. Output: ${WORKDIR}/slurm-${JOBID}.out"
+    log_next "Monitor:  squeue -u $USER"
+    log_next "Progress: tail -f ${WORKDIR}/slurm-${JOBID}.out"
+    log_next "Status:   ls -1 ${WORKDIR}/pipeline.*"
+    log_next "Sidecar:  ${WORKDIR}/pipeline.status.json"
+    log_divider
   else
+    write_pipeline_state_marker failed "sbatch_not_found"
     err "sbatch not found in PATH; cannot submit head job to Slurm"
   fi
 
@@ -804,11 +995,11 @@ function run() {
 
 function reset() {
   #delete the workdir and re-initialize it
-  echo "Working Dir: $WORKDIR"
+  log_info "Working Dir: $WORKDIR"
   if [ ! -d $WORKDIR ];then err "Folder $WORKDIR does not exist!";fi
-  echo "Deleting $WORKDIR"
+  log_warn "Deleting $WORKDIR"
   rm -rf $WORKDIR
-  echo "Re-Initializing $WORKDIR"
+  log_step "Re-Initializing $WORKDIR"
   init
 }
 
@@ -861,7 +1052,7 @@ function main(){
   done
 
   WORKDIR=$(readlink -f $WORKDIR)
-  echo "Working Dir: $WORKDIR"
+  log_info "Working Dir: $WORKDIR"
   CONFIGFILE="${WORKDIR}/config.yaml"
 
   SCRATCH_ROOT="${SCRATCH:-/scratch/$USER}"
@@ -884,7 +1075,7 @@ function main(){
   if [[ -n "$APPTAINER_SIF_DIR" ]]; then
     export APPTAINER_PREFIX_ARG="--apptainer-prefix=${APPTAINER_SIF_DIR}"
   else
-    echo "ERROR: APPTAINER_SIF_DIR is not set!"
+    log_error "APPTAINER_SIF_DIR is not set!"
     exit 1
   fi
 

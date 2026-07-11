@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 - **Config key renamed:** `infer_strandedness` → `use_infer_strandedness`. Update existing config files to use the new key name for clarity (true = use inferred values, false = use manifest values).
 
 ### Added
+- Pipeline run-state tracking — `harold` now writes `pipeline.{running,completed,failed,canceled}` markers and a `pipeline.status.json` sidecar to WORKDIR, updated on `runlocal`/`run` start, success, failure, and Slurm cancellation (SIGTERM/SIGINT trap)
+- Live progress monitoring — Slurm head job now tails Snakemake's step-completion output and writes a human-readable progress summary into `pipeline.running`
+- Structured CLI logging — `harold` output now uses leveled log helpers (`INFO`/`STEP`/`OK`/`WARN`/`ERROR`/`NEXT`) with next-step hints after `init`, `dryrun`, and job submission
 - S3 deposit feature — Pipeline outputs can now be transferred to S3 buckets (GitHub #44)
 - Alignment summary report — New QC report in the workflow
 - FASTQ validation gating — Cutadapt can now be gated behind FASTQ validation
