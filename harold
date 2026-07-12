@@ -264,7 +264,7 @@ if [ "$PLATFORM" == "shen" ]; then
   # MODULE_LOAD="module load apptainer && module load snakemake"
   # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer && $PATH_PREPEND"
   MODULE_LOAD="module load apptainer"
-  TEMP_DIR="/scratch/${USER}/"
+  TEMP_DIR="/scratch/${USER}/harold_temp/"
   REFS_DIR="/project/dremel_lab/workflows/reference_data/fasta_gtf"
   KRAKEN2_DB="/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
   hint="This is set in pipelines mamba environment. If you are running into this error reach out to cud2td@virginia.edu."
