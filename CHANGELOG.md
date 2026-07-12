@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Documentation clarification — Improved strandedness documentation to clarify that HAROLD always infers strandedness and reports it; the config option controls only whether inferred or manifest values are used for count extraction
 
 ### Fixed
+- Scratch temp dir crowding — Per-job scratch directories now nest under `/scratch/$USER/harold_temp/<uuid>` instead of `/scratch/$USER/<uuid>`
 - Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads
 - Qualimap Java heap scaling (#42) — Now properly scales from job memory allocation
 - kraken2 verbose output (#41) — Suppressed excessive per-read classification output to reduce log verbosity
