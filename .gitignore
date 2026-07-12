@@ -11,3 +11,5 @@ site/
 
 /.quarto/
 **/*.quarto_ipynb
+_site/
+.codex
