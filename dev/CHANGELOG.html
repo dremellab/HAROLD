@@ -497,12 +497,14 @@ ul.task-list li input[type="checkbox"] {
 <li>Default reference path — Updated fasta_gtf reference path to <code>/project/dremel_lab/workflows/reference_data/fasta_gtf</code></li>
 <li>Manifest initialization — Strand values now normalized to lowercase during manifest parsing</li>
 <li>Documentation clarification — Improved strandedness documentation to clarify that HAROLD always infers strandedness and reports it; the config option controls only whether inferred or manifest values are used for count extraction</li>
+<li>S3 documentation accuracy — Corrected <code>s3_configuration.md</code>’s “Files Transferred to S3” table, which listed peak files, ataqv data, and tRNA/Tn5 outputs that HAROLD doesn’t produce; documented the previously-missing SJ, DEG/GSEA, and normalized-counts transfers instead</li>
+<li>SLURM resource tuning — Added initial <code>set-resources</code> overrides for <code>alignment_summary</code> and <code>warm_msigdb_cache</code> (previously fell back to generic defaults)</li>
 </ul>
 </section>
 <section id="fixed" class="level3">
 <h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
 <ul>
-<li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success</li>
+<li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success, and no longer depend on always being invoked as <code>... &amp;&amp; exit 0</code> to do so safely</li>
 <li>Stray user-site packages — <code>harold</code> wrapper and its Slurm job script now set <code>PYTHONNOUSERSITE=1</code> to isolate from <code>~/.local</code> pip <code>--user</code> packages</li>
 <li>Scratch temp dir crowding — Per-job scratch directories now nest under <code>/scratch/$USER/harold_temp/&lt;uuid&gt;</code> instead of <code>/scratch/$USER/&lt;uuid&gt;</code></li>
 <li>Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads</li>
@@ -512,6 +514,13 @@ ul.task-list li input[type="checkbox"] {
 <li>Validation hardening — Improved input validation and Rivanna submission defaults</li>
 <li>Fastq validator escaping — Fixed bash variable escaping in FASTQ validation rule</li>
 <li>Strandedness normalization — Manifest strandedness values now consistently lowercase</li>
+<li><code>pipeline.status.json</code> on Slurm runs — Fixed invalid JSON caused by an unescaped literal tab in <code>git_commit_tag</code></li>
+<li><code>unlock</code> silent failures — Now propagates the real exit code instead of always reporting success</li>
+<li>S3 transfer completeness — <code>s3_transfer_if_enabled</code> now depends on every pipeline output instead of a hand-picked subset, so it can no longer finish while other stages (DEG/GSEA, QC, etc.) are still running</li>
+<li>DEG/GSEA variant directory naming — Output directories now always include both the ERCC and batch tags (e.g.&nbsp;<code>wo_ercc_wo_batch</code>), not just when <code>use_ercc: both</code></li>
+<li>Generated Slurm script corruption — Fixed a sed-substitution escaping bug that could corrupt the generated head-job script when <code>WORKDIR</code>, <code>GIT_COMMIT_TAG</code>, or similar values contained <code>/</code>, <code>&amp;</code>, or <code>\</code></li>
+<li>Removed a dead <code>CONDA_ACTIVATE</code> placeholder in the generated Slurm head-job template that had silently been a no-op since introduction</li>
+<li><code>pipeline.*</code> state marker swap — Reordered marker creation/removal so there’s never a brief window with no marker file present</li>
 </ul>
 </section>
 </section>
