@@ -30,20 +30,20 @@ rule s3_transfer_if_enabled:
                 echo "ERROR: s3_sample_set_name is required when push_to_s3=true"
                 exit 1
             fi
-            export AWS_SHARED_CREDENTIALS_FILE={params.creds_file}
+            export AWS_SHARED_CREDENTIALS_FILE="{params.creds_file}"
             export AWS_PROFILE=s3-globus-user
-            python3 {params.scriptsdir}/s3_transfer_harold.py \\
+            python3 "{params.scriptsdir}/s3_transfer_harold.py" \\
                 --workdir "$(pwd)" \\
                 --pipeline-name "{params.pipeline_name}" \\
                 --sample-set-name "{params.sample_set}" \\
                 --bucket "{params.bucket}" \\
                 --s3-prefix "{params.s3_prefix}" \\
-                --storage-class {params.default_storage} \\
-                --large-file-storage-class {params.large_file_storage} \\
-                && touch {output.sentinel} \\
+                --storage-class "{params.default_storage}" \\
+                --large-file-storage-class "{params.large_file_storage}" \\
+                && touch "{output.sentinel}" \\
                 || exit 1
         else
             echo "S3 transfer disabled (push_to_s3=false)"
-            touch {output.sentinel}
+            touch "{output.sentinel}"
         fi
         """

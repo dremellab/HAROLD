@@ -167,6 +167,16 @@ function json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n\t' '  '
 }
 
+function sed_replacement_escape() {
+# Escape a value for safe use as the replacement side of `sed -i "s|placeholder|VALUE|g"`
+# (used when templating the generated SBATCH script). Backslash must be escaped
+# first, before & and the | delimiter, so the backslashes this inserts aren't
+# themselves re-escaped by a later pass -- doing it in the other order (as a
+# previous version of this script did for APPTAINER_PREFIX_ARG) silently
+# corrupts any value containing a literal / or &.
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/[&|]/\\&/g'
+}
+
 function write_pipeline_state_marker() {
 # Write a single state marker file (pipeline.<state>) and a JSON status
 # sidecar (pipeline.status.json) in WORKDIR.
@@ -835,23 +845,21 @@ else
 fi
 SBATCH_EOF
 
-  # Replace placeholders with actual values (safe expansion)
-  sed -i "s|__WORKDIR__|${WORKDIR}|g" ${SBATCH_SCRIPT}
-  sed -i "s|__SNAKEFILE__|${SNAKEFILE}|g" ${SBATCH_SCRIPT}
-  sed -i "s|__CLUSTER_PROFILE__|${CLUSTER_PROFILE}|g" ${SBATCH_SCRIPT}
-  sed -i "s|__CONDA_ACTIVATE__|${__CONDA_ACTIVATE__}|g" ${SBATCH_SCRIPT}
-  sed -i "s|__VERSION__|${VERSION}|g" ${SBATCH_SCRIPT}
-  sed -i "s|__GIT_COMMIT_TAG__|${GIT_COMMIT_TAG}|g" ${SBATCH_SCRIPT}
+  # Replace placeholders with actual values, escaped for safe use as a sed
+  # replacement (see sed_replacement_escape for why this matters).
+  sed -i "s|__WORKDIR__|$(sed_replacement_escape "${WORKDIR}")|g" ${SBATCH_SCRIPT}
+  sed -i "s|__SNAKEFILE__|$(sed_replacement_escape "${SNAKEFILE}")|g" ${SBATCH_SCRIPT}
+  sed -i "s|__CLUSTER_PROFILE__|$(sed_replacement_escape "${CLUSTER_PROFILE}")|g" ${SBATCH_SCRIPT}
+  sed -i "s|__CONDA_ACTIVATE__|$(sed_replacement_escape "${__CONDA_ACTIVATE__}")|g" ${SBATCH_SCRIPT}
+  sed -i "s|__VERSION__|$(sed_replacement_escape "${VERSION}")|g" ${SBATCH_SCRIPT}
+  sed -i "s|__GIT_COMMIT_TAG__|$(sed_replacement_escape "${GIT_COMMIT_TAG}")|g" ${SBATCH_SCRIPT}
   if [[ -n "${APPTAINER_PREFIX_ARG}" ]]; then
-    APPTAINER_PREFIX_ESCAPED=$(
-      printf "%s" "${APPTAINER_PREFIX_ARG}" | sed -e 's/[&/]/\\&/g' -e 's/\\/\\\\/g' -e 's/"/\\"/g'
-    )
-    sed -i "s|__APPTAINER_PREFIX__|${APPTAINER_PREFIX_ESCAPED}|g" ${SBATCH_SCRIPT}
+    sed -i "s|__APPTAINER_PREFIX__|$(sed_replacement_escape "${APPTAINER_PREFIX_ARG}")|g" ${SBATCH_SCRIPT}
   else
     sed -i "s|__APPTAINER_PREFIX__||g" ${SBATCH_SCRIPT}
   fi
   if [[ -n "${PART_OPT}" ]]; then
-    sed -i "s|__PART_OPTION__|#SBATCH ${PART_OPT}|g" ${SBATCH_SCRIPT}
+    sed -i "s|__PART_OPTION__|$(sed_replacement_escape "#SBATCH ${PART_OPT}")|g" ${SBATCH_SCRIPT}
   else
     sed -i "s|__PART_OPTION__||g" ${SBATCH_SCRIPT}
   fi
@@ -874,16 +882,14 @@ PY
 
   # Insert PROFILE export (may be empty)
   if [[ -n "${EXPORT_PROFILE_CMD:-}" ]]; then
-    ESCAPED_PROFILE_CMD=$(printf "%s" "${EXPORT_PROFILE_CMD}" | sed 's|\\|\\\\|g')
-    sed -i "s|__EXPORT_PROFILE_CMD__|${ESCAPED_PROFILE_CMD}|g" ${SBATCH_SCRIPT}
+    sed -i "s|__EXPORT_PROFILE_CMD__|$(sed_replacement_escape "${EXPORT_PROFILE_CMD}")|g" ${SBATCH_SCRIPT}
   else
     sed -i "s|__EXPORT_PROFILE_CMD__||g" ${SBATCH_SCRIPT}
   fi
 
   # MODULE_LOAD may contain commands to load modules/conda. Place it into script if set.
   if [[ -n "${MODULE_LOAD:-}" ]]; then
-    ESCAPED_MODULE_LOAD=$(printf "%s" "${MODULE_LOAD}" | sed 's|\\|\\\\|g')
-    sed -i "s|__MODULE_LOAD_CMD__|${ESCAPED_MODULE_LOAD}|g" ${SBATCH_SCRIPT}
+    sed -i "s|__MODULE_LOAD_CMD__|$(sed_replacement_escape "${MODULE_LOAD}")|g" ${SBATCH_SCRIPT}
   else
     sed -i "s|__MODULE_LOAD_CMD__||g" ${SBATCH_SCRIPT}
   fi
