@@ -623,11 +623,14 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/qc/alignment_summary.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bams/{sample}.Aligned.sortedByCoord.out.bam
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bams/{sample}.Aligned.sortedByCoord.out.bam.bai
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bigwigs/{sample}.{region}.bw
-s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/peaks/{sample}.*
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bigwigs/{sample}.{region}.junction.bb
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/SJ/{sample}.SJ.out.tab
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.rpkm.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tpm.tsv
-s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...</code></pre>
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/normalized_counts/normalize.html
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/GSEA/{contrast}_{variant}/{method}/gsea.html</code></pre>
 <p><strong>Namespace benefits:</strong></p>
 <ul>
 <li><strong>Scoping:</strong> Each pipeline (HAROLD, CHROMA, etc.) isolated; multiple runs grouped by sample_set_name</li>
@@ -656,57 +659,51 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...</code></pre>
 <tbody>
 <tr class="odd">
 <td><strong>Configuration</strong></td>
-<td><code>samples.tsv</code>, <code>config.yaml</code>, <code>contrasts.tsv</code></td>
+<td><code>samples.tsv</code>, <code>config.yaml</code>, <code>config/rivanna/config.yaml</code>, <code>contrasts.tsv</code> (if DEG/GSEA enabled)</td>
 <td>GLACIER_IR</td>
 <td>Metadata for reproducibility</td>
 </tr>
 <tr class="even">
 <td><strong>QC Reports</strong></td>
-<td><code>multiqc_report.html</code>, <code>alignment_summary.tsv</code>, MultiQC data</td>
+<td><code>multiqc_report.html</code>, MultiQC data, <code>alignment_summary.tsv</code></td>
 <td>GLACIER_IR</td>
-<td>High-level summary; quick access for review</td>
+<td>High-level, aggregated QC summary</td>
 </tr>
 <tr class="odd">
-<td><strong>Alignment QC</strong></td>
-<td>Qualimap reports, RSeQC outputs, ataqv data</td>
-<td>GLACIER_IR</td>
-<td>Supplementary QC; browseable</td>
-</tr>
-<tr class="even">
 <td><strong>BAM Files</strong></td>
-<td><code>.bam</code>, <code>.bai</code> (all samples, all regions)</td>
+<td><code>.bam</code>, <code>.bai</code> (final sorted BAMs, all samples, all regions)</td>
 <td>GLACIER</td>
 <td>Large files; infrequent access; ~1 min retrieval acceptable</td>
 </tr>
-<tr class="odd">
-<td><strong>BigWig Tracks</strong></td>
-<td><code>.bw</code> (all samples, all regions)</td>
+<tr class="even">
+<td><strong>BigWig/BigBed Tracks</strong></td>
+<td><code>.bw</code> coverage tracks and <code>.bb</code> junction tracks (all samples, all regions)</td>
 <td>GLACIER_IR</td>
 <td>Visualization; medium size; instant retrieval useful</td>
 </tr>
-<tr class="even">
-<td><strong>Peak Files</strong></td>
-<td><code>.narrowPeak.gz</code>, <code>.summits.bed.gz</code></td>
-<td>GLACIER_IR</td>
-<td>Region annotations</td>
-</tr>
 <tr class="odd">
+<td><strong>Splice Junctions</strong></td>
+<td><code>SJ.out.tab</code> (final-pass STAR splice junctions)</td>
+<td>GLACIER_IR</td>
+<td>Splice-junction calls</td>
+</tr>
+<tr class="even">
 <td><strong>Count Matrices</strong></td>
-<td><code>counts_matrix.tsv</code>, RPKM, TPM, transcript-level</td>
+<td><code>counts_matrix.tsv</code>, RPKM, TPM, transcript-level equivalents, <code>aggregate_tin.tsv</code></td>
 <td>GLACIER_IR</td>
 <td>Primary output for analysis</td>
 </tr>
-<tr class="even">
-<td><strong>DESeq2 Reports</strong></td>
-<td><code>deseq2/</code> directory (HTML reports, TSVs)</td>
-<td>GLACIER_IR</td>
-<td>Analysis results; browseable</td>
-</tr>
 <tr class="odd">
-<td><strong>tRNA/Tn5 Counts</strong></td>
-<td>Aggregate count matrices, PFMs, BigBeds</td>
+<td><strong>Normalized Counts</strong></td>
+<td><code>counts/normalized_counts/normalize.html</code> (if <code>diffex_normalized_counts: true</code>)</td>
 <td>GLACIER_IR</td>
-<td>Specialized quantification</td>
+<td>DiffEx-normalized count report</td>
+</tr>
+<tr class="even">
+<td><strong>DEG &amp; GSEA</strong></td>
+<td><code>counts/DEG/</code>, <code>counts/GSEA/</code> — limma/DESeq2/edgeR results and GSEA reports (if <code>diffex_deg_gsea: true</code>)</td>
+<td>GLACIER_IR</td>
+<td>Differential expression &amp; enrichment results</td>
 </tr>
 </tbody>
 </table>
