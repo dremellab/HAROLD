@@ -43,9 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-21dfb6f5b24708782b3851273225b992.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-1d9ce628b283cb5cd0383b305d90339b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-21dfb6f5b24708782b3851273225b992.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-c77c9138bec0b7f87654b70582999a87.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ac5bb5289c2b1a5be279e62d808716b0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-c77c9138bec0b7f87654b70582999a87.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -682,6 +682,16 @@ ul.task-list li input[type="checkbox"] {
 <li>If <code>diffex_normalized_counts: true</code> in config</li>
 <li>Run DiffEx R package for batch-effect correction, ERCC normalization, etc.</li>
 <li>Output: <code>counts/normalized_counts/normalize.html</code> (interactive report)</li>
+</ul>
+</section>
+<section id="h.-optional-diffex-deg-gsea" class="level4">
+<h4 class="anchored" data-anchor-id="h.-optional-diffex-deg-gsea"><strong>5h. Optional: DiffEx DEG + GSEA</strong></h4>
+<ul>
+<li>If <code>diffex_deg_gsea: true</code> in config, requires a <code>contrasts.tsv</code> file (<code>group1</code>/<code>group2</code> columns)</li>
+<li>Per contrast, run <code>diffex deg</code> (limma, DESeq2, and edgeR) against <code>counts_matrix.tsv</code></li>
+<li>Per method’s ranked gene list (<code>.rnk</code>), run <code>diffex gsea</code></li>
+<li><code>use_ercc</code>/<code>use_batch</code> are tri-state (<code>false</code>/<code>true</code>/<code>both</code>); <code>both</code> runs DEG twice and keeps both variants</li>
+<li>Outputs: <code>counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv</code>, <code>counts/GSEA/{contrast}_{variant}/{method}/gsea.html</code></li>
 </ul>
 <hr>
 </section>

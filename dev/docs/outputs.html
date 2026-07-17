@@ -43,9 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-21dfb6f5b24708782b3851273225b992.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-1d9ce628b283cb5cd0383b305d90339b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-21dfb6f5b24708782b3851273225b992.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-c77c9138bec0b7f87654b70582999a87.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-ac5bb5289c2b1a5be279e62d808716b0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-c77c9138bec0b7f87654b70582999a87.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -438,6 +438,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#optional-outputs" id="toc-optional-outputs" class="nav-link" data-scroll-target="#optional-outputs">Optional Outputs</a>
   <ul class="collapse">
   <li><a href="#normalized-count-matrices-diffex-integration" id="toc-normalized-count-matrices-diffex-integration" class="nav-link" data-scroll-target="#normalized-count-matrices-diffex-integration">Normalized Count Matrices (DiffEx Integration)</a></li>
+  <li><a href="#deg-and-gsea-diffex-integration" id="toc-deg-and-gsea-diffex-integration" class="nav-link" data-scroll-target="#deg-and-gsea-diffex-integration">DEG and GSEA (DiffEx Integration)</a></li>
   <li><a href="#s3-transfer-sentinel" id="toc-s3-transfer-sentinel" class="nav-link" data-scroll-target="#s3-transfer-sentinel">S3 Transfer Sentinel</a></li>
   </ul></li>
   <li><a href="#output-naming-conventions" id="toc-output-naming-conventions" class="nav-link" data-scroll-target="#output-naming-conventions">Output Naming Conventions</a>
@@ -1846,6 +1847,40 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <tr class="odd">
 <td><code>counts/normalized_counts/normalize.html</code></td>
 <td><strong>DiffEx-normalized count matrix report</strong> (only if <code>diffex_normalized_counts: true</code> in config). HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.). Requires DiffEx configuration in <code>config.yaml</code>.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deg-and-gsea-diffex-integration" class="level3">
+<h3 class="anchored" data-anchor-id="deg-and-gsea-diffex-integration">DEG and GSEA (DiffEx Integration)</h3>
+<p>Only generated if <code>diffex_deg_gsea: true</code> in config, and requires a <code>contrasts.tsv</code> file (tab-delimited, <code>group1</code>/<code>group2</code> columns) listing which <code>groupName</code> pairs from <code>samples.tsv</code> to compare. <code>{contrast}</code> is <code>{group1}_vs_{group2}</code>. <code>{variant}</code> is <code>wo_batch</code>/<code>w_batch</code> by default; it gains explicit <code>wo_ercc</code>/<code>w_ercc</code> segments too when <code>use_ercc: both</code> is set (the tri-state <code>use_ercc</code>/<code>use_batch</code> config options — <code>false</code>, <code>true</code>, or <code>both</code> — run DEG once per selected state, so <code>both</code> produces every variant side by side rather than picking one).</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv</code></td>
+<td><strong>Differential expression results</strong> for one contrast/variant, from one of <code>limma</code>, <code>DESeq2</code>, or <code>edgeR</code> (casing matches the <code>diffex deg</code> tool’s own output naming).</td>
+</tr>
+<tr class="even">
+<td><code>counts/DEG/{contrast}_{variant}/{method}_deg/{method}_gsea.rnk</code></td>
+<td><strong>Ranked gene list</strong> derived from the DEG results, used as input to the GSEA step below.</td>
+</tr>
+<tr class="odd">
+<td><code>counts/GSEA/{contrast}_{variant}/{method}/GSEA_results.xlsx</code></td>
+<td><strong>GSEA enrichment results</strong> for the corresponding <code>.rnk</code> file.</td>
+</tr>
+<tr class="even">
+<td><code>counts/GSEA/{contrast}_{variant}/{method}/gsea.html</code></td>
+<td><strong>Interactive GSEA report</strong> for the corresponding <code>.rnk</code> file.</td>
 </tr>
 </tbody>
 </table>
