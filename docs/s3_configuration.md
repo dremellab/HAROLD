@@ -78,11 +78,14 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/qc/alignment_summary.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bams/{sample}.Aligned.sortedByCoord.out.bam
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bams/{sample}.Aligned.sortedByCoord.out.bam.bai
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bigwigs/{sample}.{region}.bw
-s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/peaks/{sample}.*
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/bigwigs/{sample}.{region}.junction.bb
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/SJ/{sample}.SJ.out.tab
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.rpkm.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tpm.tsv
-s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/deseq2/...
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/normalized_counts/normalize.html
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/GSEA/{contrast}_{variant}/{method}/gsea.html
 ```
 
 **Namespace benefits:**
@@ -98,15 +101,14 @@ HAROLD transfers the following output types:
 
 | Category | Files | Storage Class | Reason |
 |---|---|---|---|
-| **Configuration** | `samples.tsv`, `config.yaml`, `contrasts.tsv` | GLACIER_IR | Metadata for reproducibility |
-| **QC Reports** | `multiqc_report.html`, `alignment_summary.tsv`, MultiQC data | GLACIER_IR | High-level summary; quick access for review |
-| **Alignment QC** | Qualimap reports, RSeQC outputs, ataqv data | GLACIER_IR | Supplementary QC; browseable |
-| **BAM Files** | `.bam`, `.bai` (all samples, all regions) | GLACIER | Large files; infrequent access; ~1 min retrieval acceptable |
-| **BigWig Tracks** | `.bw` (all samples, all regions) | GLACIER_IR | Visualization; medium size; instant retrieval useful |
-| **Peak Files** | `.narrowPeak.gz`, `.summits.bed.gz` | GLACIER_IR | Region annotations |
-| **Count Matrices** | `counts_matrix.tsv`, RPKM, TPM, transcript-level | GLACIER_IR | Primary output for analysis |
-| **DESeq2 Reports** | `deseq2/` directory (HTML reports, TSVs) | GLACIER_IR | Analysis results; browseable |
-| **tRNA/Tn5 Counts** | Aggregate count matrices, PFMs, BigBeds | GLACIER_IR | Specialized quantification |
+| **Configuration** | `samples.tsv`, `config.yaml`, `config/rivanna/config.yaml`, `contrasts.tsv` (if DEG/GSEA enabled) | GLACIER_IR | Metadata for reproducibility |
+| **QC Reports** | `multiqc_report.html`, MultiQC data, `alignment_summary.tsv` | GLACIER_IR | High-level, aggregated QC summary |
+| **BAM Files** | `.bam`, `.bai` (final sorted BAMs, all samples, all regions) | GLACIER | Large files; infrequent access; ~1 min retrieval acceptable |
+| **BigWig/BigBed Tracks** | `.bw` coverage tracks and `.bb` junction tracks (all samples, all regions) | GLACIER_IR | Visualization; medium size; instant retrieval useful |
+| **Splice Junctions** | `SJ.out.tab` (final-pass STAR splice junctions) | GLACIER_IR | Splice-junction calls |
+| **Count Matrices** | `counts_matrix.tsv`, RPKM, TPM, transcript-level equivalents, `aggregate_tin.tsv` | GLACIER_IR | Primary output for analysis |
+| **Normalized Counts** | `counts/normalized_counts/normalize.html` (if `diffex_normalized_counts: true`) | GLACIER_IR | DiffEx-normalized count report |
+| **DEG & GSEA** | `counts/DEG/`, `counts/GSEA/` — limma/DESeq2/edgeR results and GSEA reports (if `diffex_deg_gsea: true`) | GLACIER_IR | Differential expression & enrichment results |
 
 **Total typical upload size:** 50–500 GB per run (scales with read count and number of samples)
 
