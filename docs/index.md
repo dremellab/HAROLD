@@ -45,6 +45,10 @@ HAROLD automates the process from raw FASTQ files to normalized count matrices a
 
 - **HAROLD supports optional S3 cloud deposition.** Outputs can be automatically transferred to Amazon S3 buckets for cloud storage, collaboration, and downstream analysis without local disk overhead. Configurable storage classes optimize costs (GLACIER for BAMs, GLACIER_IR for metadata/reports).
 
+- **HAROLD can run DEG and GSEA directly.** Given a `contrasts.tsv` manifest, HAROLD runs differential expression (limma, DESeq2, edgeR) and gene set enrichment analysis per contrast via **DiffEx**, with tri-state ERCC/batch variants and interactive reports — no separate manual DiffEx invocation required.
+
+- **HAROLD tracks and reports its own run state.** Every run writes `pipeline.{running,completed,failed,canceled}` markers and a `pipeline.status.json` sidecar to the working directory, with live progress updates during SLURM execution, so status can be checked without parsing logs.
+
 ---
 
 ## 🧬 Workflow Overview

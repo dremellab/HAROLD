@@ -4,10 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [dev]
 
+### Changed
+- TBD
+
+## [2.0.0]
+
 ### ⚠️ Breaking Changes
 - **Config key renamed:** `infer_strandedness` → `use_infer_strandedness`. Update existing config files to use the new key name for clarity (true = use inferred values, false = use manifest values).
 
 ### Added
+- DEG and GSEA pipeline stage — New optional `diffex_deg_gsea` stage driven by a `contrasts.tsv` manifest (`harold --contrasts/-x`); runs DiffEx DEG (limma/DESeq2/edgeR) per contrast/variant/method followed by GSEA, with tri-state ERCC/batch variant expansion, a shared MSigDB cache warm-up, and `.rnk` sanitization for +/-Inf scores
 - Pipeline run-state tracking — `harold` now writes `pipeline.{running,completed,failed,canceled}` markers and a `pipeline.status.json` sidecar to WORKDIR, updated on `runlocal`/`run` start, success, failure, and Slurm cancellation (SIGTERM/SIGINT trap)
 - Live progress monitoring — Slurm head job now tails Snakemake's step-completion output and writes a human-readable progress summary into `pipeline.running`
 - Structured CLI logging — `harold` output now uses leveled log helpers (`INFO`/`STEP`/`OK`/`WARN`/`ERROR`/`NEXT`) with next-step hints after `init`, `dryrun`, and job submission
@@ -25,6 +31,8 @@ All notable changes to this project will be documented in this file.
 - Documentation clarification — Improved strandedness documentation to clarify that HAROLD always infers strandedness and reports it; the config option controls only whether inferred or manifest values are used for count extraction
 
 ### Fixed
+- `dryrun`/`touch` exit codes — Now propagate Snakemake's real exit code instead of always reporting success
+- Stray user-site packages — `harold` wrapper and its Slurm job script now set `PYTHONNOUSERSITE=1` to isolate from `~/.local` pip `--user` packages
 - Scratch temp dir crowding — Per-job scratch directories now nest under `/scratch/$USER/harold_temp/<uuid>` instead of `/scratch/$USER/<uuid>`
 - Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads
 - Qualimap Java heap scaling (#42) — Now properly scales from job memory allocation

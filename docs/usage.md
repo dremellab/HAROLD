@@ -69,9 +69,44 @@ The workflow will now begin executing on Rivanna’s compute nodes. Each rule (s
 
 When the pipeline finishes, the working directory will contain organized subfolders for `counts`, `alignment`, `logs`, and `reports`. The main outputs include raw count matrices, sample manifest copies, BAM/BAI alignment files, bigWig coverage tracks, and the MultiQC report summarizing quality control results.
 
+### Tracking run state
+
+Every `runlocal`/`run` invocation writes a state marker and JSON status sidecar to `WORKDIR` so you can check pipeline status without digging through logs:
+
+- **State marker** — exactly one of `pipeline.running`, `pipeline.completed`, `pipeline.failed`, or `pipeline.canceled` exists in `WORKDIR` at any time, replaced as the run progresses. While a SLURM run is active, `pipeline.running` is periodically rewritten with a live progress summary (steps complete, percent done, steps remaining) parsed from Snakemake's own step-completion output, so `cat $WORKDIR/pipeline.running` gives an at-a-glance status.
+- **`pipeline.status.json`** — a structured sidecar with `state`, `reason`, `runmode`, `slurm_job_id`, `host`, and `timestamp_utc`, updated at submission, success, failure, and on cancellation (SIGTERM/SIGINT, e.g. `scancel`).
+
+```bash
+cat $WORKDIR/pipeline.running        # live progress, while a SLURM run is active
+cat $WORKDIR/pipeline.status.json    # structured status snapshot
+```
+
+`harold` command output itself is also leveled (`INFO`/`STEP`/`OK`/`WARN`/`ERROR`/`NEXT`), with `NEXT` lines suggesting the next command to run after `init`, `dryrun`, and job submission.
+
 ---
 
-## Step 4 (Optional): S3 Deposition
+## Step 4 (Optional): DEG & GSEA
+
+HAROLD can run differential expression (DEG) and gene set enrichment analysis (GSEA) directly on its count matrices via DiffEx. This step is **optional** and requires a contrasts manifest.
+
+To enable it:
+1. Create a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from your `samples.tsv` to compare.
+2. Supply it at `init` time with `--contrasts` or `-x` (it is copied to `WORKDIR/contrasts.tsv`), or add it to an already-initialized workdir and re-run `init`:
+   ```bash
+   harold -w=/scratch/$USER/harold_test -m=init \
+     --host=hg38 \
+     --additives=ERCC,BAC16Insert \
+     --viruses=NC_009333.1,NC_045512.2 \
+     --manifest=/project/$USER/samples.tsv \
+     --contrasts=/project/$USER/contrasts.tsv
+   ```
+3. Set `diffex_deg_gsea: true` in `config.yaml`.
+
+Per contrast, HAROLD runs `diffex deg` (limma, DESeq2, and edgeR) against the counts matrix, then `diffex gsea` on each method's ranked gene list. The tri-state `use_ercc`/`use_batch` config options (`false`/`true`/`both`) control which variants are produced; `both` runs DEG twice and keeps both. See [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration) for the full output layout.
+
+---
+
+## Step 5 (Optional): S3 Deposition
 
 HAROLD can automatically upload results to Amazon S3 for cloud storage and sharing. This step is **optional** and requires prior configuration.
 
