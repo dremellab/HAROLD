@@ -194,8 +194,15 @@ function write_pipeline_state_marker() {
   sidecar="${WORKDIR}/pipeline.status.json"
   sidecar_tmp="${sidecar}.tmp.$$"
 
-  rm -f "${WORKDIR}/pipeline.running" "${WORKDIR}/pipeline.completed" "${WORKDIR}/pipeline.failed" "${WORKDIR}/pipeline.canceled"
+  # Create the new marker before removing the old ones, so there's never a
+  # window with no pipeline.* marker present -- worst case is a brief window
+  # with two (new + stale old), which is a safer failure mode for anything
+  # polling pipeline.* than a window with none.
   : > "${WORKDIR}/pipeline.${state}"
+  for other_state in running completed failed canceled; do
+    [[ "${other_state}" == "${state}" ]] && continue
+    rm -f "${WORKDIR}/pipeline.${other_state}"
+  done
 
   cat > "$sidecar_tmp" << EOF
 {
@@ -598,8 +605,15 @@ function dryrun() {
     done
   fi
   log_divider
-  run "--dry-run" | tee ${WORKDIR}/dryrun.${timestamp}.log
-  rc=${PIPESTATUS[0]}
+  # Pipeline as an `if` condition (not a bare statement) so errexit is
+  # suppressed for this line intrinsically, regardless of how dryrun() itself
+  # is invoked at the call site -- unlike relying on the caller always doing
+  # `dryrun && exit 0`, which only works by accident of where it's called from.
+  if run "--dry-run" | tee ${WORKDIR}/dryrun.${timestamp}.log; then
+    rc=0
+  else
+    rc=${PIPESTATUS[0]}
+  fi
   log_divider
   if [ "$rc" -ne 0 ]; then
     log_error "Dry-run failed (exit code ${rc}). See log: ${WORKDIR}/dryrun.${timestamp}.log"
@@ -615,8 +629,12 @@ function touch() {
   log_step "[touch] Touching output files"
   runcheck
   timestamp=$(date +"%y%m%d%H%M%S")
-  run "--touch" | tee ${WORKDIR}/touch.${timestamp}.log
-  rc=${PIPESTATUS[0]}
+  # See dryrun() for why this is an `if` condition rather than a bare statement.
+  if run "--touch" | tee ${WORKDIR}/touch.${timestamp}.log; then
+    rc=0
+  else
+    rc=${PIPESTATUS[0]}
+  fi
   if [ "$rc" -ne 0 ]; then
     log_error "Touch failed (exit code ${rc}). See log: ${WORKDIR}/touch.${timestamp}.log"
     return $rc
@@ -741,8 +759,13 @@ function _write_pipeline_state_marker() {
   host=$(hostname 2>/dev/null || echo "unknown")
   sidecar="__WORKDIR__/pipeline.status.json"
   sidecar_tmp="${sidecar}.tmp.$$"
-  rm -f "__WORKDIR__/pipeline.running" "__WORKDIR__/pipeline.completed" "__WORKDIR__/pipeline.failed" "__WORKDIR__/pipeline.canceled"
+  # Create the new marker before removing the old ones -- see the wrapper's
+  # write_pipeline_state_marker for why.
   : > "__WORKDIR__/pipeline.${state}"
+  for other_state in running completed failed canceled; do
+    [[ "${other_state}" == "${state}" ]] && continue
+    rm -f "__WORKDIR__/pipeline.${other_state}"
+  done
   cat > "${sidecar_tmp}" << JSON
 {
   "pipeline": "HAROLD",
