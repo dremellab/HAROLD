@@ -121,3 +121,24 @@ set-resources:
     mem_mb: 4096 # 4 GB (minimal, just AWS CLI)
     runtime: 480 # 8 hours (for large transfers)
     threads: 1
+
+  # Initial estimates, not yet profiled against real production runs --
+  # revisit once there's usage data from actual v2.0.0 runs.
+  alignment_summary:
+    mem_mb: 8192 # 8 GB -- streams reads via pysam into a small per-contig
+                 # tally dict (not read-accumulating), so this is I/O/CPU-bound
+                 # rather than memory-bound.
+    runtime: 480 # 8 hours -- aggregates ALL samples' BAMs in a single
+                 # sequential job (bam.fetch(until_eof=True) per sample), so
+                 # runtime scales with total read depth across the whole
+                 # sample set, unlike the per-sample alignment rules above.
+    threads: 1   # single-threaded pysam iteration; no benefit from more cores.
+
+  warm_msigdb_cache:
+    mem_mb: 4096 # 4 GB -- lightweight R/msigdbr metadata fetch, not a
+                 # compute-heavy step.
+    runtime: 480 # 8 hours -- network-bound (MSigDB download); compute nodes
+                 # may have slower/more restricted egress than login nodes.
+                 # restart-times: 3 (set globally above) already retries
+                 # transient network failures.
+    threads: 1
