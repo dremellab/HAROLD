@@ -414,6 +414,58 @@ def _normalize_species_label(value):
 
 DIFFEX_HOST = _normalize_species_label(config.get('host'))
 
+DIFFEX_DEG_GSEA = str(config.get('diffex_deg_gsea', {}).get('run', 'false')).lower()
+
+def _tristate_options(value):
+    """Return the list of booleans a tri-state (false/true/both) config value expands to."""
+    value = str(value).strip().lower()
+    if value == "both":
+        return [True, False]
+    return [value == "true"]
+
+METHODS = ["limma", "DESeq2", "edgeR"]  # must match diffex deg's own output dir/file naming exactly
+CONTRASTS = []
+CONTRAST2GROUPS = {}
+VARIANTS = {}
+
+if DIFFEX_DEG_GSEA == "true":
+    CONTRASTS_FILE = config.get('diffex_deg_gsea', {}).get('contrasts')
+    if not CONTRASTS_FILE or not os.path.isfile(CONTRASTS_FILE):
+        raise FileNotFoundError(
+            f"diffex_deg_gsea.run is set to true in config.yaml, so a contrasts.tsv file is required, "
+            f"but none was found at diffex_deg_gsea.contrasts: '{CONTRASTS_FILE}'. "
+            f"Either fix that path in config.yaml, or supply one with 'harold --contrasts=/path/to/contrasts.tsv ...' "
+            f"to copy it into the workdir."
+        )
+    CONTRASTSDF = pd.read_csv(CONTRASTS_FILE, sep="\t", dtype=str).fillna("")
+
+    contrasts_required_columns = ["group1", "group2"]
+    missing_contrasts_columns = [col for col in contrasts_required_columns if col not in CONTRASTSDF.columns]
+    if missing_contrasts_columns:
+        print("Headers in the contrasts file:", [f'"{header}"' for header in CONTRASTSDF.columns])
+        raise ValueError(f"Missing required columns in contrasts file: {', '.join(missing_contrasts_columns)}")
+
+    if CONTRASTSDF[["group1", "group2"]].duplicated().any():
+        raise ValueError("Duplicate (group1, group2) rows found in contrasts file!")
+
+    known_groups = set(SAMPLESDF['groupName'])
+    unknown_groups = (set(CONTRASTSDF['group1']) | set(CONTRASTSDF['group2'])) - known_groups
+    if unknown_groups:
+        raise ValueError(f"Contrasts file references groupName(s) not present in the samplesheet: {', '.join(unknown_groups)}")
+
+    CONTRASTS = [f"{r.group1}_vs_{r.group2}" for r in CONTRASTSDF.itertuples()]
+    CONTRAST2GROUPS = {f"{r.group1}_vs_{r.group2}": (r.group1, r.group2) for r in CONTRASTSDF.itertuples()}
+
+    ERCC_OPTIONS = _tristate_options(config.get('diffex_deg_gsea', {}).get('use_ercc', 'false'))
+    BATCH_OPTIONS = _tristate_options(config.get('diffex_deg_gsea', {}).get('use_batch', 'false'))
+    for e in ERCC_OPTIONS:
+        for b in BATCH_OPTIONS:
+            parts = []
+            if len(ERCC_OPTIONS) > 1:
+                parts.append("w_ercc" if e else "wo_ercc")
+            parts.append("w_batch" if b else "wo_batch")
+            VARIANTS["_".join(parts)] = (e, b)
+
 USE_INFER_STRANDEDNESS = str(config.get("use_infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
 STRANDEDNESS_COLUMN = config.get("strandedness_column", "strandedness")

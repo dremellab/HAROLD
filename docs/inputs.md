@@ -239,5 +239,6 @@ validate_fastq: true  # default: false
 4. **Strandedness specification** (in manifest or config) — only needed if `use_infer_strandedness: false`
 5. **Custom GTF files** (in config) — tRNA and repeat annotations if desired
 6. **FASTQ validation** (in config) — enable for quality screening of input files
+7. **Contrasts manifest** (`contrasts.tsv`, `group1`/`group2` columns) — only needed if `diffex_deg_gsea: true`, to run DEG (limma/DESeq2/edgeR) and GSEA per contrast; see [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration)
 
 Together, these inputs ensure that HAROLD can dynamically build the appropriate reference index, validate experimental metadata, and execute reproducible, high-quality RNA-seq analyses across host and viral genomes. Most users need only the three required inputs; optional inputs add specialized functionality for specific experimental designs (tRNA analysis, repeat quantification, quality gating).

@@ -27,6 +27,7 @@ from typing import List, Tuple, Optional
 # Transfer rules for HAROLD outputs
 HAROLD_RULES = [
     {"kind": "path", "path": "samples.tsv", "dest": "config/samples.tsv"},
+    {"kind": "path", "path": "contrasts.tsv", "dest": "config/contrasts.tsv"},
     {"kind": "path", "path": "config.yaml", "dest": "config/config.yaml"},
     {"kind": "path", "path": "config/rivanna/config.yaml", "dest": "config/rivanna/config.yaml"},
     {"kind": "path", "path": "results/alignmentqc/alignment_summary.tsv", "dest": "qc/alignment_summary.tsv"},
@@ -42,7 +43,7 @@ HAROLD_RULES = [
         "kind": "dir",
         "dir_name": "counts",
         "dest": "counts",
-        "exclude_substrings": ["counts/normalized_counts/.quarto/"],
+        "exclude_substrings": ["counts/normalized_counts/.quarto/", ".quarto/"],
     },
     {"kind": "path", "path": "results/multiqc_report.html", "dest": "qc/multiqc_report.html"},
     {"kind": "dir", "dir_name": "results/multiqc_data", "dest": "qc/multiqc_data"},

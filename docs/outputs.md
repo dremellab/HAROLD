@@ -595,6 +595,17 @@ Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5
 |------|---|
 | `counts/normalized_counts/normalize.html` | **DiffEx-normalized count matrix report** (only if `diffex_normalized_counts: true` in config). HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.). Requires DiffEx configuration in `config.yaml`. |
 
+### DEG and GSEA (DiffEx Integration)
+
+Only generated if `diffex_deg_gsea: true` in config, and requires a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from `samples.tsv` to compare. `{contrast}` is `{group1}_vs_{group2}`. `{variant}` is `wo_batch`/`w_batch` by default; it gains explicit `wo_ercc`/`w_ercc` segments too when `use_ercc: both` is set (the tri-state `use_ercc`/`use_batch` config options — `false`, `true`, or `both` — run DEG once per selected state, so `both` produces every variant side by side rather than picking one).
+
+| File | Description |
+|------|---|
+| `counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv` | **Differential expression results** for one contrast/variant, from one of `limma`, `DESeq2`, or `edgeR` (casing matches the `diffex deg` tool's own output naming). |
+| `counts/DEG/{contrast}_{variant}/{method}_deg/{method}_gsea.rnk` | **Ranked gene list** derived from the DEG results, used as input to the GSEA step below. |
+| `counts/GSEA/{contrast}_{variant}/{method}/GSEA_results.xlsx` | **GSEA enrichment results** for the corresponding `.rnk` file. |
+| `counts/GSEA/{contrast}_{variant}/{method}/gsea.html` | **Interactive GSEA report** for the corresponding `.rnk` file. |
+
 ### S3 Transfer Sentinel
 
 | File | Description |

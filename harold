@@ -5,6 +5,13 @@
 
 set -eo pipefail
 
+# Isolate from any personal `pip install --user` packages under ~/.local, which Python
+# adds to sys.path ahead of the active conda/mamba env regardless of which env is
+# active. A stray user-site numpy/pandas install can silently shadow the pipelines
+# env's own versions and break snakemake's executor plugins (eg. ABI mismatches
+# surfacing as MemoryError deep in a numpy import).
+export PYTHONNOUSERSITE=1
+
 # suppress platform echo when only --version/-V is requested
 SUPPRESS_PLATFORM_ECHO=0
 if [[ $# -eq 1 && ( "$1" == "-V" || "$1" == "--version" ) ]]; then
@@ -288,6 +295,7 @@ ADDITIVES="ERCC"
 VIRUSES="NC_009333.1"
 MANIFEST="${PIPELINE_HOME}/config/samples.tsv"
 check_file $MANIFEST
+CONTRASTS=""
 
 # set variables
 SCRIPTNAME="$0"
@@ -362,6 +370,8 @@ Optional Arguments:
 --additives|-a  : supply comma-separated list of additives at command line. ERCC or BAC16Insert or both (--runmode=init only)
 --viruses|-v    : supply comma-separated list of viruses at command line                                (--runmode=init only)
 --manifest|-s   : absolute path to samples.tsv. This will be copied to output folder                    (--runmode=init only)
+--contrasts|-x  : absolute path to contrasts.tsv. Copied to WORKDIR/contrasts.tsv                       (any runmode)
+                  Required only if diffex_deg_gsea.run=true in config.yaml.
 --singcache|-c  : path for the Apptainer/Singularity cache (default: /scratch/\$USER/singularity/cache if available)
 --sifdir|-i     : path for cached SIF images (default: /project/dremel_lab/workflows/singularity_images)
 --help|-h       : print this help
@@ -433,6 +443,7 @@ log_info "Host: $HOST"
 log_info "Additives: $ADDITIVES"
 log_info "Viruses: $VIRUSES"
 log_info "Manifest: $MANIFEST"
+log_info "Contrasts: ${CONTRASTS:-<not provided>}"
 log_info "Temp Dir: $TEMP_DIR"
 log_info "Refs Dir: $REFS_DIR"
 log_info "Cluster Profile: $CLUSTER_PROFILE"
@@ -463,6 +474,12 @@ log_ok "Completed writing $WORKDIR/config.yaml"
 if [ ! -f $WORKDIR/samples.tsv ];then
 # copy manifest file ... follow symlink
 cp -L $MANIFEST $WORKDIR/samples.tsv
+fi
+
+if [ -n "$CONTRASTS" ];then
+# copy contrasts file ... follow symlink
+cp -L $CONTRASTS $WORKDIR/contrasts.tsv
+log_ok "Copied contrasts file to $WORKDIR/contrasts.tsv"
 fi
 
 #create log and stats folders
@@ -577,9 +594,16 @@ function dryrun() {
   fi
   log_divider
   run "--dry-run" | tee ${WORKDIR}/dryrun.${timestamp}.log
+  rc=${PIPESTATUS[0]}
   log_divider
+  if [ "$rc" -ne 0 ]; then
+    log_error "Dry-run failed (exit code ${rc}). See log: ${WORKDIR}/dryrun.${timestamp}.log"
+    return $rc
+  fi
   log_ok "Dry-run completed. Log: ${WORKDIR}/dryrun.${timestamp}.log"
-  log_next "Submit run with: harold -w=$WORKDIR -m=run"
+  if ! grep -q "Nothing to be done" ${WORKDIR}/dryrun.${timestamp}.log; then
+    log_next "Submit run with: harold -w=$WORKDIR -m=run"
+  fi
 }
 
 function touch() {
@@ -587,6 +611,11 @@ function touch() {
   runcheck
   timestamp=$(date +"%y%m%d%H%M%S")
   run "--touch" | tee ${WORKDIR}/touch.${timestamp}.log
+  rc=${PIPESTATUS[0]}
+  if [ "$rc" -ne 0 ]; then
+    log_error "Touch failed (exit code ${rc}). See log: ${WORKDIR}/touch.${timestamp}.log"
+    return $rc
+  fi
   log_ok "Touch completed. Log: ${WORKDIR}/touch.${timestamp}.log"
 }
 
@@ -678,6 +707,10 @@ function runslurm() {
 __PART_OPTION__
 
 set -euo pipefail
+
+# Isolate from any personal ~/.local pip --user packages (see top of harold wrapper
+# for why); must be set here too since this script runs as its own SLURM job.
+export PYTHONNOUSERSITE=1
 
 function _json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n\t' '  '
@@ -1038,6 +1071,10 @@ function main(){
         MANIFEST="${i#*=}"
         if [ ! -f $MANIFEST ];then err "File $MANIFEST does NOT exist!";fi
       ;;
+      -x=*|--contrasts=*)
+        CONTRASTS="${i#*=}"
+        if [ ! -f $CONTRASTS ];then err "File $CONTRASTS does NOT exist!";fi
+      ;;
       -h|--help)
         usage && exit 0;
       ;;
@@ -1092,6 +1129,14 @@ EOF
 
   if [[ "$APPTAINER_SIF_DIR" == "$DEFAULT_SHARED_SIF_DIR" ]]; then
     warn_missing_shared_sifs "$CONFIGFILE" "$APPTAINER_SIF_DIR"
+  fi
+
+  # --contrasts can be supplied against an already-initialized workdir (eg. to turn on
+  # diffex_deg_gsea after the fact) without needing to re-run init/reconfig.
+  # For a fresh `-m=init`, WORKDIR does not exist yet here; init() copies it instead.
+  if [ -n "$CONTRASTS" ] && [ -d "$WORKDIR" ]; then
+    cp -L "$CONTRASTS" "$WORKDIR/contrasts.tsv"
+    log_ok "Copied contrasts file to $WORKDIR/contrasts.tsv"
   fi
 
   case $RUNMODE in

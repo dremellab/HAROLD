@@ -87,6 +87,26 @@ diffex_normalized_counts:
   host: "Hs" # options are Hs or Mm
   genes_selection: "both" # host virus or both ... recommend both
 
+# run DEG (limma/DESeq2/edgeR) and GSEA per contrast via the diffex container
+diffex_deg_gsea:
+  run: false # true or false ... requires contrasts.tsv (see "contrasts" below)
+  contrasts: "WORKDIR/contrasts.tsv" # tab-delimited, columns: group1  group2
+  use_ercc: false # false, true, or both ... "both" runs DEG with and without ERCC normalization
+  ercc_mix: 1 # which ERCC mix was used ... 1 or 2
+  use_batch: false # false, true, or both ... "both" runs DEG with and without batch correction
+  batch_column: "batch" # if use_batch is true/both, which column in samples.tsv has the batch info
+  genes_selection: "both" # host virus or both ... recommend both
+  log2fc_threshold: 1.0
+  pvalue_threshold: 0.05
+  fdr_threshold: 0.05
+  edger_cpm_cutoff: 0.1
+  edger_cpm_group_fraction: 0.5
+  deseq2_low_count_cutoff: 2
+  deseq2_low_count_group_fraction: 0.5
+  gsea_min_gs_size: 15
+  gsea_max_gs_size: 500
+  gsea_pvalue_cutoff: 0.05
+
 # list out all containers to be used
 containers:
   base: "docker://nciccbr/ccbr_ubuntu_base_20.04:v7"
