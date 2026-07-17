@@ -626,7 +626,11 @@ function touch() {
 function unlock() {
   log_step "[unlock] Unlocking workdir"
   runcheck
-  run "--unlock"
+  if ! run "--unlock"; then
+    rc=$?
+    log_error "Unlock failed (exit code ${rc})"
+    return $rc
+  fi
   log_ok "Workdir unlocked"
 }
 
@@ -712,6 +716,13 @@ set -euo pipefail
 # for why); must be set here too since this script runs as its own SLURM job.
 export PYTHONNOUSERSITE=1
 
+# Assigned via sed substitution (not interpolated directly into the JSON heredoc
+# below) so that _json_escape can sanitize them at runtime -- GIT_COMMIT_TAG in
+# particular always embeds a literal tab (see get_git_commitid_tag in the harold
+# wrapper), which would otherwise produce invalid JSON.
+VERSION="__VERSION__"
+GIT_COMMIT_TAG="__GIT_COMMIT_TAG__"
+
 function _json_escape() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr '\n\t' '  '
 }
@@ -730,8 +741,8 @@ function _write_pipeline_state_marker() {
   cat > "${sidecar_tmp}" << JSON
 {
   "pipeline": "HAROLD",
-  "version": "__VERSION__",
-  "git_commit_tag": "__GIT_COMMIT_TAG__",
+  "version": "$(_json_escape "${VERSION}")",
+  "git_commit_tag": "$(_json_escape "${GIT_COMMIT_TAG}")",
   "state": "$(_json_escape "${state}")",
   "reason": "$(_json_escape "${reason}")",
   "runmode": "run",

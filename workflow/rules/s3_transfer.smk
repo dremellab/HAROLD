@@ -4,10 +4,11 @@ rule s3_transfer_if_enabled:
     Only executes if push_to_s3=true in config.
     """
     input:
-        # Depend on key final outputs to avoid circular dependency with rule all
-        join(RESULTSDIR, "multiqc_report.html"),
-        join(RESULTSDIR,"counts","counts_matrix.tsv"),
-        join(RESULTSDIR, "alignmentqc", "alignment_summary.tsv"),
+        # Depend on every other terminal output (PIPELINE_TARGETS, defined in the
+        # Snakefile) rather than a hand-picked subset, so the S3 push can't start
+        # until the rest of the run has actually finished. Deliberately excludes
+        # ".s3_transfer.done" itself to avoid a circular dependency with rule all.
+        PIPELINE_TARGETS,
     output:
         sentinel=".s3_transfer.done",
     container:
