@@ -29,9 +29,11 @@ All notable changes to this project will be documented in this file.
 - Default reference path — Updated fasta_gtf reference path to `/project/dremel_lab/workflows/reference_data/fasta_gtf`
 - Manifest initialization — Strand values now normalized to lowercase during manifest parsing
 - Documentation clarification — Improved strandedness documentation to clarify that HAROLD always infers strandedness and reports it; the config option controls only whether inferred or manifest values are used for count extraction
+- S3 documentation accuracy — Corrected `s3_configuration.md`'s "Files Transferred to S3" table, which listed peak files, ataqv data, and tRNA/Tn5 outputs that HAROLD doesn't produce; documented the previously-missing SJ, DEG/GSEA, and normalized-counts transfers instead
+- SLURM resource tuning — Added initial `set-resources` overrides for `alignment_summary` and `warm_msigdb_cache` (previously fell back to generic defaults)
 
 ### Fixed
-- `dryrun`/`touch` exit codes — Now propagate Snakemake's real exit code instead of always reporting success
+- `dryrun`/`touch` exit codes — Now propagate Snakemake's real exit code instead of always reporting success, and no longer depend on always being invoked as `... && exit 0` to do so safely
 - Stray user-site packages — `harold` wrapper and its Slurm job script now set `PYTHONNOUSERSITE=1` to isolate from `~/.local` pip `--user` packages
 - Scratch temp dir crowding — Per-job scratch directories now nest under `/scratch/$USER/harold_temp/<uuid>` instead of `/scratch/$USER/<uuid>`
 - Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads
@@ -41,6 +43,13 @@ All notable changes to this project will be documented in this file.
 - Validation hardening — Improved input validation and Rivanna submission defaults
 - Fastq validator escaping — Fixed bash variable escaping in FASTQ validation rule
 - Strandedness normalization — Manifest strandedness values now consistently lowercase
+- `pipeline.status.json` on Slurm runs — Fixed invalid JSON caused by an unescaped literal tab in `git_commit_tag`
+- `unlock` silent failures — Now propagates the real exit code instead of always reporting success
+- S3 transfer completeness — `s3_transfer_if_enabled` now depends on every pipeline output instead of a hand-picked subset, so it can no longer finish while other stages (DEG/GSEA, QC, etc.) are still running
+- DEG/GSEA variant directory naming — Output directories now always include both the ERCC and batch tags (e.g. `wo_ercc_wo_batch`), not just when `use_ercc: both`
+- Generated Slurm script corruption — Fixed a sed-substitution escaping bug that could corrupt the generated head-job script when `WORKDIR`, `GIT_COMMIT_TAG`, or similar values contained `/`, `&`, or `\`
+- Removed a dead `CONDA_ACTIVATE` placeholder in the generated Slurm head-job template that had silently been a no-op since introduction
+- `pipeline.*` state marker swap — Reordered marker creation/removal so there's never a brief window with no marker file present
 
 ## [1.2.1]
 
