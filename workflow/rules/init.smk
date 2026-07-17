@@ -460,10 +460,10 @@ if DIFFEX_DEG_GSEA == "true":
     BATCH_OPTIONS = _tristate_options(config.get('diffex_deg_gsea', {}).get('use_batch', 'false'))
     for e in ERCC_OPTIONS:
         for b in BATCH_OPTIONS:
-            parts = []
-            if len(ERCC_OPTIONS) > 1:
-                parts.append("w_ercc" if e else "wo_ercc")
-            parts.append("w_batch" if b else "wo_batch")
+            # Always tag both segments (not just the ones with a "both" tri-state),
+            # so directory names alone always show whether ERCC/batch were applied
+            # rather than only when use_ercc/use_batch is set to "both".
+            parts = ["w_ercc" if e else "wo_ercc", "w_batch" if b else "wo_batch"]
             VARIANTS["_".join(parts)] = (e, b)
 
 USE_INFER_STRANDEDNESS = str(config.get("use_infer_strandedness", "true")).lower()

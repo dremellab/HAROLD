@@ -597,7 +597,7 @@ Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5
 
 ### DEG and GSEA (DiffEx Integration)
 
-Only generated if `diffex_deg_gsea: true` in config, and requires a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from `samples.tsv` to compare. `{contrast}` is `{group1}_vs_{group2}`. `{variant}` is `wo_batch`/`w_batch` by default; it gains explicit `wo_ercc`/`w_ercc` segments too when `use_ercc: both` is set (the tri-state `use_ercc`/`use_batch` config options — `false`, `true`, or `both` — run DEG once per selected state, so `both` produces every variant side by side rather than picking one).
+Only generated if `diffex_deg_gsea: true` in config, and requires a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from `samples.tsv` to compare. `{contrast}` is `{group1}_vs_{group2}`. `{variant}` is always `{wo_ercc|w_ercc}_{wo_batch|w_batch}` (e.g. `wo_ercc_wo_batch`, `w_ercc_w_batch`), so the directory name alone always shows whether ERCC/batch correction was applied — regardless of whether `use_ercc`/`use_batch` is set to `true`, `false`, or `both`. The tri-state `use_ercc`/`use_batch` config options run DEG once per selected state, so `both` produces every variant side by side rather than picking one.
 
 | File | Description |
 |------|---|
