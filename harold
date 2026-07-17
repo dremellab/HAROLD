@@ -245,7 +245,6 @@ VERSION=$(cat $VERSIONFILE | head -n 1 | awk '{print $1}')
 PYTHONVERSION="3.11"
 # SNAKEMAKEVERSION="7.24.2"
 SNAKEMAKEVERSION="9.8.1"
-CONDA_ACTIVATE=''
 PATH_PREPEND=''
 MODULE_LOAD=''
 PLATFORM=$(get_platform)
@@ -267,7 +266,6 @@ if [ "$PLATFORM" == "shen" ]; then
   CLUSTER_PROFILE="rivanna"
   PARTITION="standard-rivanna"
   EXTRA_SINGULARITY_BINDS=""
-  CONDA_ACTIVATE='source /project/dremel_lab/scripts/.sh_common && mamba activate pipelines'
   # PY311_BIN=$(conda run -n py311 python -c "import sys; print(sys.executable.rsplit('/',1)[0])")
   PY311_BIN="/sfs/gpfs/tardis/project/dremel_lab/miniforge3/envs/pipelines/bin"
   # echo "PY311_BIN: $PY311_BIN"
@@ -276,10 +274,7 @@ if [ "$PLATFORM" == "shen" ]; then
   # echo $PATH
   # exit 1
   # eval $PATH_PREPEND
-  # eval $CONDA_ACTIVATE
-  # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer"
   # MODULE_LOAD="module load apptainer && module load snakemake"
-  # MODULE_LOAD="$CONDA_ACTIVATE && module load apptainer && $PATH_PREPEND"
   MODULE_LOAD="module load apptainer"
   TEMP_DIR="/scratch/${USER}/harold_temp/"
   REFS_DIR="/project/dremel_lab/workflows/reference_data/fasta_gtf"
@@ -778,7 +773,6 @@ __EXPORT_PROFILE_CMD__
 
 # Load modules or conda if configured
 __MODULE_LOAD_CMD__
-__CONDA_ACTIVATE__
 
 echo "------------------------------------------------------------------"
 echo "STEP  [head_job] Starting Snakemake head process"
@@ -850,7 +844,6 @@ SBATCH_EOF
   sed -i "s|__WORKDIR__|$(sed_replacement_escape "${WORKDIR}")|g" ${SBATCH_SCRIPT}
   sed -i "s|__SNAKEFILE__|$(sed_replacement_escape "${SNAKEFILE}")|g" ${SBATCH_SCRIPT}
   sed -i "s|__CLUSTER_PROFILE__|$(sed_replacement_escape "${CLUSTER_PROFILE}")|g" ${SBATCH_SCRIPT}
-  sed -i "s|__CONDA_ACTIVATE__|$(sed_replacement_escape "${__CONDA_ACTIVATE__}")|g" ${SBATCH_SCRIPT}
   sed -i "s|__VERSION__|$(sed_replacement_escape "${VERSION}")|g" ${SBATCH_SCRIPT}
   sed -i "s|__GIT_COMMIT_TAG__|$(sed_replacement_escape "${GIT_COMMIT_TAG}")|g" ${SBATCH_SCRIPT}
   if [[ -n "${APPTAINER_PREFIX_ARG}" ]]; then
