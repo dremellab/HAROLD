@@ -459,8 +459,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#example-command" id="toc-example-command" class="nav-link" data-scroll-target="#example-command">Example command</a></li>
   </ul></li>
   <li><a href="#step-2-dry-run-runmodedryrun" id="toc-step-2-dry-run-runmodedryrun" class="nav-link" data-scroll-target="#step-2-dry-run-runmodedryrun">Step 2: Dry Run (<code>runmode=dryrun</code>)</a></li>
-  <li><a href="#step-3-execution-runmoderun" id="toc-step-3-execution-runmoderun" class="nav-link" data-scroll-target="#step-3-execution-runmoderun">Step 3: Execution (<code>runmode=run</code>)</a></li>
-  <li><a href="#step-4-optional-s3-deposition" id="toc-step-4-optional-s3-deposition" class="nav-link" data-scroll-target="#step-4-optional-s3-deposition">Step 4 (Optional): S3 Deposition</a></li>
+  <li><a href="#step-3-execution-runmoderun" id="toc-step-3-execution-runmoderun" class="nav-link" data-scroll-target="#step-3-execution-runmoderun">Step 3: Execution (<code>runmode=run</code>)</a>
+  <ul class="collapse">
+  <li><a href="#tracking-run-state" id="toc-tracking-run-state" class="nav-link" data-scroll-target="#tracking-run-state">Tracking run state</a></li>
+  </ul></li>
+  <li><a href="#step-4-optional-deg-gsea" id="toc-step-4-optional-deg-gsea" class="nav-link" data-scroll-target="#step-4-optional-deg-gsea">Step 4 (Optional): DEG &amp; GSEA</a></li>
+  <li><a href="#step-5-optional-s3-deposition" id="toc-step-5-optional-s3-deposition" class="nav-link" data-scroll-target="#step-5-optional-s3-deposition">Step 5 (Optional): S3 Deposition</a></li>
   <li><a href="#monitoring-slurm-jobs-and-locating-rule-specific-logs" id="toc-monitoring-slurm-jobs-and-locating-rule-specific-logs" class="nav-link" data-scroll-target="#monitoring-slurm-jobs-and-locating-rule-specific-logs">Monitoring SLURM jobs and locating rule-specific logs</a></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul></li>
@@ -528,10 +532,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">harold</span> <span class="at">-w</span><span class="op">=</span>/scratch/<span class="va">$USER</span>/harold_test <span class="at">-m</span><span class="op">=</span>run</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The workflow will now begin executing on Rivanna’s compute nodes. Each rule (step of the pipeline) will produce a corresponding log file stored under the <code>logs/</code> subdirectory within your working directory. You can monitor progress by examining these log files or by using standard SLURM commands such as <code>squeue -u $USER</code> to check job status.</p>
 <p>When the pipeline finishes, the working directory will contain organized subfolders for <code>counts</code>, <code>alignment</code>, <code>logs</code>, and <code>reports</code>. The main outputs include raw count matrices, sample manifest copies, BAM/BAI alignment files, bigWig coverage tracks, and the MultiQC report summarizing quality control results.</p>
+<section id="tracking-run-state" class="level3">
+<h3 class="anchored" data-anchor-id="tracking-run-state">Tracking run state</h3>
+<p>Every <code>runlocal</code>/<code>run</code> invocation writes a state marker and JSON status sidecar to <code>WORKDIR</code> so you can check pipeline status without digging through logs:</p>
+<ul>
+<li><strong>State marker</strong> — exactly one of <code>pipeline.running</code>, <code>pipeline.completed</code>, <code>pipeline.failed</code>, or <code>pipeline.canceled</code> exists in <code>WORKDIR</code> at any time, replaced as the run progresses. While a SLURM run is active, <code>pipeline.running</code> is periodically rewritten with a live progress summary (steps complete, percent done, steps remaining) parsed from Snakemake’s own step-completion output, so <code>cat $WORKDIR/pipeline.running</code> gives an at-a-glance status.</li>
+<li><strong><code>pipeline.status.json</code></strong> — a structured sidecar with <code>state</code>, <code>reason</code>, <code>runmode</code>, <code>slurm_job_id</code>, <code>host</code>, and <code>timestamp_utc</code>, updated at submission, success, failure, and on cancellation (SIGTERM/SIGINT, e.g.&nbsp;<code>scancel</code>).</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="va">$WORKDIR</span>/pipeline.running        <span class="co"># live progress, while a SLURM run is active</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="va">$WORKDIR</span>/pipeline.status.json    <span class="co"># structured status snapshot</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>harold</code> command output itself is also leveled (<code>INFO</code>/<code>STEP</code>/<code>OK</code>/<code>WARN</code>/<code>ERROR</code>/<code>NEXT</code>), with <code>NEXT</code> lines suggesting the next command to run after <code>init</code>, <code>dryrun</code>, and job submission.</p>
 <hr>
 </section>
-<section id="step-4-optional-s3-deposition" class="level2">
-<h2 class="anchored" data-anchor-id="step-4-optional-s3-deposition">Step 4 (Optional): S3 Deposition</h2>
+</section>
+<section id="step-4-optional-deg-gsea" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-optional-deg-gsea">Step 4 (Optional): DEG &amp; GSEA</h2>
+<p>HAROLD can run differential expression (DEG) and gene set enrichment analysis (GSEA) directly on its count matrices via DiffEx. This step is <strong>optional</strong> and requires a contrasts manifest.</p>
+<p>To enable it: 1. Create a <code>contrasts.tsv</code> file (tab-delimited, <code>group1</code>/<code>group2</code> columns) listing which <code>groupName</code> pairs from your <code>samples.tsv</code> to compare. 2. Supply it at <code>init</code> time with <code>--contrasts</code> or <code>-x</code> (it is copied to <code>WORKDIR/contrasts.tsv</code>), or add it to an already-initialized workdir and re-run <code>init</code>: <code>bash    harold -w=/scratch/$USER/harold_test -m=init \      --host=hg38 \      --additives=ERCC,BAC16Insert \      --viruses=NC_009333.1,NC_045512.2 \      --manifest=/project/$USER/samples.tsv \      --contrasts=/project/$USER/contrasts.tsv</code> 3. Set <code>diffex_deg_gsea: true</code> in <code>config.yaml</code>.</p>
+<p>Per contrast, HAROLD runs <code>diffex deg</code> (limma, DESeq2, and edgeR) against the counts matrix, then <code>diffex gsea</code> on each method’s ranked gene list. The tri-state <code>use_ercc</code>/<code>use_batch</code> config options (<code>false</code>/<code>true</code>/<code>both</code>) control which variants are produced; <code>both</code> runs DEG twice and keeps both. See <a href="../docs/outputs.html#deg-and-gsea-diffex-integration">Outputs: DEG and GSEA</a> for the full output layout.</p>
+<hr>
+</section>
+<section id="step-5-optional-s3-deposition" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-optional-s3-deposition">Step 5 (Optional): S3 Deposition</h2>
 <p>HAROLD can automatically upload results to Amazon S3 for cloud storage and sharing. This step is <strong>optional</strong> and requires prior configuration.</p>
 <p>To enable S3 transfer: 1. Ensure you have AWS credentials and access to an S3 bucket (see <a href="https://dremellab.github.io/howtos/guides/s3-globus-access/s3_globus_access_guide.html">S3/Globus Access Guide</a> if needed) 2. Update your <code>config.yaml</code>: <code>yaml    push_to_s3: true    s3_sample_set_name: "my_exp_batch1"  # Choose a meaningful name</code> 3. Re-run the pipeline (S3 transfer will execute automatically upon successful completion of all other stages)</p>
 <p>See the <a href="../docs/s3_configuration.html">S3 Configuration Guide</a> for detailed instructions on setup, cost estimation, storage classes, and troubleshooting.</p>
@@ -540,8 +562,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="monitoring-slurm-jobs-and-locating-rule-specific-logs" class="level2">
 <h2 class="anchored" data-anchor-id="monitoring-slurm-jobs-and-locating-rule-specific-logs">Monitoring SLURM jobs and locating rule-specific logs</h2>
 <p>While <code>harold -m run</code> is active, the driver submits one head job plus hundreds of per-rule batch jobs to SLURM. For a detailed status view, use the explicit Rivanna <code>squeue</code> binary with a custom format string:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/slurm/current/bin/squeue</span> <span class="at">-u</span> <span class="op">&lt;</span>computing_id<span class="op">&gt;</span> <span class="dt">\</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> <span class="st">"%.18i %.50j %.8u %.2t %.10M %.6D %.6C %R"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/slurm/current/bin/squeue</span> <span class="at">-u</span> <span class="op">&lt;</span>computing_id<span class="op">&gt;</span> <span class="dt">\</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> <span class="st">"%.18i %.50j %.8u %.2t %.10M %.6D %.6C %R"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This prints the job ID, Snakemake-generated job name, user, state, elapsed time, nodes, cores, and pending reason/host. The columns make it easy to spot jobs that are queued (<code>PD</code>), actively running (<code>R</code>), or already finished.</p>
 <p>Every SLURM task writes a dedicated log file under <code>$WORKDIR/logs</code>, grouped by rule and sample. A typical tree looks like:</p>
 <pre><code>logs/
@@ -550,8 +572,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ├── rule_rseqc_tin/Uninf_RLIG1_R2/7130807.log
 └── ...</code></pre>
 <p>To jump straight to the stdout/stderr for a specific SLURM job ID, search the log tree:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example for jobid 7130807</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> <span class="va">$WORKDIR</span>/logs <span class="at">-name</span> <span class="st">"*7130807*"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example for jobid 7130807</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> <span class="va">$WORKDIR</span>/logs <span class="at">-name</span> <span class="st">"*7130807*"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Open the matching <code>.log</code> to see the exact command, module setup, and any errors for that Snakemake rule. This workflow—<code>squeue</code> to identify the job followed by <code>find</code> in <code>logs/</code>—is the fastest way to debug failed or stalled tasks.</p>
 <hr>
 </section>
