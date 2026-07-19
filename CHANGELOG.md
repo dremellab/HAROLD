@@ -4,8 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [dev]
 
+### ⚠️ Breaking Changes
+- **Shared `diffex` config block:** `use_ercc`, `ercc_mix`, `use_batch`, `batch_column`, and `genes_selection` moved out of `diffex_normalized_counts` and `diffex_deg_gsea` into one shared `diffex:` block, so the aggregate normalized-counts step and the per-contrast DEG/GSEA step can no longer disagree on ERCC/batch handling. The now-unused `diffex_normalized_counts.host` key was also removed (host was already sourced from the top-level `host:` config). As a result, `diffex_normalized_counts` output moved from `counts/normalized_counts/normalize.html` to `counts/normalized_counts/{variant}/normalize.html`, mirroring the DEG/GSEA variant layout, since `diffex.use_ercc`/`use_batch: both` now expands the aggregate step per-variant too. Update existing `config.yaml` files to the new schema (see #51).
+
 ### Changed
-- TBD
+- **Final-state `pipeline.*` progress reporting:** `pipeline.completed` now reports the final step tally (`N / N steps complete (100%)`, `Remaining: 0 steps`) instead of being an empty marker file, matching the live format `pipeline.running` already used. `pipeline.failed` now preserves the last known progress snapshot instead of being emptied, so a failed run shows how far it got before failing. `runlocal` (previously untracked) now gets the same live progress monitoring as SLURM `run` jobs, via a tee'd Snakemake log.
 
 ## [2.0.0]
 

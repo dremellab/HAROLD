@@ -428,6 +428,19 @@ CONTRASTS = []
 CONTRAST2GROUPS = {}
 VARIANTS = {}
 
+if DIFFEX_NORMALIZED_COUNTS == "true" or DIFFEX_DEG_GSEA == "true":
+    # use_ercc/use_batch are shared by diffex_normalized_counts and diffex_deg_gsea
+    # (config['diffex']) so the aggregate and per-contrast normalizations always agree.
+    ERCC_OPTIONS = _tristate_options(config.get('diffex', {}).get('use_ercc', 'false'))
+    BATCH_OPTIONS = _tristate_options(config.get('diffex', {}).get('use_batch', 'false'))
+    for e in ERCC_OPTIONS:
+        for b in BATCH_OPTIONS:
+            # Always tag both segments (not just the ones with a "both" tri-state),
+            # so directory names alone always show whether ERCC/batch were applied
+            # rather than only when use_ercc/use_batch is set to "both".
+            parts = ["w_ercc" if e else "wo_ercc", "w_batch" if b else "wo_batch"]
+            VARIANTS["_".join(parts)] = (e, b)
+
 if DIFFEX_DEG_GSEA == "true":
     CONTRASTS_FILE = config.get('diffex_deg_gsea', {}).get('contrasts')
     if not CONTRASTS_FILE or not os.path.isfile(CONTRASTS_FILE):
@@ -455,16 +468,6 @@ if DIFFEX_DEG_GSEA == "true":
 
     CONTRASTS = [f"{r.group1}_vs_{r.group2}" for r in CONTRASTSDF.itertuples()]
     CONTRAST2GROUPS = {f"{r.group1}_vs_{r.group2}": (r.group1, r.group2) for r in CONTRASTSDF.itertuples()}
-
-    ERCC_OPTIONS = _tristate_options(config.get('diffex_deg_gsea', {}).get('use_ercc', 'false'))
-    BATCH_OPTIONS = _tristate_options(config.get('diffex_deg_gsea', {}).get('use_batch', 'false'))
-    for e in ERCC_OPTIONS:
-        for b in BATCH_OPTIONS:
-            # Always tag both segments (not just the ones with a "both" tri-state),
-            # so directory names alone always show whether ERCC/batch were applied
-            # rather than only when use_ercc/use_batch is set to "both".
-            parts = ["w_ercc" if e else "wo_ercc", "w_batch" if b else "wo_batch"]
-            VARIANTS["_".join(parts)] = (e, b)
 
 USE_INFER_STRANDEDNESS = str(config.get("use_infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)

@@ -180,10 +180,11 @@ function sed_replacement_escape() {
 function write_pipeline_state_marker() {
 # Write a single state marker file (pipeline.<state>) and a JSON status
 # sidecar (pipeline.status.json) in WORKDIR.
-# Args: state reason [job_id]
+# Args: state reason [job_id] [content]
   local state="$1"
   local reason="${2:-}"
   local job_id="${3:-NA}"
+  local content="${4:-}"
   local now_utc
   local host
   local sidecar
@@ -198,7 +199,13 @@ function write_pipeline_state_marker() {
   # window with no pipeline.* marker present -- worst case is a brief window
   # with two (new + stale old), which is a safer failure mode for anything
   # polling pipeline.* than a window with none.
-  : > "${WORKDIR}/pipeline.${state}"
+  # If content was supplied (e.g. a final/last-known progress summary), write
+  # it into the marker instead of leaving the marker empty.
+  if [[ -n "$content" ]]; then
+    printf '%s' "$content" > "${WORKDIR}/pipeline.${state}"
+  else
+    : > "${WORKDIR}/pipeline.${state}"
+  fi
   for other_state in running completed failed canceled; do
     [[ "${other_state}" == "${state}" ]] && continue
     rm -f "${WORKDIR}/pipeline.${other_state}"
@@ -689,12 +696,69 @@ function runlocal() {
   if [ "$SLURM_JOB_ID" == "" ];then err "runlocal can only be done on an interactive node"; exit 1; fi
   log_divider
   write_pipeline_state_marker running "runlocal_started"
-  if run "local"; then
-    write_pipeline_state_marker completed "runlocal_succeeded"
+
+  # Background loop: tails the tee'd snakemake log below for Snakemake's own
+  # "N of M steps (P%) done" lines and periodically writes a human-readable
+  # progress summary into pipeline.running, mirroring the SLURM head job's
+  # _progress_monitor (see the sbatch template built in run_head_job()).
+  runlocal_log="${WORKDIR}/runlocal.$(date +%y%m%d%H%M%S).log"
+  marker="${WORKDIR}/pipeline.running"
+  _runlocal_progress_monitor() {
+    local raw done_n total_n pct remaining updated
+    while true; do
+      [[ -f "$marker" ]] || break
+      if [[ -f "$runlocal_log" ]]; then
+        raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "$runlocal_log" 2>/dev/null | tail -1 || true)
+        if [[ -n "$raw" ]]; then
+          done_n=$(printf '%s' "$raw" | grep -oP '^\d+' || true)
+          total_n=$(printf '%s' "$raw" | grep -oP '(?<=of )\d+' || true)
+          pct=$(printf '%s' "$raw" | grep -oP '\d+(?=%)' || true)
+          if [[ -n "$done_n" && -n "$total_n" && -n "$pct" ]]; then
+            remaining=$(( total_n - done_n ))
+            (( remaining < 0 )) && remaining=0
+            updated=$(date '+%Y-%m-%d %H:%M:%S')
+            printf 'Progress : %s / %s steps complete (%s%%)\nRemaining: %s steps\nUpdated  : %s\n' \
+              "$done_n" "$total_n" "$pct" "$remaining" "$updated" > "$marker"
+          fi
+        fi
+      fi
+      sleep 60
+    done
+  }
+  _runlocal_progress_monitor &
+  monitor_pid=$!
+
+  # Pipeline as an `if` condition, using PIPESTATUS to get run()'s exit code
+  # rather than tee's -- see dryrun() for why.
+  if run "local" | tee "$runlocal_log"; then
+    rc=0
+  else
+    rc=${PIPESTATUS[0]}
+  fi
+
+  kill "$monitor_pid" 2>/dev/null || true
+  wait "$monitor_pid" 2>/dev/null || true
+
+  if [ "$rc" -eq 0 ]; then
+    # Re-derive the final step count from the log and report it as N/N
+    # (100%, 0 remaining) rather than the monitor's last (up to 60s stale)
+    # snapshot.
+    final_content=""
+    final_raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "$runlocal_log" 2>/dev/null | tail -1 || true)
+    if [[ -n "$final_raw" ]]; then
+      final_total=$(printf '%s' "$final_raw" | grep -oP '(?<=of )\d+' || true)
+      if [[ -n "$final_total" ]]; then
+        final_content=$(printf 'Progress : %s / %s steps complete (100%%)\nRemaining: 0 steps\nUpdated  : %s\n' \
+          "$final_total" "$final_total" "$(date '+%Y-%m-%d %H:%M:%S')")
+      fi
+    fi
+    write_pipeline_state_marker completed "runlocal_succeeded" "" "$final_content"
     log_ok "Local run completed successfully"
   else
-    rc=$?
-    write_pipeline_state_marker failed "runlocal_failed"
+    # Preserve whatever progress snapshot the monitor last wrote (instead of
+    # losing it) so pipeline.failed shows how far the run got.
+    last_progress=$(cat "${WORKDIR}/pipeline.running" 2>/dev/null || true)
+    write_pipeline_state_marker failed "runlocal_failed" "" "$last_progress"
     log_error "Local run failed (exit code ${rc})"
     exit $rc
   fi
@@ -754,6 +818,7 @@ function _write_pipeline_state_marker() {
   local state="$1"
   local reason="${2:-}"
   local job_id="${3:-${SLURM_JOB_ID:-NA}}"
+  local content="${4:-}"
   local now_utc host sidecar sidecar_tmp
   now_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   host=$(hostname 2>/dev/null || echo "unknown")
@@ -761,7 +826,13 @@ function _write_pipeline_state_marker() {
   sidecar_tmp="${sidecar}.tmp.$$"
   # Create the new marker before removing the old ones -- see the wrapper's
   # write_pipeline_state_marker for why.
-  : > "__WORKDIR__/pipeline.${state}"
+  # If content was supplied (e.g. a final/last-known progress summary), write
+  # it into the marker instead of leaving the marker empty.
+  if [[ -n "$content" ]]; then
+    printf '%s' "$content" > "__WORKDIR__/pipeline.${state}"
+  else
+    : > "__WORKDIR__/pipeline.${state}"
+  fi
   for other_state in running completed failed canceled; do
     [[ "${other_state}" == "${state}" ]] && continue
     rm -f "__WORKDIR__/pipeline.${other_state}"
@@ -853,10 +924,25 @@ kill "$_monitor_pid" 2>/dev/null || true
 wait "$_monitor_pid" 2>/dev/null || true
 
 if [[ "$snakemake_rc" -eq 0 ]]; then
-  _write_pipeline_state_marker completed "snakemake_succeeded"
+  # On success, re-derive the final step count from Snakemake's own last
+  # progress line and report it as N/N (100%, 0 remaining) rather than
+  # whatever the monitor's last (up to 60s stale) snapshot said.
+  final_content=""
+  final_raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "__WORKDIR__/slurm-${SLURM_JOB_ID}.out" 2>/dev/null | tail -1 || true)
+  if [[ -n "$final_raw" ]]; then
+    final_total=$(printf '%s' "$final_raw" | grep -oP '(?<=of )\d+' || true)
+    if [[ -n "$final_total" ]]; then
+      final_content=$(printf 'Progress : %s / %s steps complete (100%%)\nRemaining: 0 steps\nUpdated  : %s\n' \
+        "$final_total" "$final_total" "$(date '+%Y-%m-%d %H:%M:%S')")
+    fi
+  fi
+  _write_pipeline_state_marker completed "snakemake_succeeded" "" "$final_content"
   echo "OK    [head_job] Snakemake completed successfully"
 else
-  _write_pipeline_state_marker failed "snakemake_failed"
+  # On failure, preserve whatever progress snapshot the monitor last wrote
+  # (instead of losing it) so pipeline.failed shows how far the run got.
+  last_progress=$(cat "__WORKDIR__/pipeline.running" 2>/dev/null || true)
+  _write_pipeline_state_marker failed "snakemake_failed" "" "$last_progress"
   echo "ERROR [head_job] Snakemake failed (exit code ${snakemake_rc})"
   exit "$snakemake_rc"
 fi

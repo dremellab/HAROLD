@@ -102,7 +102,7 @@ To enable it:
    ```
 3. Set `diffex_deg_gsea: true` in `config.yaml`.
 
-Per contrast, HAROLD runs `diffex deg` (limma, DESeq2, and edgeR) against the counts matrix, then `diffex gsea` on each method's ranked gene list. The tri-state `use_ercc`/`use_batch` config options (`false`/`true`/`both`) control which variants are produced; `both` runs DEG twice and keeps both. See [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration) for the full output layout.
+Per contrast, HAROLD runs `diffex deg` (limma, DESeq2, and edgeR) against the counts matrix, then `diffex gsea` on each method's ranked gene list. ERCC/batch handling is controlled by the shared `diffex:` config block (`use_ercc`/`use_batch`, tri-state `false`/`true`/`both`), which also governs the aggregate `diffex_normalized_counts` step so the two never disagree on how the matrix was normalized; `both` runs a given step once per variant and keeps all of them. See [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration) for the full output layout.
 
 ---
 

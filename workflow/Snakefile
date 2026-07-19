@@ -96,7 +96,8 @@ PIPELINE_TARGETS = [
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.tpm.tsv"),
 
         # diffex normalized counts
-        *([join(RESULTSDIR,"counts","normalized_counts","normalize.html")] if DIFFEX_NORMALIZED_COUNTS == "true" else []),
+        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"), variant=list(VARIANTS.keys()))
+               if DIFFEX_NORMALIZED_COUNTS == "true" else []),
 
         # diffex DEG + GSEA
         *(expand(join(RESULTSDIR, "counts", "DEG", "{contrast}_{variant}", "{method}_deg", "{method}_results.tsv"),

@@ -83,7 +83,7 @@ s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/SJ/{sample}.SJ.out.tab
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.rpkm.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/counts_matrix.tpm.tsv
-s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/normalized_counts/normalize.html
+s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/normalized_counts/{variant}/normalize.html
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv
 s3://dremel-lab-bucket/_HTS/HAROLD/exp_A_batch1/counts/GSEA/{contrast}_{variant}/{method}/gsea.html
 ```
@@ -107,7 +107,7 @@ HAROLD transfers the following output types:
 | **BigWig/BigBed Tracks** | `.bw` coverage tracks and `.bb` junction tracks (all samples, all regions) | GLACIER_IR | Visualization; medium size; instant retrieval useful |
 | **Splice Junctions** | `SJ.out.tab` (final-pass STAR splice junctions) | GLACIER_IR | Splice-junction calls |
 | **Count Matrices** | `counts_matrix.tsv`, RPKM, TPM, transcript-level equivalents, `aggregate_tin.tsv` | GLACIER_IR | Primary output for analysis |
-| **Normalized Counts** | `counts/normalized_counts/normalize.html` (if `diffex_normalized_counts: true`) | GLACIER_IR | DiffEx-normalized count report |
+| **Normalized Counts** | `counts/normalized_counts/{variant}/normalize.html` (if `diffex_normalized_counts: true`) | GLACIER_IR | DiffEx-normalized count report |
 | **DEG & GSEA** | `counts/DEG/`, `counts/GSEA/` — limma/DESeq2/edgeR results and GSEA reports (if `diffex_deg_gsea: true`) | GLACIER_IR | Differential expression & enrichment results |
 
 **Total typical upload size:** 50–500 GB per run (scales with read count and number of samples)

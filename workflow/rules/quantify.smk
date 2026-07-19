@@ -148,14 +148,16 @@ rule normalized_counts:
         counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
-        html = join(RESULTSDIR,"counts","normalized_counts","normalize.html")
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html")
+    wildcard_constraints:
+        variant = "|".join(VARIANTS.keys()) if VARIANTS else "NOVARIANT",
     params:
         manifest_file = MANIFEST_FILE,
-        user_ercc = str(config.get('diffex_normalized_counts', {}).get('use_ercc', 'false')).lower(),
-        ercc_mix = str(config.get('diffex_normalized_counts', {}).get('ercc_mix', '1')).lower(),
-        user_batch = str(config.get('diffex_normalized_counts', {}).get('use_batch', 'false')).lower(),
-        batch_column = str(config.get('diffex_normalized_counts', {}).get('batch_column', 'batch')),
-        genes_selection = str(config.get('diffex_normalized_counts', {}).get('genes_selection', 'both')).lower(),
+        user_ercc = lambda wc: VARIANTS[wc.variant][0],
+        user_batch = lambda wc: VARIANTS[wc.variant][1],
+        ercc_mix = str(config.get('diffex', {}).get('ercc_mix', '1')).lower(),
+        batch_column = str(config.get('diffex', {}).get('batch_column', 'batch')),
+        genes_selection = str(config.get('diffex', {}).get('genes_selection', 'both')).lower(),
         host = DIFFEX_HOST,
     container:
         config['containers']['diffex']
@@ -165,12 +167,12 @@ rule normalized_counts:
         set -exo pipefail
         outdir=$(dirname {output.html})
         mkdir -p $outdir
-        if [ "{params.user_ercc}" = "true" ]; then
+        if [ "{params.user_ercc}" = "True" ]; then
             ercc_arg="--use-ercc --ercc-mix {params.ercc_mix}"
         else
             ercc_arg=""
         fi
-        if [ "{params.user_batch}" = "true" ]; then
+        if [ "{params.user_batch}" = "True" ]; then
             batch_arg="--use-batch --batch-column {params.batch_column}"
         else
             batch_arg=""
