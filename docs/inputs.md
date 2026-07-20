@@ -73,6 +73,12 @@ HAROLD employs a **two-step strandedness strategy**:
 
 **Recommendation:** Leave `use_infer_strandedness: true` unless you have a strong reason to override (e.g., known library prep protocol contradicts inference). Inferred values are more robust than manual annotation.
 
+**Renaming the manifest column:** If your manifest names the strandedness column something other than `strandedness`, point HAROLD at it with:
+```yaml
+strandedness_column: "strandedness"  # default; change to match your manifest's column name
+```
+This only matters when `use_infer_strandedness: false` (that's the only time the manifest column is read at all).
+
 ---
 
 ## 2. Working Directory (`--workdir`) {#working-directory}
@@ -191,21 +197,17 @@ If unsupported or misspelled identifiers are supplied, HAROLD will display an er
 
 ---
 
-## 4. Optional: Input Validation and Quality Gating
+## 4. Input Validation and Quality Gating
 
-HAROLD can optionally validate input FASTQ files before alignment to detect contamination or formatting issues.
+HAROLD always validates input FASTQ files before alignment to detect contamination or formatting issues. This is not configurable — there is no config key to disable it.
 
 ### FASTQ Validation Gating
 
-**Configuration:**
-```yaml
-validate_fastq: true  # default: false
-```
+**Behavior:** For every sample, `fastQValidator` runs on R1 (and R2, if paired-end) before Cutadapt. This always happens; there is nothing to turn on. Crucially, it is **blocking**: Cutadapt has a hard dependency on validation succeeding for that sample, so if validation fails, Cutadapt (and everything downstream) does not run for that sample until the underlying FASTQ issue is fixed.
 
-**When enabled:**
 1. FastQValidator analyzes each input FASTQ file (R1 and R2) for format compliance
 2. Reports total sequences, line count, and any formatting errors
-3. Cutadapt proceeds regardless of validation results (non-blocking)
+3. **Cutadapt only proceeds if validation passes** — a failed validation (missing `FASTQ_SUCCESS` in the validator's report, or a `gzip`/validator error) fails the rule and blocks that sample's Cutadapt job
 
 **Validation checks include:**
 
@@ -214,9 +216,9 @@ validate_fastq: true  # default: false
 - Quality score range validity (Phred 0–93)
 - Invalid characters in sequence or quality strings
 
-**Output:** Validation report in `results/{sample}/fastq_validation/{sample}.fastq_validator.txt` (included in alignment summary if validation is enabled)
+**Output:** Validation report in `results/{sample}/fastq_validation/{sample}.fastq_validator.txt`, always produced.
 
-**Use case:** Enable for new or untrusted sample sources to catch obvious formatting or contamination issues early. Validation adds minimal runtime overhead (< 1 min per sample).
+**If validation fails:** Check that report for the specific FastQValidator error, then check `logs/rule_fastq_validate_sample/{sample}/` for the full job log. Common causes: truncated/corrupted download, mismatched R1/R2 pairing, or a non-gzip file with a `.fastq.gz` name.
 
 **Red flags from validation output:**
 
@@ -234,11 +236,12 @@ validate_fastq: true  # default: false
 2. **Working directory** — output and configuration location (created if doesn't exist)
 3. **Reference selection** — host (hg38 or mm39) + viral accessions (comma-separated)
 
+FASTQ format validation (FastQValidator) always runs on every sample and blocks Cutadapt on failure — see [above](#input-validation-and-quality-gating). There's no input needed for it and no config key to disable it.
+
 ### Optional but Recommended Inputs
 
 4. **Strandedness specification** (in manifest or config) — only needed if `use_infer_strandedness: false`
 5. **Custom GTF files** (in config) — tRNA and repeat annotations if desired
-6. **FASTQ validation** (in config) — enable for quality screening of input files
-7. **Contrasts manifest** (`contrasts.tsv`, `group1`/`group2` columns) — only needed if `diffex_deg_gsea: true`, to run DEG (limma/DESeq2/edgeR) and GSEA per contrast; see [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration)
+6. **Contrasts manifest** (`contrasts.tsv`, `group1`/`group2` columns) — only needed if `diffex_deg_gsea: true`, to run DEG (limma/DESeq2/edgeR) and GSEA per contrast; see [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration)
 
 Together, these inputs ensure that HAROLD can dynamically build the appropriate reference index, validate experimental metadata, and execute reproducible, high-quality RNA-seq analyses across host and viral genomes. Most users need only the three required inputs; optional inputs add specialized functionality for specific experimental designs (tRNA analysis, repeat quantification, quality gating).

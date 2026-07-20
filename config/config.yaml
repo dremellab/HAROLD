@@ -53,7 +53,7 @@ chrr_gtf:
 include_trnas_gtf_in_ref: true # when true, append trnas_gtf[host] to GTFS before building ref.gtf
 
 # strand inference
-infer_strandedness: true
+use_infer_strandedness: true
 infer_strandedness_threshold: 0.8
 strandedness_column: "strandedness"
 

@@ -33,7 +33,7 @@ workdir/
 │   │   ├── rseqc/                    # RNA-seq QC metrics
 │   │   ├── kraken2/                  # Pathogen detection reports
 │   │   ├── counts/                   # Per-sample count matrices
-│   │   └── fastq_validation/         # (Optional) FASTQ validation logs
+│   │   └── fastq_validation/         # FASTQ validation logs (always produced, blocks Cutadapt on failure)
 │   │
 │   ├── counts/                       # Aggregate count matrices
 │   ├── alignmentqc/                  # Alignment summary statistics
@@ -377,11 +377,11 @@ ENSG00000000005	500	100	400
 
 **Use case:** Aggregated per-sample files are merged into transcript-level count matrices (`counts_matrix.transcript_level.tsv`, etc.) with FPKM/TPM values aggregated across samples.
 
-### Optional: FASTQ Validation
+### FASTQ Validation
 
 | File | Description |
 |------|---|
-| `fastq_validation/{sample}.fastq_validator.txt` | **FASTQ validation log** (only if FASTQ validation gating is enabled). Reports any formatting issues with input FASTQ files detected by FastQValidator. |
+| `fastq_validation/{sample}.fastq_validator.txt` | **FASTQ validation log**, always produced for every sample before Cutadapt runs (not config-gated). Reports any formatting issues with input FASTQ files detected by FastQValidator; a failed validation blocks Cutadapt for that sample. |
 
 ---
 

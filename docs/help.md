@@ -10,7 +10,7 @@ If you encounter issues running HAROLD or have questions about its configuration
 If HAROLD reports that input FASTQ files are missing or unreadable, double-check that the paths listed in your manifest file are correct and that you have read permissions. Paths can be absolute or relative to your working directory.
 
 **2. Manifest format errors**
-Ensure your manifest file is tab-separated and includes all required columns (`sampleName`, `groupName`, `batch`, `path_to_R1_fastq`, `path_to_R2_fastq`, and optionally `strandedness`). Duplicate sample names or incorrect headers will cause initialization to fail.
+Ensure your manifest file is tab-separated and includes all required columns (`sampleName`, `groupName`, `path_to_R1_fastq`, `path_to_R2_fastq`), plus `batch` and `strandedness` if you need them (both optional — see [Inputs](inputs.md#sample-manifest-required-for-initialization)). Duplicate sample names or incorrect headers will cause initialization to fail.
 
 **3. Unsupported host or virus identifiers**
 If HAROLD returns an error related to unsupported genomes, confirm that the host, additives, and viral accessions match the list of supported references. Refer to the [Inputs](inputs.md) page for the complete list.

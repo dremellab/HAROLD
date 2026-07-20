@@ -91,7 +91,15 @@ cat $WORKDIR/pipeline.status.json    # structured status snapshot
 HAROLD can run differential expression (DEG) and gene set enrichment analysis (GSEA) directly on its count matrices via DiffEx. This step is **optional** and requires a contrasts manifest.
 
 To enable it:
-1. Create a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from your `samples.tsv` to compare.
+1. Create a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from your `samples.tsv` to compare. Each row is one contrast; `group1`/`group2` must match `groupName` values in your `samples.tsv` exactly.
+
+   ```text
+   group1	group2
+   Treatment	Control
+   Treatment_2h	Control_2h
+   Treatment_6h	Control_6h
+   ```
+
 2. Supply it at `init` time with `--contrasts` or `-x` (it is copied to `WORKDIR/contrasts.tsv`), or add it to an already-initialized workdir and re-run `init`:
    ```bash
    harold -w=/scratch/$USER/harold_test -m=init \
@@ -104,6 +112,8 @@ To enable it:
 3. Set `diffex_deg_gsea: true` in `config.yaml`.
 
 Per contrast, HAROLD runs `diffex deg` (limma, DESeq2, and edgeR) against the counts matrix, then `diffex gsea` on each method's ranked gene list. ERCC/batch handling is controlled by the shared `diffex:` config block (`use_ercc`/`use_batch`, tri-state `false`/`true`/`both`), which also governs the aggregate `diffex_normalized_counts` step so the two never disagree on how the matrix was normalized; `both` runs a given step once per variant and keeps all of them. See [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration) for the full output layout.
+
+If `use_ercc` is `true` or `both`, also set `ercc_mix` (`1` or `2`) in the same `diffex:` block to match whichever ERCC spike-in mix was actually added to your libraries during prep. ERCC spike-ins ship as two mixes containing the same 92 synthetic transcripts at different known relative concentrations — using the wrong mix number here doesn't cause an error, it just silently normalizes against the wrong expected concentrations, so double-check it against your wet-lab protocol rather than leaving it at the default.
 
 ---
 
