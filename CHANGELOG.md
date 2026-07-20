@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 - **Final-state `pipeline.*` progress reporting:** `pipeline.completed` now reports the final step tally (`N / N steps complete (100%)`, `Remaining: 0 steps`) instead of being an empty marker file, matching the live format `pipeline.running` already used. `pipeline.failed` now preserves the last known progress snapshot instead of being emptied, so a failed run shows how far it got before failing. `runlocal` (previously untracked) now gets the same live progress monitoring as SLURM `run` jobs, via a tee'd Snakemake log.
 - **`diffex` container bumped `0.5.2` → `0.5.5`:** picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA `+Inf`/`-Inf` rank-clamp fix (v0.5.5, [dremellab/DiffEx#41](https://github.com/dremellab/DiffEx/pull/41)) that HAROLD's own `_sanitize_rnk.py` pre-processing step was working around. Switched to `docker://seqinfomics/diffex:0.5.5` (Docker Hub) rather than `ghcr.io/dremellab/diffex`, since no image newer than `0.5.2` has been published to GHCR ([dremellab/DiffEx#40](https://github.com/dremellab/DiffEx/issues/40)).
 
+### Fixed
+- **`fastq_validate_sample` OOM on large FASTQ files:** the rule had no memory override, so it used the pipeline-wide 40 GB default. `fastQValidator` runs unconditionally before `cutadapt` and blocks it on failure, so an OOM here (observed killed at ~40 GB validating a ~20-22 GB gzip R1/R2 pair) silently blocks the whole sample with no config workaround. Bumped to 120 GB (`config/rivanna/config.yaml`, matching the existing `cutadapt` allocation for the same files).
+
 ## [2.0.0]
 
 ### ⚠️ Breaking Changes

@@ -76,6 +76,16 @@ set-resources:
     mem_mb: 122880 # 120 GB
     runtime: 480 # 8 hours
 
+  fastq_validate_sample:
+    mem_mb: 122880 # 120 GB -- matches cutadapt below, which processes the same
+                 # FASTQ files. Default (40 GB) OOM-kills fastQValidator on
+                 # large modern runs (observed: killed at ~40 GB validating a
+                 # ~20-22 GB gzip R1/R2 pair); this rule runs unconditionally
+                 # before cutadapt and blocks it on failure, so under-sizing
+                 # this silently blocks the whole sample.
+    runtime: 480 # 8 hours
+    threads: 1   # single-threaded fastQValidator invocation; no benefit from more cores.
+
   cutadapt:
     mem_mb: 122880 # 120 GB
     runtime: 960 # 16 hours
