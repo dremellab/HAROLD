@@ -422,13 +422,14 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
   <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
+  <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
   </ul></li>
   <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.0.0]</a>
   <ul class="collapse">
   <li><a href="#breaking-changes-1" id="toc-breaking-changes-1" class="nav-link" data-scroll-target="#breaking-changes-1">⚠️ Breaking Changes</a></li>
   <li><a href="#added" id="toc-added" class="nav-link" data-scroll-target="#added">Added</a></li>
   <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
-  <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
+  <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
   </ul></li>
   <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1">[1.2.1]</a>
   <ul class="collapse">
@@ -442,7 +443,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#added-1" id="toc-added-1" class="nav-link" data-scroll-target="#added-1">Added</a></li>
   <li><a href="#changed-4" id="toc-changed-4" class="nav-link" data-scroll-target="#changed-4">Changed</a></li>
-  <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
+  <li><a href="#fixed-2" id="toc-fixed-2" class="nav-link" data-scroll-target="#fixed-2">Fixed</a></li>
   </ul></li>
   <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4">[1.0.0]</a></li>
   </ul></li>
@@ -472,6 +473,12 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>Final-state <code>pipeline.*</code> progress reporting:</strong> <code>pipeline.completed</code> now reports the final step tally (<code>N / N steps complete (100%)</code>, <code>Remaining: 0 steps</code>) instead of being an empty marker file, matching the live format <code>pipeline.running</code> already used. <code>pipeline.failed</code> now preserves the last known progress snapshot instead of being emptied, so a failed run shows how far it got before failing. <code>runlocal</code> (previously untracked) now gets the same live progress monitoring as SLURM <code>run</code> jobs, via a tee’d Snakemake log.</li>
 <li><strong><code>diffex</code> container bumped <code>0.5.2</code> → <code>0.5.5</code>:</strong> picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA <code>+Inf</code>/<code>-Inf</code> rank-clamp fix (v0.5.5, <a href="https://github.com/dremellab/DiffEx/pull/41">dremellab/DiffEx#41</a>) that HAROLD’s own <code>_sanitize_rnk.py</code> pre-processing step was working around. Switched to <code>docker://seqinfomics/diffex:0.5.5</code> (Docker Hub) rather than <code>ghcr.io/dremellab/diffex</code>, since no image newer than <code>0.5.2</code> has been published to GHCR (<a href="https://github.com/dremellab/DiffEx/issues/40">dremellab/DiffEx#40</a>).</li>
+</ul>
+</section>
+<section id="fixed" class="level3">
+<h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
+<ul>
+<li><strong><code>fastq_validate_sample</code> OOM on large FASTQ files:</strong> the rule had no memory override, so it used the pipeline-wide 40 GB default. <code>fastQValidator</code> runs unconditionally before <code>cutadapt</code> and blocks it on failure, so an OOM here (observed killed at ~40 GB validating a ~20-22 GB gzip R1/R2 pair) silently blocks the whole sample with no config workaround. Bumped to 120 GB (<code>config/rivanna/config.yaml</code>, matching the existing <code>cutadapt</code> allocation for the same files).</li>
 </ul>
 </section>
 </section>
@@ -509,8 +516,8 @@ ul.task-list li input[type="checkbox"] {
 <li>SLURM resource tuning — Added initial <code>set-resources</code> overrides for <code>alignment_summary</code> and <code>warm_msigdb_cache</code> (previously fell back to generic defaults)</li>
 </ul>
 </section>
-<section id="fixed" class="level3">
-<h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
+<section id="fixed-1" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-1">Fixed</h3>
 <ul>
 <li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success, and no longer depend on always being invoked as <code>... &amp;&amp; exit 0</code> to do so safely</li>
 <li>Stray user-site packages — <code>harold</code> wrapper and its Slurm job script now set <code>PYTHONNOUSERSITE=1</code> to isolate from <code>~/.local</code> pip <code>--user</code> packages</li>
@@ -573,8 +580,8 @@ ul.task-list li input[type="checkbox"] {
 <li><code>harold --version</code> now prints a clean version string (no platform banner) thanks to a dedicated <code>-V/--version</code> flag in the wrapper.</li>
 </ul>
 </section>
-<section id="fixed-1" class="level3">
-<h3 class="anchored" data-anchor-id="fixed-1">Fixed</h3>
+<section id="fixed-2" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-2">Fixed</h3>
 <ul>
 <li><code>diffex normalize</code> host selection now infers <code>Hs</code> vs <code>Mm</code> from both the diffex block and the top-level <code>host</code> option (e.g., mm39 maps to <code>--host Mm</code>).</li>
 <li>Hardened <code>rseqc_junction_annotation</code> to always create its junction file and log outputs cleanly, preventing spurious Snakemake failures.</li>
