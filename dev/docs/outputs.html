@@ -1832,6 +1832,7 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <h2 class="anchored" data-anchor-id="optional-outputs">Optional Outputs</h2>
 <section id="normalized-count-matrices-diffex-integration" class="level3">
 <h3 class="anchored" data-anchor-id="normalized-count-matrices-diffex-integration">Normalized Count Matrices (DiffEx Integration)</h3>
+<p>Only generated if <code>diffex_normalized_counts: true</code> in config. <code>{variant}</code> is always <code>{wo_ercc|w_ercc}_{wo_batch|w_batch}</code> (e.g.&nbsp;<code>wo_ercc_wo_batch</code>, <code>w_ercc_w_batch</code>) — the same shared <code>diffex.use_ercc</code>/<code>diffex.use_batch</code> tri-state options that drive DEG/GSEA below also drive this step, so <code>both</code> produces every variant side by side here too.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 66%">
@@ -1845,15 +1846,15 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>counts/normalized_counts/normalize.html</code></td>
-<td><strong>DiffEx-normalized count matrix report</strong> (only if <code>diffex_normalized_counts: true</code> in config). HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.). Requires DiffEx configuration in <code>config.yaml</code>.</td>
+<td><code>counts/normalized_counts/{variant}/normalize.html</code></td>
+<td><strong>DiffEx-normalized count matrix report</strong>, across the whole sample set. HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.), per the <code>diffex</code> config block in <code>config.yaml</code>.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="deg-and-gsea-diffex-integration" class="level3">
 <h3 class="anchored" data-anchor-id="deg-and-gsea-diffex-integration">DEG and GSEA (DiffEx Integration)</h3>
-<p>Only generated if <code>diffex_deg_gsea: true</code> in config, and requires a <code>contrasts.tsv</code> file (tab-delimited, <code>group1</code>/<code>group2</code> columns) listing which <code>groupName</code> pairs from <code>samples.tsv</code> to compare. <code>{contrast}</code> is <code>{group1}_vs_{group2}</code>. <code>{variant}</code> is always <code>{wo_ercc|w_ercc}_{wo_batch|w_batch}</code> (e.g.&nbsp;<code>wo_ercc_wo_batch</code>, <code>w_ercc_w_batch</code>), so the directory name alone always shows whether ERCC/batch correction was applied — regardless of whether <code>use_ercc</code>/<code>use_batch</code> is set to <code>true</code>, <code>false</code>, or <code>both</code>. The tri-state <code>use_ercc</code>/<code>use_batch</code> config options run DEG once per selected state, so <code>both</code> produces every variant side by side rather than picking one.</p>
+<p>Only generated if <code>diffex_deg_gsea: true</code> in config, and requires a <code>contrasts.tsv</code> file (tab-delimited, <code>group1</code>/<code>group2</code> columns) listing which <code>groupName</code> pairs from <code>samples.tsv</code> to compare. <code>{contrast}</code> is <code>{group1}_vs_{group2}</code>. <code>{variant}</code> is always <code>{wo_ercc|w_ercc}_{wo_batch|w_batch}</code> (e.g.&nbsp;<code>wo_ercc_wo_batch</code>, <code>w_ercc_w_batch</code>), so the directory name alone always shows whether ERCC/batch correction was applied — regardless of whether <code>use_ercc</code>/<code>use_batch</code> is set to <code>true</code>, <code>false</code>, or <code>both</code>. The tri-state <code>use_ercc</code>/<code>use_batch</code> config options (shared with the normalized-counts step above, via the <code>diffex</code> config block) run DEG once per selected state, so <code>both</code> produces every variant side by side rather than picking one.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 66%">

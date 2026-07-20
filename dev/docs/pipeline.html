@@ -681,7 +681,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li>If <code>diffex_normalized_counts: true</code> in config</li>
 <li>Run DiffEx R package for batch-effect correction, ERCC normalization, etc.</li>
-<li>Output: <code>counts/normalized_counts/normalize.html</code> (interactive report)</li>
+<li>Output: <code>counts/normalized_counts/{variant}/normalize.html</code> (interactive report)</li>
 </ul>
 </section>
 <section id="h.-optional-diffex-deg-gsea" class="level4">
@@ -690,7 +690,7 @@ ul.task-list li input[type="checkbox"] {
 <li>If <code>diffex_deg_gsea: true</code> in config, requires a <code>contrasts.tsv</code> file (<code>group1</code>/<code>group2</code> columns)</li>
 <li>Per contrast, run <code>diffex deg</code> (limma, DESeq2, and edgeR) against <code>counts_matrix.tsv</code></li>
 <li>Per method’s ranked gene list (<code>.rnk</code>), run <code>diffex gsea</code></li>
-<li><code>use_ercc</code>/<code>use_batch</code> are tri-state (<code>false</code>/<code>true</code>/<code>both</code>); <code>both</code> runs DEG twice and keeps both variants</li>
+<li><code>use_ercc</code>/<code>use_batch</code> are tri-state (<code>false</code>/<code>true</code>/<code>both</code>), set once in the shared <code>diffex:</code> config block that governs both this step and DiffEx Normalization above, so the two never disagree; <code>both</code> runs a given step once per variant and keeps all of them</li>
 <li>Outputs: <code>counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv</code>, <code>counts/GSEA/{contrast}_{variant}/{method}/gsea.html</code></li>
 </ul>
 <hr>

@@ -420,11 +420,12 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#dev" id="toc-dev" class="nav-link" data-scroll-target="#dev">[dev]</a>
   <ul class="collapse">
+  <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
   <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
   </ul></li>
   <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.0.0]</a>
   <ul class="collapse">
-  <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
+  <li><a href="#breaking-changes-1" id="toc-breaking-changes-1" class="nav-link" data-scroll-target="#breaking-changes-1">⚠️ Breaking Changes</a></li>
   <li><a href="#added" id="toc-added" class="nav-link" data-scroll-target="#added">Added</a></li>
   <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
   <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
@@ -460,17 +461,24 @@ ul.task-list li input[type="checkbox"] {
 <p>All notable changes to this project will be documented in this file.</p>
 <section id="dev" class="level2">
 <h2 class="anchored" data-anchor-id="dev">[dev]</h2>
+<section id="breaking-changes" class="level3">
+<h3 class="anchored" data-anchor-id="breaking-changes">⚠️ Breaking Changes</h3>
+<ul>
+<li><strong>Shared <code>diffex</code> config block:</strong> <code>use_ercc</code>, <code>ercc_mix</code>, <code>use_batch</code>, <code>batch_column</code>, and <code>genes_selection</code> moved out of <code>diffex_normalized_counts</code> and <code>diffex_deg_gsea</code> into one shared <code>diffex:</code> block, so the aggregate normalized-counts step and the per-contrast DEG/GSEA step can no longer disagree on ERCC/batch handling. The now-unused <code>diffex_normalized_counts.host</code> key was also removed (host was already sourced from the top-level <code>host:</code> config). As a result, <code>diffex_normalized_counts</code> output moved from <code>counts/normalized_counts/normalize.html</code> to <code>counts/normalized_counts/{variant}/normalize.html</code>, mirroring the DEG/GSEA variant layout, since <code>diffex.use_ercc</code>/<code>use_batch: both</code> now expands the aggregate step per-variant too. Update existing <code>config.yaml</code> files to the new schema (see #51).</li>
+</ul>
+</section>
 <section id="changed" class="level3">
 <h3 class="anchored" data-anchor-id="changed">Changed</h3>
 <ul>
-<li>TBD</li>
+<li><strong>Final-state <code>pipeline.*</code> progress reporting:</strong> <code>pipeline.completed</code> now reports the final step tally (<code>N / N steps complete (100%)</code>, <code>Remaining: 0 steps</code>) instead of being an empty marker file, matching the live format <code>pipeline.running</code> already used. <code>pipeline.failed</code> now preserves the last known progress snapshot instead of being emptied, so a failed run shows how far it got before failing. <code>runlocal</code> (previously untracked) now gets the same live progress monitoring as SLURM <code>run</code> jobs, via a tee’d Snakemake log.</li>
+<li><strong><code>diffex</code> container bumped <code>0.5.2</code> → <code>0.5.5</code>:</strong> picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA <code>+Inf</code>/<code>-Inf</code> rank-clamp fix (v0.5.5, <a href="https://github.com/dremellab/DiffEx/pull/41">dremellab/DiffEx#41</a>) that HAROLD’s own <code>_sanitize_rnk.py</code> pre-processing step was working around. Switched to <code>docker://seqinfomics/diffex:0.5.5</code> (Docker Hub) rather than <code>ghcr.io/dremellab/diffex</code>, since no image newer than <code>0.5.2</code> has been published to GHCR (<a href="https://github.com/dremellab/DiffEx/issues/40">dremellab/DiffEx#40</a>).</li>
 </ul>
 </section>
 </section>
 <section id="section" class="level2">
 <h2 class="anchored" data-anchor-id="section">[2.0.0]</h2>
-<section id="breaking-changes" class="level3">
-<h3 class="anchored" data-anchor-id="breaking-changes">⚠️ Breaking Changes</h3>
+<section id="breaking-changes-1" class="level3">
+<h3 class="anchored" data-anchor-id="breaking-changes-1">⚠️ Breaking Changes</h3>
 <ul>
 <li><strong>Config key renamed:</strong> <code>infer_strandedness</code> → <code>use_infer_strandedness</code>. Update existing config files to use the new key name for clarity (true = use inferred values, false = use manifest values).</li>
 </ul>
