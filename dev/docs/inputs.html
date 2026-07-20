@@ -471,7 +471,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#host-specific-gtf-files-trna-and-repeats" id="toc-host-specific-gtf-files-trna-and-repeats" class="nav-link" data-scroll-target="#host-specific-gtf-files-trna-and-repeats">Host-Specific GTF Files (tRNA and Repeats)</a></li>
   <li><a href="#validation-rules-1" id="toc-validation-rules-1" class="nav-link" data-scroll-target="#validation-rules-1">Validation Rules</a></li>
   </ul></li>
-  <li><a href="#optional-input-validation-and-quality-gating" id="toc-optional-input-validation-and-quality-gating" class="nav-link" data-scroll-target="#optional-input-validation-and-quality-gating">4. Optional: Input Validation and Quality Gating</a>
+  <li><a href="#input-validation-and-quality-gating" id="toc-input-validation-and-quality-gating" class="nav-link" data-scroll-target="#input-validation-and-quality-gating">4. Input Validation and Quality Gating</a>
   <ul class="collapse">
   <li><a href="#fastq-validation-gating" id="toc-fastq-validation-gating" class="nav-link" data-scroll-target="#fastq-validation-gating">FASTQ Validation Gating</a></li>
   </ul></li>
@@ -605,6 +605,9 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 </ul></li>
 </ol>
 <p><strong>Recommendation:</strong> Leave <code>use_infer_strandedness: true</code> unless you have a strong reason to override (e.g., known library prep protocol contradicts inference). Inferred values are more robust than manual annotation.</p>
+<p><strong>Renaming the manifest column:</strong> If your manifest names the strandedness column something other than <code>strandedness</code>, point HAROLD at it with:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">strandedness_column</span><span class="kw">:</span><span class="at"> </span><span class="st">"strandedness"</span><span class="co">  # default; change to match your manifest's column name</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This only matters when <code>use_infer_strandedness: false</code> (that’s the only time the manifest column is read at all).</p>
 <hr>
 </section>
 </section>
@@ -668,7 +671,7 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 </tbody>
 </table>
 <p>To use custom reference paths, edit the <code>config.yaml</code> key:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fastas_gtfs_dir</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/custom/references"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fastas_gtfs_dir</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/custom/references"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Available reference files in the default location include FASTA and GTF for:</p>
 <ul>
 <li>Host genomes: <code>hg38</code>, <code>mm39</code> (with comprehensive gene annotations)</li>
@@ -684,9 +687,9 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <h4 class="anchored" data-anchor-id="trnas_gtf-trna-gene-annotations"><code>trnas_gtf</code> — tRNA Gene Annotations</h4>
 <p><strong>Purpose:</strong> Include transfer RNA (tRNA) genes in quantification with explicit coordinates.</p>
 <p><strong>Configuration:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">trnas_gtf</span><span class="kw">:</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/hg38.tRNAs.hg38chroms.gtf"</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/mm39.tRNAs.mm39chroms.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">trnas_gtf</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/hg38.tRNAs.hg38chroms.gtf"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/mm39.tRNAs.mm39chroms.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>When to use:</strong></p>
 <ul>
 <li>If your experiment has tRNA-focused analysis (e.g., tRNA quantification, tRNA fragment analysis)</li>
@@ -700,9 +703,9 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <h4 class="anchored" data-anchor-id="chrr_gtf-repeats-and-ribosomal-rna-annotations"><code>chrr_gtf</code> — Repeats and Ribosomal RNA Annotations</h4>
 <p><strong>Purpose:</strong> Include genomic repeats and ribosomal RNA (rRNA) regions in the reference annotation.</p>
 <p><strong>Configuration:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chrr_gtf</span><span class="kw">:</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/hg38.repeats.gtf"</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/mm39.repeats.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chrr_gtf</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/hg38.repeats.gtf"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/mm39.repeats.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>When to use:</strong></p>
 <ul>
 <li>If you want to explicitly quantify rRNA contamination or repeat-associated reads</li>
@@ -726,14 +729,17 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <hr>
 </section>
 </section>
-<section id="optional-input-validation-and-quality-gating" class="level2">
-<h2 class="anchored" data-anchor-id="optional-input-validation-and-quality-gating">4. Optional: Input Validation and Quality Gating</h2>
-<p>HAROLD can optionally validate input FASTQ files before alignment to detect contamination or formatting issues.</p>
+<section id="input-validation-and-quality-gating" class="level2">
+<h2 class="anchored" data-anchor-id="input-validation-and-quality-gating">4. Input Validation and Quality Gating</h2>
+<p>HAROLD always validates input FASTQ files before alignment to detect contamination or formatting issues. This is not configurable — there is no config key to disable it.</p>
 <section id="fastq-validation-gating" class="level3">
 <h3 class="anchored" data-anchor-id="fastq-validation-gating">FASTQ Validation Gating</h3>
-<p><strong>Configuration:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">validate_fastq</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span><span class="co">  # default: false</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>When enabled:</strong> 1. FastQValidator analyzes each input FASTQ file (R1 and R2) for format compliance 2. Reports total sequences, line count, and any formatting errors 3. Cutadapt proceeds regardless of validation results (non-blocking)</p>
+<p><strong>Behavior:</strong> For every sample, <code>fastQValidator</code> runs on R1 (and R2, if paired-end) before Cutadapt. This always happens; there is nothing to turn on. Crucially, it is <strong>blocking</strong>: Cutadapt has a hard dependency on validation succeeding for that sample, so if validation fails, Cutadapt (and everything downstream) does not run for that sample until the underlying FASTQ issue is fixed.</p>
+<ol type="1">
+<li>FastQValidator analyzes each input FASTQ file (R1 and R2) for format compliance</li>
+<li>Reports total sequences, line count, and any formatting errors</li>
+<li><strong>Cutadapt only proceeds if validation passes</strong> — a failed validation (missing <code>FASTQ_SUCCESS</code> in the validator’s report, or a <code>gzip</code>/validator error) fails the rule and blocks that sample’s Cutadapt job</li>
+</ol>
 <p><strong>Validation checks include:</strong></p>
 <ul>
 <li>Correct FASTQ format (4-line records with @, sequence, +, qualities)</li>
@@ -741,8 +747,8 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <li>Quality score range validity (Phred 0–93)</li>
 <li>Invalid characters in sequence or quality strings</li>
 </ul>
-<p><strong>Output:</strong> Validation report in <code>results/{sample}/fastq_validation/{sample}.fastq_validator.txt</code> (included in alignment summary if validation is enabled)</p>
-<p><strong>Use case:</strong> Enable for new or untrusted sample sources to catch obvious formatting or contamination issues early. Validation adds minimal runtime overhead (&lt; 1 min per sample).</p>
+<p><strong>Output:</strong> Validation report in <code>results/{sample}/fastq_validation/{sample}.fastq_validator.txt</code>, always produced.</p>
+<p><strong>If validation fails:</strong> Check that report for the specific FastQValidator error, then check <code>logs/rule_fastq_validate_sample/{sample}/</code> for the full job log. Common causes: truncated/corrupted download, mismatched R1/R2 pairing, or a non-gzip file with a <code>.fastq.gz</code> name.</p>
 <p><strong>Red flags from validation output:</strong></p>
 <ul>
 <li>Mismatched R1/R2 sequence counts (indicates paired-end mismatch or corruption)</li>
@@ -761,13 +767,13 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <li><strong>Working directory</strong> — output and configuration location (created if doesn’t exist)</li>
 <li><strong>Reference selection</strong> — host (hg38 or mm39) + viral accessions (comma-separated)</li>
 </ol>
+<p>FASTQ format validation (FastQValidator) always runs on every sample and blocks Cutadapt on failure — see <a href="#input-validation-and-quality-gating">above</a>. There’s no input needed for it and no config key to disable it.</p>
 </section>
 <section id="optional-but-recommended-inputs" class="level3">
 <h3 class="anchored" data-anchor-id="optional-but-recommended-inputs">Optional but Recommended Inputs</h3>
 <ol start="4" type="1">
 <li><strong>Strandedness specification</strong> (in manifest or config) — only needed if <code>use_infer_strandedness: false</code></li>
 <li><strong>Custom GTF files</strong> (in config) — tRNA and repeat annotations if desired</li>
-<li><strong>FASTQ validation</strong> (in config) — enable for quality screening of input files</li>
 <li><strong>Contrasts manifest</strong> (<code>contrasts.tsv</code>, <code>group1</code>/<code>group2</code> columns) — only needed if <code>diffex_deg_gsea: true</code>, to run DEG (limma/DESeq2/edgeR) and GSEA per contrast; see <a href="../docs/outputs.html#deg-and-gsea-diffex-integration">Outputs: DEG and GSEA</a></li>
 </ol>
 <p>Together, these inputs ensure that HAROLD can dynamically build the appropriate reference index, validate experimental metadata, and execute reproducible, high-quality RNA-seq analyses across host and viral genomes. Most users need only the three required inputs; optional inputs add specialized functionality for specific experimental designs (tRNA analysis, repeat quantification, quality gating).</p>

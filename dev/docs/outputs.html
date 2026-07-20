@@ -426,7 +426,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#alignment-files" id="toc-alignment-files" class="nav-link" data-scroll-target="#alignment-files">Alignment Files</a></li>
   <li><a href="#normalization-and-coverage-tracks-bigwig-files" id="toc-normalization-and-coverage-tracks-bigwig-files" class="nav-link" data-scroll-target="#normalization-and-coverage-tracks-bigwig-files">Normalization and Coverage Tracks: BigWig Files</a></li>
   <li><a href="#quality-control" id="toc-quality-control" class="nav-link" data-scroll-target="#quality-control">Quality Control</a></li>
-  <li><a href="#optional-fastq-validation" id="toc-optional-fastq-validation" class="nav-link" data-scroll-target="#optional-fastq-validation">Optional: FASTQ Validation</a></li>
+  <li><a href="#fastq-validation" id="toc-fastq-validation" class="nav-link" data-scroll-target="#fastq-validation">FASTQ Validation</a></li>
   </ul></li>
   <li><a href="#aggregate-output-files" id="toc-aggregate-output-files" class="nav-link" data-scroll-target="#aggregate-output-files">Aggregate Output Files</a>
   <ul class="collapse">
@@ -497,7 +497,7 @@ ul.task-list li input[type="checkbox"] {
 │   │   ├── rseqc/                    # RNA-seq QC metrics
 │   │   ├── kraken2/                  # Pathogen detection reports
 │   │   ├── counts/                   # Per-sample count matrices
-│   │   └── fastq_validation/         # (Optional) FASTQ validation logs
+│   │   └── fastq_validation/         # FASTQ validation logs (always produced, blocks Cutadapt on failure)
 │   │
 │   ├── counts/                       # Aggregate count matrices
 │   ├── alignmentqc/                  # Alignment summary statistics
@@ -1286,8 +1286,8 @@ ENSG00000000005 500 100 400</code></pre>
 <p><strong>Use case:</strong> Aggregated per-sample files are merged into transcript-level count matrices (<code>counts_matrix.transcript_level.tsv</code>, etc.) with FPKM/TPM values aggregated across samples.</p>
 </section>
 </section>
-<section id="optional-fastq-validation" class="level3">
-<h3 class="anchored" data-anchor-id="optional-fastq-validation">Optional: FASTQ Validation</h3>
+<section id="fastq-validation" class="level3">
+<h3 class="anchored" data-anchor-id="fastq-validation">FASTQ Validation</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 66%">
@@ -1302,7 +1302,7 @@ ENSG00000000005 500 100 400</code></pre>
 <tbody>
 <tr class="odd">
 <td><code>fastq_validation/{sample}.fastq_validator.txt</code></td>
-<td><strong>FASTQ validation log</strong> (only if FASTQ validation gating is enabled). Reports any formatting issues with input FASTQ files detected by FastQValidator.</td>
+<td><strong>FASTQ validation log</strong>, always produced for every sample before Cutadapt runs (not config-gated). Reports any formatting issues with input FASTQ files detected by FastQValidator; a failed validation blocks Cutadapt for that sample.</td>
 </tr>
 </tbody>
 </table>

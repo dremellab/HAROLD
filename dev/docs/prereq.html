@@ -461,6 +461,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#shared-apptainer-images-and-cache-layout" id="toc-shared-apptainer-images-and-cache-layout" class="nav-link" data-scroll-target="#shared-apptainer-images-and-cache-layout">6. Shared Apptainer Images and Cache Layout</a></li>
   <li><a href="#reference-bundle-created-inside-each-work-directory" id="toc-reference-bundle-created-inside-each-work-directory" class="nav-link" data-scroll-target="#reference-bundle-created-inside-each-work-directory">7. Reference bundle created inside each work directory</a></li>
   <li><a href="#understanding-snakemake-dry-run-output" id="toc-understanding-snakemake-dry-run-output" class="nav-link" data-scroll-target="#understanding-snakemake-dry-run-output">8. Understanding Snakemake dry-run output</a></li>
+  <li><a href="#other-runmodes-unlock-reconfig-reset-printbinds" id="toc-other-runmodes-unlock-reconfig-reset-printbinds" class="nav-link" data-scroll-target="#other-runmodes-unlock-reconfig-reset-printbinds">9. Other Runmodes: <code>unlock</code>, <code>reconfig</code>, <code>reset</code>, <code>printbinds</code></a></li>
+  <li><a href="#cluster-profiles-configrivanna-configlocal-configunknown" id="toc-cluster-profiles-configrivanna-configlocal-configunknown" class="nav-link" data-scroll-target="#cluster-profiles-configrivanna-configlocal-configunknown">10. Cluster Profiles (<code>config/rivanna</code>, <code>config/local</code>, <code>config/unknown</code>)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -651,6 +653,27 @@ total                    162</code></pre>
 <li>The final “Job stats” table is Snakemake’s count of how many times each rule would execute. This lets you gauge how much work is queued before launching a real run.</li>
 </ul>
 <p>Because <code>--dry-run</code> never touches data, you can use it freely after editing <code>config.yaml</code> or <code>samples.tsv</code> to confirm HAROLD recognizes the changes. Once you are satisfied with the dry-run summary, re-run <code>harold -m run</code> (or <code>runlocal</code>) from the same work directory to start the actual workflow.</p>
+<hr>
+</section>
+<section id="other-runmodes-unlock-reconfig-reset-printbinds" class="level2">
+<h2 class="anchored" data-anchor-id="other-runmodes-unlock-reconfig-reset-printbinds">9. Other Runmodes: <code>unlock</code>, <code>reconfig</code>, <code>reset</code>, <code>printbinds</code></h2>
+<p>Beyond <code>init</code>/<code>dryrun</code>/<code>run</code>/<code>runlocal</code>, <code>harold</code>’s <code>--runmode</code> accepts a few maintenance modes. Each still requires <code>-w=WORKDIR</code>.</p>
+<ul>
+<li><p><strong><code>unlock</code></strong> — If a previous <code>run</code>/<code>runlocal</code> was interrupted uncleanly (node failure, <code>scancel</code>, a dropped VPN connection, Ctrl-C), Snakemake’s lock on the working directory can be left in place, and the next <code>dryrun</code>/<code>run</code> will fail with a locking error. <code>harold -w=WORKDIR -m=unlock</code> clears it. Only run this if you’re sure no other HAROLD process is still actively using that WORKDIR — the lock exists specifically to prevent two concurrent Snakemake instances from writing to the same directory at once.</p></li>
+<li><p><strong><code>reconfig</code></strong> — ⚠️ <strong>Regenerates <code>config.yaml</code> from the pipeline’s pristine template, completely overwriting the current file.</strong> This discards <em>any</em> manual edits you’ve made since <code>init</code> — DEG/GSEA settings, S3 settings, custom GTF paths, threshold tweaks, everything. Per the tool’s own internal comment, this mode exists for pipeline development (e.g.&nbsp;picking up newly-added config keys after a HAROLD update), not routine use. If you need a new config key in an existing WORKDIR without losing your customizations, copy that one key in by hand instead of running <code>reconfig</code>.</p></li>
+<li><p><strong><code>reset</code></strong> — <strong>Deletes the entire WORKDIR</strong> (<code>rm -rf</code>) and re-initializes it from scratch. Irreversible — all results, logs, and config edits in that directory are gone for good. Only use this for a broken WORKDIR you’re willing to lose entirely, not as a way to “start fresh” on a run whose partial results you might still want.</p></li>
+<li><p><strong><code>printbinds</code></strong> — Prints the Apptainer/Singularity bind-mount paths HAROLD would use for the given WORKDIR/manifest, without running anything. Useful when a container-based rule fails with a “file not found” error despite the file clearly existing on the host filesystem — that usually means the file lives outside every bound path, and this command shows you exactly which paths are (and aren’t) bound.</p></li>
+</ul>
+<hr>
+</section>
+<section id="cluster-profiles-configrivanna-configlocal-configunknown" class="level2">
+<h2 class="anchored" data-anchor-id="cluster-profiles-configrivanna-configlocal-configunknown">10. Cluster Profiles (<code>config/rivanna</code>, <code>config/local</code>, <code>config/unknown</code>)</h2>
+<p>Every <code>init</code>’d WORKDIR gets a copy of <code>config/</code>, which contains a Snakemake profile subdirectory per execution context — SLURM resource defaults, container bind paths, executor type, and per-rule overrides. You don’t choose one directly; <code>harold</code> picks it for you:</p>
+<ul>
+<li><strong><code>rivanna</code></strong> — Used automatically for <code>run</code> when <code>harold</code> detects it’s executing on Rivanna. Fully tuned for the cluster: SLURM partitions, per-rule memory/thread overrides, and the shared Apptainer image directory paths described in <a href="#shared-apptainer-images-and-cache-layout">section 6</a>.</li>
+<li><strong><code>local</code></strong> — Used automatically by <code>runlocal</code>/<code>local</code> runmode: executes Snakemake directly on the current node (no SLURM submission), regardless of which cluster you’re on.</li>
+<li><strong><code>unknown</code></strong> — The fallback <code>run</code> profile used when <code>harold</code> doesn’t recognize the current cluster (i.e., anywhere that isn’t Rivanna). It’s a generic starting-point SLURM profile with Rivanna-specific settings (bind paths, partition names) commented out — this is what the <code>harold --help</code> banner means by “edit the files in <code>config/unknown/</code> &amp; <code>config.yaml</code> for compatibility with your computing environment.” As noted at the top of this page, <strong>HAROLD is tested and supported exclusively on Rivanna</strong> — running on another cluster via <code>unknown</code> is unsupported and will need manual tuning of that profile.</li>
+</ul>
 
 
 </section>
