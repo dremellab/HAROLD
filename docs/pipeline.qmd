@@ -209,14 +209,14 @@ graph TD
 
 - If `diffex_normalized_counts: true` in config
 - Run DiffEx R package for batch-effect correction, ERCC normalization, etc.
-- Output: `counts/normalized_counts/normalize.html` (interactive report)
+- Output: `counts/normalized_counts/{variant}/normalize.html` (interactive report)
 
 #### **5h. Optional: DiffEx DEG + GSEA**
 
 - If `diffex_deg_gsea: true` in config, requires a `contrasts.tsv` file (`group1`/`group2` columns)
 - Per contrast, run `diffex deg` (limma, DESeq2, and edgeR) against `counts_matrix.tsv`
 - Per method's ranked gene list (`.rnk`), run `diffex gsea`
-- `use_ercc`/`use_batch` are tri-state (`false`/`true`/`both`); `both` runs DEG twice and keeps both variants
+- `use_ercc`/`use_batch` are tri-state (`false`/`true`/`both`), set once in the shared `diffex:` config block that governs both this step and DiffEx Normalization above, so the two never disagree; `both` runs a given step once per variant and keeps all of them
 - Outputs: `counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv`, `counts/GSEA/{contrast}_{variant}/{method}/gsea.html`
 
 ---

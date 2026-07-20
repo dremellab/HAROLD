@@ -47,7 +47,7 @@ HAROLD automates the process from raw FASTQ files to normalized count matrices a
 
 - **HAROLD can run DEG and GSEA directly.** Given a `contrasts.tsv` manifest, HAROLD runs differential expression (limma, DESeq2, edgeR) and gene set enrichment analysis per contrast via **DiffEx**, with tri-state ERCC/batch variants and interactive reports — no separate manual DiffEx invocation required.
 
-- **HAROLD tracks and reports its own run state.** Every run writes `pipeline.{running,completed,failed,canceled}` markers and a `pipeline.status.json` sidecar to the working directory, with live progress updates during SLURM execution, so status can be checked without parsing logs.
+- **HAROLD tracks and reports its own run state.** Every run writes `pipeline.{running,completed,failed,canceled}` markers and a `pipeline.status.json` sidecar to the working directory, with live progress updates during execution (SLURM `run` or `runlocal` alike) and a final step tally on completion, so status can be checked without parsing logs.
 
 ---
 

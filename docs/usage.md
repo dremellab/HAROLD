@@ -73,11 +73,12 @@ When the pipeline finishes, the working directory will contain organized subfold
 
 Every `runlocal`/`run` invocation writes a state marker and JSON status sidecar to `WORKDIR` so you can check pipeline status without digging through logs:
 
-- **State marker** — exactly one of `pipeline.running`, `pipeline.completed`, `pipeline.failed`, or `pipeline.canceled` exists in `WORKDIR` at any time, replaced as the run progresses. While a SLURM run is active, `pipeline.running` is periodically rewritten with a live progress summary (steps complete, percent done, steps remaining) parsed from Snakemake's own step-completion output, so `cat $WORKDIR/pipeline.running` gives an at-a-glance status.
+- **State marker** — exactly one of `pipeline.running`, `pipeline.completed`, `pipeline.failed`, or `pipeline.canceled` exists in `WORKDIR` at any time, replaced as the run progresses. While a run is active (`run` on SLURM or `runlocal`), `pipeline.running` is periodically rewritten with a live progress summary (steps complete, percent done, steps remaining) parsed from Snakemake's own step-completion output, so `cat $WORKDIR/pipeline.running` gives an at-a-glance status. On success, `pipeline.completed` carries the same summary showing the final tally (100% done, 0 remaining) rather than being left empty; on failure, `pipeline.failed` preserves whatever progress was last recorded, so you can see how far the run got before failing.
 - **`pipeline.status.json`** — a structured sidecar with `state`, `reason`, `runmode`, `slurm_job_id`, `host`, and `timestamp_utc`, updated at submission, success, failure, and on cancellation (SIGTERM/SIGINT, e.g. `scancel`).
 
 ```bash
-cat $WORKDIR/pipeline.running        # live progress, while a SLURM run is active
+cat $WORKDIR/pipeline.running        # live progress, while a run is active
+cat $WORKDIR/pipeline.completed      # final tally, once finished successfully
 cat $WORKDIR/pipeline.status.json    # structured status snapshot
 ```
 
