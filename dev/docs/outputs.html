@@ -527,7 +527,7 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td><code>ref/ref.fa</code></td>
-<td><strong>Combined reference FASTA</strong> containing host genome, additives (ERCC, BAC16Insert), and all selected viral sequences. Single source of truth for all alignments.</td>
+<td><strong>Combined reference FASTA</strong> containing host genome, additives (ERCC, BAC16Insert, 4SU1), and all selected viral sequences. Single source of truth for all alignments.</td>
 </tr>
 <tr class="even">
 <td><code>ref/ref.gtf</code></td>
@@ -1684,6 +1684,12 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <td><strong>Primary alignments to each virus</strong> (one column per virus, e.g., NC_009333.1_mapped, NC_045512.2_mapped). Named by RefSeq accession ID.</td>
 <td>BAM analysis</td>
 </tr>
+<tr class="even">
+<td><code>{additive}_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to each additive/spike-in</strong> (one column per configured additive, e.g., ERCC_mapped, BAC16Insert_mapped, 4SU1_mapped). Named by additive name.</td>
+<td>BAM analysis</td>
+</tr>
 </tbody>
 </table>
 <p><strong>Example row:</strong></p>
@@ -1922,7 +1928,7 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <ul>
 <li><strong>Host:</strong> <code>hg38</code> or <code>mm39</code> (depending on your host genome)</li>
 <li><strong>Viruses:</strong> RefSeq accession IDs (e.g., <code>NC_009333.1</code> for KSHV, <code>NC_045512.2</code> for SARS-CoV-2)</li>
-<li><strong>Additives:</strong> <code>ERCC</code>, <code>BAC16Insert</code> (if included)</li>
+<li><strong>Additives:</strong> <code>ERCC</code>, <code>BAC16Insert</code>, <code>4SU1</code> (if included)</li>
 </ul>
 <p>Example: <code>{sample}.NC_009333.1.bam</code> contains only reads mapped to KSHV.</p>
 <hr>
