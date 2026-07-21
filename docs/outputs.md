@@ -54,7 +54,7 @@ Created during the first Snakemake run and reused across all subsequent runs in 
 
 | File | Description |
 |------|---|
-| `ref/ref.fa` | **Combined reference FASTA** containing host genome, additives (ERCC, BAC16Insert), and all selected viral sequences. Single source of truth for all alignments. |
+| `ref/ref.fa` | **Combined reference FASTA** containing host genome, additives (ERCC, BAC16Insert, 4SU1), and all selected viral sequences. Single source of truth for all alignments. |
 | `ref/ref.gtf` | **Concatenated GTF** with annotations from host, viruses, and optional tRNA/repeats GTF files. |
 | `ref/ref.fixed.gtf` | **Cleaned GTF** with normalized formatting for Snakemake compatibility. |
 | `ref/ref.genes.bed` / `.bed12` | **BED format gene annotations** derived from GTF. Used by RSeQC tools for read distribution analysis and junction detection. |
@@ -522,6 +522,7 @@ Interpretation: Sample A confidently forward-stranded (95% of pairs); Sample B a
 | `host_mapped` | Integer | **Primary alignments to host genome** (e.g., hg38, mm39). Counted from BAM file primary alignment flag. |  BAM analysis |
 | `chrR_mapped` | Integer | **Primary alignments to chrR regions** (repeats, rRNA, etc.) if present. Subset of host_mapped. | BAM analysis |
 | `{virus_accession}_mapped` | Integer | **Primary alignments to each virus** (one column per virus, e.g., NC_009333.1_mapped, NC_045512.2_mapped). Named by RefSeq accession ID. | BAM analysis |
+| `{additive}_mapped` | Integer | **Primary alignments to each additive/spike-in** (one column per configured additive, e.g., ERCC_mapped, BAC16Insert_mapped, 4SU1_mapped). Named by additive name. | BAM analysis |
 
 **Example row:**
 ```
@@ -632,7 +633,7 @@ Files containing region-specific outputs use region identifiers:
 
 - **Host:** `hg38` or `mm39` (depending on your host genome)
 - **Viruses:** RefSeq accession IDs (e.g., `NC_009333.1` for KSHV, `NC_045512.2` for SARS-CoV-2)
-- **Additives:** `ERCC`, `BAC16Insert` (if included)
+- **Additives:** `ERCC`, `BAC16Insert`, `4SU1` (if included)
 
 Example: `{sample}.NC_009333.1.bam` contains only reads mapped to KSHV.
 

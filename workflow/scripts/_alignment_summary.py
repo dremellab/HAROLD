@@ -153,6 +153,7 @@ def main() -> int:
     parser.add_argument("--results-dir", required=True)
     parser.add_argument("--regions-host", required=True)
     parser.add_argument("--regions-viruses", required=True)
+    parser.add_argument("--regions-additives", required=True)
     parser.add_argument("--output", default="-")
     parser.add_argument("--chrr-names", default="chrR")
     args = parser.parse_args()
@@ -164,6 +165,7 @@ def main() -> int:
 
     host_genomes = read_regions_file(Path(args.regions_host))
     virus_genomes = read_regions_file(Path(args.regions_viruses))
+    additive_genomes = read_regions_file(Path(args.regions_additives))
 
     host_contigs: set[str] = set()
     for contigs in host_genomes.values():
@@ -171,6 +173,7 @@ def main() -> int:
 
     chrr_contigs = {item.strip() for item in args.chrr_names.split(",") if item.strip()}
     virus_names = sorted(virus_genomes)
+    additive_names = sorted(additive_genomes)
 
     rows: list[dict[str, str]] = []
     sample_dirs = sorted(path for path in results_dir.iterdir() if path.is_dir())
@@ -227,6 +230,10 @@ def main() -> int:
             row[f"{virus}_mapped"] = str(
                 sum_contigs(mapped_by_contig, virus_genomes[virus])
             )
+        for additive in additive_names:
+            row[f"{additive}_mapped"] = str(
+                sum_contigs(mapped_by_contig, additive_genomes[additive])
+            )
         rows.append(row)
 
     fieldnames = [
@@ -242,6 +249,7 @@ def main() -> int:
         "chrR_mapped",
     ]
     fieldnames.extend(f"{virus}_mapped" for virus in virus_names)
+    fieldnames.extend(f"{additive}_mapped" for additive in additive_names)
 
     if args.output == "-":
         handle = sys.stdout

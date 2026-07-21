@@ -140,7 +140,7 @@ for varname in [
     globals()[varname] = globals()[varname].rstrip(r"\/")
 
 HOST = config["host"].strip()  # hg38 or mm39
-ADDITIVES = config["additives"].strip()  # ERCC and/or BAC16Insert
+ADDITIVES = config["additives"].strip()  # ERCC, BAC16Insert, and/or 4SU1
 ADDITIVES = ADDITIVES.replace(" ", "")
 VIRUSES = config["viruses"].strip()
 VIRUSES = VIRUSES.replace(" ", "")
@@ -195,6 +195,10 @@ if VIRUSES != "":
     REGIONS_VIRUSES = [join(FASTAS_GTFS_DIR, f + ".fa.regions") for f in VIRUSES.split(",")]
 else:
     REGIONS_VIRUSES = []
+if ADDITIVES != "":
+    REGIONS_ADDITIVES = [join(FASTAS_GTFS_DIR, f + ".fa.regions") for f in ADDITIVES.split(",")]
+else:
+    REGIONS_ADDITIVES = []
 GTFS = [join(FASTAS_GTFS_DIR, f + ".gtf") for f in HOST_ADDITIVES_VIRUSES]
 if CHRR_GTF != "":
     GTFS.append(CHRR_GTF)
@@ -211,6 +215,7 @@ REF_FA = join(REF_DIR, "ref.fa")
 REF_REGIONS = join(REF_DIR, "ref.fa.regions")
 REF_REGIONS_HOST = join(REF_DIR, "ref.fa.regions.host")
 REF_REGIONS_VIRUSES = join(REF_DIR, "ref.fa.regions.viruses")
+REF_REGIONS_ADDITIVES = join(REF_DIR, "ref.fa.regions.additives")
 REF_REGIONS_HOST_VIRUSES = join(REF_DIR, "ref.fa.regions.host_viruses")
 REF_GTF = join(REF_DIR, "ref.gtf")
 append_files_in_list(FASTAS, REF_FA)
@@ -269,6 +274,7 @@ else:
 append_files_in_list(REGIONS_HOST, REF_REGIONS_HOST)
 append_files_in_list(REGIONS_HOST + REGIONS_VIRUSES, REF_REGIONS_HOST_VIRUSES)
 append_files_in_list(REGIONS_VIRUSES, REF_REGIONS_VIRUSES)
+append_files_in_list(REGIONS_ADDITIVES, REF_REGIONS_ADDITIVES)
 
 if not os.path.exists(REF_GTF):
 

@@ -184,6 +184,7 @@ rule alignment_summary:
         ),
         regions_host=join(REF_DIR, "ref.fa.regions.host"),
         regions_viruses=join(REF_DIR, "ref.fa.regions.viruses"),
+        regions_additives=join(REF_DIR, "ref.fa.regions.additives"),
     output:
         summary=join(RESULTSDIR, "alignmentqc", "alignment_summary.tsv"),
     log:
@@ -200,6 +201,7 @@ rule alignment_summary:
             --results-dir {RESULTSDIR} \
             --regions-host {input.regions_host} \
             --regions-viruses {input.regions_viruses} \
+            --regions-additives {input.regions_additives} \
             --output {output.summary}
         """
 
