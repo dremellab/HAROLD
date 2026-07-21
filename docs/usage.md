@@ -21,7 +21,7 @@ The initialization step prepares the working directory and configuration for the
 
 - `--workdir` or `-w`: The absolute or relative path to the directory where HAROLD will create output files.
 - `--host` or `-g`: The host genome to use (`hg38` for human or `mm39` for mouse).
-- `--additives` or `-a`: Additive control sequences such as `ERCC` or `BAC16Insert`. Multiple values can be supplied as a comma-separated list.
+- `--additives` or `-a`: Additive control sequences such as `ERCC`, `BAC16Insert`, or `4SU1`. Multiple values can be supplied as a comma-separated list.
 - `--viruses` or `-v`: One or more virus accessions (for example, `NC_009333.1` for KSHV or `NC_045512.2` for SARS-CoV-2). Multiple accessions can also be supplied as a comma-separated list.
 - `--manifest` or `-s`: The path to the sample manifest file, usually a tab-separated file listing sample names and FASTQ file paths.
 

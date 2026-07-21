@@ -349,6 +349,7 @@ HOSTS:
 ADDITIVES:
   * ERCC          [External RNA Control Consortium sequences]
   * BAC16Insert   [insert from rKSHV.219-derived BAC clone of the full-length KSHV genome]
+  * 4SU1          [synthetic spike-in control for 4-thiouridine (4sU) metabolic-labeling RNA-seq]
 
 VIRUSES:
   * NC_007605.1   [Human gammaherpesvirus 4 (Epstein-Barr virus)]
@@ -386,7 +387,7 @@ Required Arguments:
 Optional Arguments:
 
 --host|-g       : supply host at command line. hg38 or mm39.                                            (--runmode=init only)
---additives|-a  : supply comma-separated list of additives at command line. ERCC or BAC16Insert or both (--runmode=init only)
+--additives|-a  : supply comma-separated list of additives at command line. ERCC, BAC16Insert, and/or 4SU1 (--runmode=init only)
 --viruses|-v    : supply comma-separated list of viruses at command line                                (--runmode=init only)
 --manifest|-s   : absolute path to samples.tsv. This will be copied to output folder                    (--runmode=init only)
 --contrasts|-x  : absolute path to contrasts.tsv. Copied to WORKDIR/contrasts.tsv                       (any runmode)

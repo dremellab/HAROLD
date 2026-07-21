@@ -11,14 +11,15 @@ samples: "WORKDIR/samples.tsv"
 # select references .... host + viruses(comma-separated):
 # select host: # options are hg38 or mm39
 # host:       "hg38"
-# additives:  "ERCC" # options are ERCC and BAC16Insert
+# additives:  "ERCC" # options are ERCC, BAC16Insert, and 4SU1
 # viruses:    "NC_009333.1"
 host: "HOST"
 additives: "ADDITIVES"
 viruses: "VIRUSES"
-# select viruses and other (ERCC/BAC): options are
+# select viruses and other (ERCC/BAC/4SU1): options are
 # ERCC
 # BAC16Insert
+# 4SU1
 #
 # | RefSeq  Sequence | RefSeq assembly accession | Notes                                                 |
 # | ---------------- | ------------------------- | ----------------------------------------------------- |

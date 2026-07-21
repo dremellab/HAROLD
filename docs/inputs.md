@@ -111,6 +111,7 @@ The reference combination defines the biological context for alignment and quant
 
   - `ERCC` for External RNA Control Consortium controls.
   - `BAC16Insert` for BAC16-derived KSHV genomic insert sequences.
+  - `4SU1` for the 4-thiouridine (4sU) metabolic-labeling spike-in control.
   - Multiple additives can be supplied as a comma-separated list (e.g., `ERCC,BAC16Insert`).
 
 - `--viruses`: Lists one or more viral genomes by their accession IDs. These must match one of the supported viral references in HAROLD’s library. Multiple accessions can be provided as a comma-separated list.
@@ -133,7 +134,7 @@ Available reference files in the default location include FASTA and GTF for:
 
 - Host genomes: `hg38`, `mm39` (with comprehensive gene annotations)
 - Viral references: All supported accessions (KSHV, SARS-CoV-2, HSV-1, etc.)
-- Additives: ERCC control sequences, BAC16Insert
+- Additives: ERCC control sequences, BAC16Insert, 4SU1
 
 ---
 
