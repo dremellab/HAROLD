@@ -180,11 +180,18 @@ function sed_replacement_escape() {
 function write_pipeline_state_marker() {
 # Write a single state marker file (pipeline.<state>) and a JSON status
 # sidecar (pipeline.status.json) in WORKDIR.
-# Args: state reason [job_id] [content]
+# Args: state reason [job_id] [content] [num_failed_rules] [failed_rules_json]
+# NOTE: kept in sync with the embedded _write_pipeline_state_marker inside
+# the SBATCH_SCRIPT heredoc below (runslurm()) -- that copy runs as a
+# detached process on the SLURM head job and can't call back into this one,
+# so any change here (especially to the two new failure-digest args) must be
+# mirrored there too.
   local state="$1"
   local reason="${2:-}"
   local job_id="${3:-NA}"
   local content="${4:-}"
+  local num_failed_rules="${5:-0}"
+  local failed_rules_json="${6:-[]}"
   local now_utc
   local host
   local sidecar
@@ -222,6 +229,8 @@ function write_pipeline_state_marker() {
   "workdir": "$(json_escape "${WORKDIR}")",
   "slurm_job_id": "$(json_escape "$job_id")",
   "host": "$(json_escape "$host")",
+  "num_failed_rules": ${num_failed_rules:-0},
+  "failed_rules": ${failed_rules_json:-[]},
   "timestamp_utc": "${now_utc}"
 }
 EOF
@@ -229,6 +238,124 @@ EOF
   log_info "State marker updated: pipeline.${state} (reason=${reason}, slurm_job_id=${job_id})"
 }
 
+function write_failure_helpers_lib() {
+# Writes the shared failed-job-digest parser to WORKDIR/.harold_failure_helpers.sh
+# so both runlocal() (live bash, sources it directly) and the generated
+# SBATCH_SCRIPT (a detached process that runs later, sources it at runtime)
+# call the exact same implementation instead of hand-duplicating a complex
+# parser -- see extract_failed_rules_digest for what it does and why. Cheap
+# to write, so this is called unconditionally from runcheck() (every
+# runmode); only run/runlocal ever actually source and call it.
+  cat > "${WORKDIR}/.harold_failure_helpers.sh" << 'LIB_EOF'
+#!/bin/bash
+
+extract_failed_rules_digest() {
+# Best-effort scrape of Snakemake's own log for "Error in rule" blocks --
+# NOT authoritative (Snakemake's log wording could shift between versions),
+# so a parse miss here must never block writing pipeline.failed. Verified
+# against snakemake 9.9.0 + snakemake-executor-plugin-slurm 1.8.0:
+#   - Job.log_error()/get_log_error_info() (snakemake/jobs.py) render a
+#     failed job as:
+#       Error in rule <name>:
+#           message: <msg>
+#           jobid: <internal_jobid>
+#           input: ...
+#           output: ...
+#           log: <path> (check log file(s) for error details)
+#           shell: ...
+#     (snakemake/logging.py:_format_job_error).
+#   - snakemake_executor_plugin_slurm's check_active_jobs() calls
+#     report_job_error(j, msg="SLURM-job '<external_jobid>' failed, SLURM
+#     status is: '<STATE>'. ", aux_logs=[<real per-job log path>]) as soon as
+#     sacct reports a failed SLURM status for that job -- this fires
+#     immediately per failed attempt, BEFORE Snakemake's scheduler decides
+#     whether restart-times allows a retry (scheduler.py's _handle_error()).
+#     Since this pipeline sets restart-times: 3, a job that fails and later
+#     succeeds on retry still leaves a stray block here -- dedup by internal
+#     jobid (stable across retries, unlike the external SLURM id) and drop
+#     any jobid that later has a matching "Finished jobid: <id>" line
+#     (scheduler.py) elsewhere in the log.
+#   - The real per-job log path is embedded directly in the "log:" line via
+#     aux_logs (almost no HAROLD rule declares its own `log:`), at
+#     logs/{rule|group}_<name>/<wildcards>/<external_jobid>.log -- the
+#     directory segment right before "<external_jobid>.log" IS the
+#     sample/wildcards value (run_job() in the executor plugin), so it's read
+#     straight out of the already-printed log path instead of needing a
+#     separate `sacct` call.
+#   - A job whose `sbatch` submission itself fails (cluster down, bad
+#     request, etc.) never gets an external jobid or log path at all -- still
+#     report it (slurm_job=NA, log=NA) rather than silently dropping it.
+#   - No HAROLD rule currently uses `group:`, so grouped-job log/comment
+#     conventions (which differ) are not handled here.
+  local logfile="$1"
+  [[ -f "$logfile" ]] || return 0
+
+  local rule_re='^Error in rule (.+):$'
+  local jobid_re='^    jobid: ([0-9]+)$'
+  local message_re='^    message: (.*)$'
+  local log_re='^    log: (.*) \(check log file\(s\) for error details\)$'
+  local slurm_fail_re="SLURM-job '([0-9]+)' failed, SLURM status is: '([A-Za-z_]+)'"
+
+  local -A last_rule=() last_extid=() last_state=() last_log=() last_sample=()
+  local -A finished_jobids=()
+
+  local fjid
+  while IFS= read -r fjid; do
+    [[ -n "$fjid" ]] && finished_jobids["$fjid"]=1
+  done < <(grep -oP '(?<=Finished jobid: )[0-9]+' "$logfile" 2>/dev/null || true)
+
+  local in_block=0 rule="" jobid="" message="" logline=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ $rule_re ]]; then
+      in_block=1
+      rule="${BASH_REMATCH[1]}"
+      jobid=""; message=""; logline=""
+      continue
+    fi
+    if [[ "$in_block" -eq 1 ]]; then
+      if [[ -z "$line" ]]; then
+        if [[ -n "$jobid" ]]; then
+          last_rule["$jobid"]="$rule"
+          last_extid["$jobid"]="NA"
+          last_state["$jobid"]="NA"
+          last_log["$jobid"]="NA"
+          last_sample["$jobid"]="NA"
+          if [[ "$message" =~ $slurm_fail_re ]]; then
+            last_extid["$jobid"]="${BASH_REMATCH[1]}"
+            last_state["$jobid"]="${BASH_REMATCH[2]}"
+          fi
+          if [[ -n "$logline" ]]; then
+            local first_log sample
+            first_log="${logline%%,*}"
+            first_log="${first_log# }"
+            last_log["$jobid"]="$first_log"
+            sample=$(basename "$(dirname "$first_log")" 2>/dev/null || true)
+            [[ -n "$sample" ]] && last_sample["$jobid"]="$sample"
+          fi
+        fi
+        in_block=0
+        continue
+      fi
+      if [[ "$line" =~ $jobid_re ]]; then
+        jobid="${BASH_REMATCH[1]}"
+      elif [[ -z "$message" && "$line" =~ $message_re ]]; then
+        message="${BASH_REMATCH[1]}"
+      elif [[ -z "$logline" && "$line" =~ $log_re ]]; then
+        logline="${BASH_REMATCH[1]}"
+      fi
+    fi
+  done < "$logfile"
+
+  local jid
+  for jid in "${!last_rule[@]}"; do
+    [[ -n "${finished_jobids[$jid]:-}" ]] && continue
+    printf 'FAILED: rule=%s jobid=%s slurm_job=%s state=%s sample=%s log=%s\n' \
+      "${last_rule[$jid]}" "$jid" "${last_extid[$jid]}" "${last_state[$jid]}" \
+      "${last_sample[$jid]}" "${last_log[$jid]}"
+  done
+}
+LIB_EOF
+}
 
 ##########################################################################################
 # initial setup
@@ -630,6 +757,7 @@ function runcheck(){
   load_modules
   # CLUSTER_PROFILE="${WORKDIR}/${CLUSTER_PROFILE}"
   cd $WORKDIR
+  write_failure_helpers_lib
 }
 
 ##########################################################################################
@@ -802,7 +930,30 @@ function runlocal() {
     # Preserve whatever progress snapshot the monitor last wrote (instead of
     # losing it) so pipeline.failed shows how far the run got.
     last_progress=$(cat "${WORKDIR}/pipeline.running" 2>/dev/null || true)
-    write_pipeline_state_marker failed "runlocal_failed" "" "$last_progress"
+
+    # Enrich pipeline.failed/pipeline.status.json with which job(s) failed --
+    # see write_failure_helpers_lib/extract_failed_rules_digest for how.
+    failed_digest=""
+    if [[ -f "${WORKDIR}/.harold_failure_helpers.sh" ]]; then
+      source "${WORKDIR}/.harold_failure_helpers.sh"
+      failed_digest=$(extract_failed_rules_digest "$runlocal_log" || true)
+    fi
+    num_failed=0
+    failed_rules_json="[]"
+    combined_content="$last_progress"
+    if [[ -n "$failed_digest" ]]; then
+      num_failed=$(printf '%s\n' "$failed_digest" | grep -c .)
+      json_parts=()
+      while IFS= read -r dl; do
+        [[ -n "$dl" ]] && json_parts+=("\"$(json_escape "$dl")\"")
+      done <<< "$failed_digest"
+      failed_rules_json="[$(IFS=,; echo "${json_parts[*]}")]"
+      combined_content="${combined_content}
+${num_failed} job(s) failed:
+${failed_digest}"
+    fi
+
+    write_pipeline_state_marker failed "runlocal_failed" "" "$combined_content" "$num_failed" "$failed_rules_json"
     log_error "Local run failed (exit code ${rc})"
     exit $rc
   fi
@@ -860,10 +1011,15 @@ function _json_escape() {
 }
 
 function _write_pipeline_state_marker() {
+# Args: state reason [job_id] [content] [num_failed_rules] [failed_rules_json]
+# NOTE: kept in sync with write_pipeline_state_marker in the harold wrapper
+# above -- see the comment there.
   local state="$1"
   local reason="${2:-}"
   local job_id="${3:-${SLURM_JOB_ID:-NA}}"
   local content="${4:-}"
+  local num_failed_rules="${5:-0}"
+  local failed_rules_json="${6:-[]}"
   local now_utc host sidecar sidecar_tmp
   now_utc=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   host=$(hostname 2>/dev/null || echo "unknown")
@@ -893,6 +1049,8 @@ function _write_pipeline_state_marker() {
   "workdir": "__WORKDIR__",
   "slurm_job_id": "$(_json_escape "${job_id}")",
   "host": "$(_json_escape "${host}")",
+  "num_failed_rules": ${num_failed_rules:-0},
+  "failed_rules": ${failed_rules_json:-[]},
   "timestamp_utc": "${now_utc}"
 }
 JSON
@@ -903,6 +1061,16 @@ trap '_write_pipeline_state_marker canceled "signal_SIGTERM"; exit 130' SIGTERM
 trap '_write_pipeline_state_marker canceled "signal_SIGINT"; exit 130' SIGINT
 
 cd __WORKDIR__
+
+# Shared failed-job-digest parser, written by write_failure_helpers_lib() in
+# the harold wrapper before this script was submitted -- see that function
+# and extract_failed_rules_digest for what it does and why. Guarded (rather
+# than a bare `source`) so a missing/unwritable lib file -- which should never
+# happen, but this enrichment must never be able to abort the run under
+# `set -e` -- just silently disables the digest instead.
+if [[ -f "__WORKDIR__/.harold_failure_helpers.sh" ]]; then
+  source "__WORKDIR__/.harold_failure_helpers.sh"
+fi
 
 # Export singularity cache dir if configured
 __EXPORT_SING_CACHE_CMD__
@@ -987,7 +1155,30 @@ else
   # On failure, preserve whatever progress snapshot the monitor last wrote
   # (instead of losing it) so pipeline.failed shows how far the run got.
   last_progress=$(cat "__WORKDIR__/pipeline.running" 2>/dev/null || true)
-  _write_pipeline_state_marker failed "snakemake_failed" "" "$last_progress"
+
+  # Enrich pipeline.failed/pipeline.status.json with which job(s) failed --
+  # see write_failure_helpers_lib/extract_failed_rules_digest (harold
+  # wrapper) for how.
+  failed_digest=""
+  if declare -F extract_failed_rules_digest > /dev/null; then
+    failed_digest=$(extract_failed_rules_digest "__WORKDIR__/slurm-${SLURM_JOB_ID}.out" || true)
+  fi
+  num_failed=0
+  failed_rules_json="[]"
+  combined_content="$last_progress"
+  if [[ -n "$failed_digest" ]]; then
+    num_failed=$(printf '%s\n' "$failed_digest" | grep -c .)
+    json_parts=()
+    while IFS= read -r dl; do
+      [[ -n "$dl" ]] && json_parts+=("\"$(_json_escape "$dl")\"")
+    done <<< "$failed_digest"
+    failed_rules_json="[$(IFS=,; echo "${json_parts[*]}")]"
+    combined_content="${combined_content}
+${num_failed} job(s) failed:
+${failed_digest}"
+  fi
+
+  _write_pipeline_state_marker failed "snakemake_failed" "" "$combined_content" "$num_failed" "$failed_rules_json"
   echo "ERROR [head_job] Snakemake failed (exit code ${snakemake_rc})"
   exit "$snakemake_rc"
 fi
