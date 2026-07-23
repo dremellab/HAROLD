@@ -114,9 +114,47 @@ rule rseqc_read_distribution:
         ls -alrth $outdir
         """
 
-rule rseqc_tin:
+rule downsample_bam_for_tin:
+    # tin.py's runtime scales poorly with read depth (see docs/pipeline.qmd), so cap the
+    # BAM it sees at `rseqc_tin_downsample_reads` primary-mapped reads, counted the
+    # samtools-flagstat way (each mate counted separately, so ~2x the fragment/pair
+    # count for paired-end data). samtools view -s hashes on QNAME, so both mates of a
+    # pair get the same keep/drop decision -- no singletons. Output keeps the exact
+    # input basename since tin.py derives its output filenames from it.
     input:
         bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
+        flagstat = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.flagstat"),
+    output:
+        bam = temp(join(TEMPDIR, "rseqc_tin_input", "{sample}", "{sample}.Aligned.sortedByCoord.out.bam")),
+        bai = temp(join(TEMPDIR, "rseqc_tin_input", "{sample}", "{sample}.Aligned.sortedByCoord.out.bam.bai")),
+    params:
+        max_reads = config.get("rseqc_tin_downsample_reads", 50000000),
+        seed = 100,
+    container:
+        config['containers']['samtools'],
+    threads: _get_threads("downsample_bam_for_tin", profile_config)
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.bam})
+        mkdir -p $outdir
+
+        total=$(grep "primary mapped" {input.flagstat} | head -1 | cut -d' ' -f1)
+
+        if [ "$total" -gt {params.max_reads} ]; then
+            frac=$(awk -v t="$total" -v m={params.max_reads} 'BEGIN{{printf "%.6f", m/t}}')
+            samtools view -@ {threads} -b -s {params.seed}${{frac#0}} -o {output.bam} {input.bam}
+            samtools index -@ {threads} {output.bam}
+        else
+            ln -f {input.bam} {output.bam} || cp -f {input.bam} {output.bam}
+            samtools index -@ {threads} {output.bam}
+        fi
+        ls -larth $outdir
+        """
+
+rule rseqc_tin:
+    input:
+        bam = join(TEMPDIR, "rseqc_tin_input", "{sample}", "{sample}.Aligned.sortedByCoord.out.bam"),
         bed12 = join(REF_DIR, "ref.genes.bed12"),
     output:
         tin = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt"),

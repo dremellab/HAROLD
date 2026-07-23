@@ -300,6 +300,8 @@ ENSG00000000005	500	100	400
 
 **Use case:** Quick per-sample RNA quality check from command line: `grep "Mean TIN" {sample}.Aligned.sortedByCoord.out.summary.txt`
 
+**Note:** `tin.py`'s runtime scales poorly with read depth, so samples with more than `rseqc_tin_downsample_reads` (config; default 50,000,000) primary-mapped reads have their BAM randomly downsampled to that many reads before TIN is calculated. This count follows the `samtools flagstat` convention of counting each mate separately, so for paired-end data it is roughly twice the fragment/pair count (e.g. the default of 50,000,000 reads is ~25,000,000 pairs). Mates of a pair are always kept or dropped together, so no singleton mates are introduced. This is a runtime workaround and does not affect samples below the threshold.
+
 ---
 
 ##### `rseqc/{sample}.{regionname}.GC.xls` (Optional)

@@ -324,7 +324,7 @@ Aligned BAM (STAR, 2-pass)
 | Cutadapt | 30 min – 2 h | Scales with read count (100M reads ≈ 1 h) |
 | STAR alignment | 2–8 h | Scales with read count and reference size; multi-threaded (8 cores default) |
 | Qualimap | 30 min – 2 h | Scales with BAM size and coverage |
-| RSeQC (all modules) | 1–4 h | TIN calculation slowest; set runtime to 36 h on Rivanna |
+| RSeQC (all modules) | 1–4 h | TIN calculation slowest; BAMs above `rseqc_tin_downsample_reads` (default 50M reads, i.e. ~25M pairs) are downsampled first to bound runtime; set runtime to 36 h on Rivanna |
 | Kraken2 | 10–30 min | Quick; fast k-mer based classification |
 | Quantification (aggregation) | 30 min – 2 h | Per-sample FPKM parallel; aggregation single-threaded |
 | Visualization (BigWigs) | 30 min – 2 h | Scales with per-region coverage; fast |
@@ -351,7 +351,7 @@ With full Slurm parallelization (default on Rivanna):
 ### **Bottlenecks**
 
 1. **STAR alignment:** Slowest single-stage. Increase `star_threads` in config (default 8; max 16 practical on Rivanna)
-2. **RSeQC TIN:** Scales poorly with high coverage. Increase `rseqc_tin_runtime` in Rivanna profile (default 36 h; usually sufficient)
+2. **RSeQC TIN:** Scales poorly with high coverage. BAMs above `rseqc_tin_downsample_reads` (default 50M primary-mapped reads — counted per mate, i.e. ~25M pairs for paired-end data) are randomly downsampled first (mates kept together, no singletons) to bound TIN's runtime. Increase `rseqc_tin_runtime` in Rivanna profile if still needed (default 36 h; usually sufficient)
 3. **Reference creation:** If re-building reference (e.g., new virus added), index build is single-threaded; allocate extra wall-clock time
 
 ### **Memory Requirements**

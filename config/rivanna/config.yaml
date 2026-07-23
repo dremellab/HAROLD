@@ -70,6 +70,7 @@ set-threads:
   bam_to_bigwig: 8
   qualimap: 8
   kraken2: 32
+  downsample_bam_for_tin: 8
 
 set-resources:
   create_index:
@@ -117,6 +118,10 @@ set-resources:
     runtime: 480
 
   rseqc_read_distribution:
+    runtime: 480
+
+  downsample_bam_for_tin:
+    mem_mb: 122880
     runtime: 480
 
   rseqc_tin:

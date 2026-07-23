@@ -65,6 +65,12 @@ cutadapt_max_n: 0.5
 cutadapt_O: 5
 cutadapt_q: 20
 
+# RSeQC TIN: tin.py's runtime scales poorly with read depth, so BAMs above this many
+# primary-mapped reads (samtools flagstat convention: each mate counted separately, so
+# for paired-end data this is ~2x the fragment/pair count) are randomly downsampled
+# (mate pairs kept together, no singletons) before TIN is run.
+rseqc_tin_downsample_reads: 50000000
+
 # kraken2 db
 kraken2_db: "/project/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
 kraken2_params: "--use-names --gzip-compressed --quick"
