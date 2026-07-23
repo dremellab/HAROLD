@@ -522,6 +522,42 @@ function check_essential_files() {
   done
 }
 
+function check_not_already_running() {
+# Refuse to run while a prior run still looks active (or crashed without
+# cleaning up) in this workdir -- submitting a second run, or unlocking the
+# Snakemake lock, while one is genuinely still active can corrupt pipeline
+# state. Called from run/runlocal (before submitting/starting) and unlock
+# (before touching the Snakemake lock); dryrun/touch are read-only/inspection
+# and must keep working while pipeline.running exists (see
+# warn_if_already_running).
+  if [ -f "${WORKDIR}/pipeline.running" ]; then
+    err "Found ${WORKDIR}/pipeline.running -- a run already appears to be in progress (or a previous run crashed without cleaning up). Confirm no run is active, then remove this file before retrying."
+  fi
+}
+
+function warn_if_already_running() {
+# Unlike check_not_already_running, this does not abort -- dryrun is
+# read-only/inspection and legitimately useful while a run is in progress.
+# Banner styled after err() (below) so it can't be missed among dry-run
+# output; unlike err() this warns rather than aborting.
+  if [ -f "${WORKDIR}/pipeline.running" ]; then
+    cat <<-EOF
+
+#
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+#
+  Found ${WORKDIR}/pipeline.running -- a pipeline run may already be in
+  progress (or a previous run crashed without cleaning up) in this workdir.
+  'harold -m=run'/'runlocal'/'unlock' will refuse to proceed while this file
+  exists.
+#
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+#
+
+EOF
+  fi
+}
+
 
 ##########################################################################################
 # RECONFIG ... recreate config.yaml and overwrite old version
@@ -625,10 +661,15 @@ function dryrun() {
   log_divider
   if [ "$rc" -ne 0 ]; then
     log_error "Dry-run failed (exit code ${rc}). See log: ${WORKDIR}/dryrun.${timestamp}.log"
+    warn_if_already_running
     return $rc
   fi
   log_ok "Dry-run completed. Log: ${WORKDIR}/dryrun.${timestamp}.log"
-  if ! grep -q "Nothing to be done" ${WORKDIR}/dryrun.${timestamp}.log; then
+  if [ -f "${WORKDIR}/pipeline.running" ]; then
+    # A run appears to already be active -- don't invite the user to submit
+    # another one; harold -m=run would refuse it anyway (check_not_already_running).
+    warn_if_already_running
+  elif ! grep -q "Nothing to be done" ${WORKDIR}/dryrun.${timestamp}.log; then
     log_next "Submit run with: harold -w=$WORKDIR -m=run"
   fi
 }
@@ -657,6 +698,7 @@ function touch() {
 function unlock() {
   log_step "[unlock] Unlocking workdir"
   runcheck
+  check_not_already_running
   if ! run "--unlock"; then
     rc=$?
     log_error "Unlock failed (exit code ${rc})"
@@ -693,6 +735,7 @@ function printbinds(){
 function runlocal() {
   log_step "[runlocal] Starting local interactive execution"
   runcheck
+  check_not_already_running
   set_singularity_binds
   if [ "$SLURM_JOB_ID" == "" ];then err "runlocal can only be done on an interactive node"; exit 1; fi
   log_divider
@@ -772,6 +815,7 @@ function runlocal() {
 function runslurm() {
   log_step "[run] Preparing SLURM submission"
   runcheck
+  check_not_already_running
   set_singularity_binds
   timestamp=$(date +"%y%m%d%H%M%S")
   # Export PROFILE for use inside the head sbatch job (Snakemake expects this env var)
