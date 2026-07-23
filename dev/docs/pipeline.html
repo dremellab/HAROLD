@@ -43,9 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-c77c9138bec0b7f87654b70582999a87.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-ac5bb5289c2b1a5be279e62d808716b0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-c77c9138bec0b7f87654b70582999a87.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-fe16a1d53e537998fa48ddc5ec098236.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-9ab4562d048c9cb75b47fa769108ba6b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-fe16a1d53e537998fa48ddc5ec098236.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -822,7 +822,7 @@ Aligned BAM (STAR, 2-pass)
 <tr class="odd">
 <td>RSeQC (all modules)</td>
 <td>1–4 h</td>
-<td>TIN calculation slowest; set runtime to 36 h on Rivanna</td>
+<td>TIN calculation slowest; BAMs above <code>rseqc_tin_downsample_reads</code> (default 50M reads, i.e.&nbsp;~25M pairs) are downsampled first to bound runtime; set runtime to 36 h on Rivanna</td>
 </tr>
 <tr class="even">
 <td>Kraken2</td>
@@ -874,7 +874,7 @@ Aligned BAM (STAR, 2-pass)
 <h3 class="anchored" data-anchor-id="bottlenecks"><strong>Bottlenecks</strong></h3>
 <ol type="1">
 <li><strong>STAR alignment:</strong> Slowest single-stage. Increase <code>star_threads</code> in config (default 8; max 16 practical on Rivanna)</li>
-<li><strong>RSeQC TIN:</strong> Scales poorly with high coverage. Increase <code>rseqc_tin_runtime</code> in Rivanna profile (default 36 h; usually sufficient)</li>
+<li><strong>RSeQC TIN:</strong> Scales poorly with high coverage. BAMs above <code>rseqc_tin_downsample_reads</code> (default 50M primary-mapped reads — counted per mate, i.e.&nbsp;~25M pairs for paired-end data) are randomly downsampled first (mates kept together, no singletons) to bound TIN’s runtime. Increase <code>rseqc_tin_runtime</code> in Rivanna profile if still needed (default 36 h; usually sufficient)</li>
 <li><strong>Reference creation:</strong> If re-building reference (e.g., new virus added), index build is single-threaded; allocate extra wall-clock time</li>
 </ol>
 </section>
