@@ -454,6 +454,29 @@ if DIFFEX_NORMALIZED_COUNTS == "true" or DIFFEX_DEG_GSEA == "true":
     # (config['diffex']) so the aggregate and per-contrast normalizations always agree.
     ERCC_OPTIONS = _tristate_options(config.get('diffex', {}).get('use_ercc', 'false'))
     BATCH_OPTIONS = _tristate_options(config.get('diffex', {}).get('use_batch', 'false'))
+    BATCH_COLUMN = str(config.get('diffex', {}).get('batch_column', 'batch'))
+
+    if True in BATCH_OPTIONS:
+        # A single-level batch factor makes limma's design matrix blow up with an
+        # opaque "contrasts can be applied only to factors with 2 or more levels"
+        # error deep inside the diffex container, only after the DAG has already
+        # spent compute on everything upstream of normalized_counts/diffex_deg.
+        # Catch it here instead, at config-parse time (covers dryrun too).
+        if BATCH_COLUMN not in SAMPLESDF.columns:
+            raise ValueError(
+                f"diffex.use_batch is 'true'/'both' in config.yaml, but batch_column "
+                f"'{BATCH_COLUMN}' is not a column in the samplesheet."
+            )
+        if DIFFEX_NORMALIZED_COUNTS == "true":
+            all_batches = sorted(SAMPLESDF[BATCH_COLUMN].dropna().unique())
+            if len(all_batches) < 2:
+                raise ValueError(
+                    f"diffex_normalized_counts.run is 'true' and diffex.use_batch is 'true'/'both', but "
+                    f"'{BATCH_COLUMN}' only has {len(all_batches)} distinct value(s) ({all_batches}) across "
+                    f"all samples -- batch correction requires at least 2 batches. Either fix "
+                    f"'{BATCH_COLUMN}' in the samplesheet, or set diffex.use_batch: false in config.yaml."
+                )
+
     for e in ERCC_OPTIONS:
         for b in BATCH_OPTIONS:
             # Always tag both segments (not just the ones with a "both" tri-state),
@@ -489,6 +512,26 @@ if DIFFEX_DEG_GSEA == "true":
 
     CONTRASTS = [f"{r.group1}_vs_{r.group2}" for r in CONTRASTSDF.itertuples()]
     CONTRAST2GROUPS = {f"{r.group1}_vs_{r.group2}": (r.group1, r.group2) for r in CONTRASTSDF.itertuples()}
+
+    if True in BATCH_OPTIONS:
+        # Same rationale as the normalized_counts check above, but per-contrast:
+        # diffex_deg only sees the group1/group2 samples for a given contrast, so
+        # the whole-cohort batch column can have 2+ levels while a specific
+        # contrast's samples still collapse to a single one.
+        bad_contrasts = []
+        for contrast, (group1, group2) in CONTRAST2GROUPS.items():
+            contrast_batches = sorted(
+                SAMPLESDF.loc[SAMPLESDF['groupName'].isin([group1, group2]), BATCH_COLUMN].dropna().unique()
+            )
+            if len(contrast_batches) < 2:
+                bad_contrasts.append(f"{contrast} ({BATCH_COLUMN}={contrast_batches})")
+        if bad_contrasts:
+            raise ValueError(
+                f"diffex_deg_gsea.run is 'true' and diffex.use_batch is 'true'/'both', but these "
+                f"contrast(s) only see a single distinct '{BATCH_COLUMN}' value among their group1/group2 "
+                f"samples, so batch correction isn't possible for them: {'; '.join(bad_contrasts)}. Either "
+                f"fix '{BATCH_COLUMN}' in the samplesheet for these groups, or set diffex.use_batch: false."
+            )
 
 USE_INFER_STRANDEDNESS = str(config.get("use_infer_strandedness", "true")).lower()
 INFER_FRACTION_THRESHOLD = config.get("infer_strandedness_threshold", 0.8)
