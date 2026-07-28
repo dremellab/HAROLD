@@ -114,6 +114,14 @@ set-resources:
   rseqc_geneBody_coverage:
     runtime: 2880
 
+  rseqc_fpkm:
+    runtime: 720 # 12 hours -- per-attempt BASE runtime (minutes), not a flat cap -- the
+                 # rule's own `resources:` block (workflow/rules/quantify.smk) multiplies
+                 # this by Snakemake's `attempt` (1..4, since restart-times: 3 above), so
+                 # retries get progressively more walltime instead of timing out
+                 # identically 4x. Observed: FPKM_count.py over a full hg38 annotation
+                 # (~230k+ transcripts) didn't finish within the global 4h default.
+
   rseqc_infer_experiment:
     runtime: 480
 

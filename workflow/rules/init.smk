@@ -68,6 +68,21 @@ def _get_threads(rule_name, profile_config):
         return profile_config["set-resources"][rule_name]["threads"]
     return profile_config["default-resources"]["threads"]
 
+def _get_runtime(rule_name, profile_config):
+    """
+    Return the per-attempt base runtime (minutes) for a rule from profile_config.
+    Falls back to default if not defined. Meant to be multiplied by Snakemake's
+    `attempt` in a rule's `resources:` block so retries (restart-times) get more
+    walltime instead of failing identically on every attempt.
+    """
+    if (
+        "set-resources" in profile_config
+        and rule_name in profile_config["set-resources"]
+        and "runtime" in profile_config["set-resources"][rule_name]
+    ):
+        return profile_config["set-resources"][rule_name]["runtime"]
+    return profile_config["default-resources"]["runtime"]
+
 ## Load cluster.json
 # with open(config["cluster"]) as json_file:
 #     CLUSTER = yaml.safe_load(json_file)

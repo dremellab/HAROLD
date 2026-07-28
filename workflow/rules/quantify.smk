@@ -88,6 +88,17 @@ rule rseqc_fpkm:
     container:
         config['containers']['rseqc']
     threads: _get_threads("rseqc_fpkm", profile_config)
+    resources:
+        # FPKM_count.py's runtime scales with transcript count (observed:
+        # ~230k+ transcripts still unfinished at the 4h default on a full
+        # hg38 annotation), so a single static cap either wastes allocation
+        # on small references or isn't enough on large ones. `attempt` is
+        # bumped by Snakemake on every restart (restart-times: 3, set in
+        # the profile config), so this scales the per-rule base runtime
+        # (set-resources.rseqc_fpkm.runtime in the profile, e.g.
+        # config/rivanna/config.yaml) up on each retry instead of failing
+        # identically on every attempt.
+        runtime=lambda wildcards, attempt: _get_runtime("rseqc_fpkm", profile_config) * attempt,
     shell:
         r"""
         set -exo pipefail
