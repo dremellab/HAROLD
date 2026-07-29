@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -38,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-fe16a1d53e537998fa48ddc5ec098236.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-9ab4562d048c9cb75b47fa769108ba6b.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-fe16a1d53e537998fa48ddc5ec098236.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-d94f0129d652a5a8036266edffbc062c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-ba3a55b1aa12643ba8f77d4963b16f08.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-d94f0129d652a5a8036266edffbc062c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -467,21 +470,26 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="breaking-changes">⚠️ Breaking Changes</h3>
 <ul>
 <li><strong>Shared <code>diffex</code> config block:</strong> <code>use_ercc</code>, <code>ercc_mix</code>, <code>use_batch</code>, <code>batch_column</code>, and <code>genes_selection</code> moved out of <code>diffex_normalized_counts</code> and <code>diffex_deg_gsea</code> into one shared <code>diffex:</code> block, so the aggregate normalized-counts step and the per-contrast DEG/GSEA step can no longer disagree on ERCC/batch handling. The now-unused <code>diffex_normalized_counts.host</code> key was also removed (host was already sourced from the top-level <code>host:</code> config). As a result, <code>diffex_normalized_counts</code> output moved from <code>counts/normalized_counts/normalize.html</code> to <code>counts/normalized_counts/{variant}/normalize.html</code>, mirroring the DEG/GSEA variant layout, since <code>diffex.use_ercc</code>/<code>use_batch: both</code> now expands the aggregate step per-variant too. Update existing <code>config.yaml</code> files to the new schema (see #51).</li>
+<li><strong>New <code>rustqc</code> container required; <code>rseqc_tin_downsample_reads</code> config key removed:</strong> existing <code>config.yaml</code> files need a <code>rustqc: "docker://seqinfomics/rustqc:0.2.1"</code> entry added to <code>containers:</code> (see the QC migration entries below). The now-unused <code>rseqc_tin_downsample_reads</code> key was removed — TIN no longer downsamples. Any cluster-profile <code>set-resources</code>/<code>set-threads</code> overrides keyed to <code>infer_strandedness</code>, <code>rseqc_read_distribution</code>, <code>downsample_bam_for_tin</code>, <code>rseqc_tin</code>, or <code>rseqc_junction_annotation</code> are now inert (those rules no longer exist) and can be deleted; the replacements are <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rustqc_rna_region</code>, and <code>mark_duplicates</code>.</li>
 </ul>
 </section>
 <section id="added" class="level3">
 <h3 class="anchored" data-anchor-id="added">Added</h3>
 <ul>
-<li><strong>Downsample BAM before RSeQC TIN calculation:</strong> New <code>downsample_bam_for_tin</code> rule caps the BAM fed into <code>tin.py</code> at <code>rseqc_tin_downsample_reads</code> primary-mapped reads (config; default 50,000,000, counted the <code>samtools flagstat</code> way — each mate counted separately, so ~25,000,000 pairs for paired-end data) — samples above that threshold are randomly downsampled with <code>samtools view -s</code>, which keeps read pairs together (no singleton mates), before every other TIN output. This bounds <code>tin.py</code>’s runtime, which scales poorly with read depth, without changing any TIN output filenames or the <code>aggregate_tin.tsv</code> schema.</li>
+<li><strong>Migrated core QC tooling to <code>rustqc</code>:</strong> <code>infer_strandedness</code> (RSeQC <code>infer_experiment.py</code>), <code>rseqc_read_distribution</code>, and <code>rseqc_junction_annotation</code> are now <code>rustqc</code> 0.2.1 modules instead — output formats confirmed byte-identical to RSeQC’s own at the same legacy output paths, so downstream consumers (<code>aggregate_stranded_counts</code>, <code>junctions_to_bigbed</code>, <code>multiqc</code>) needed no changes. TIN also moved to <code>rustqc</code>, now at full read depth instead of RSeQC’s downsampled workaround (see Changed below) (<a href="https://github.com/dremellab/HAROLD/issues/56">dremellab/HAROLD#56</a>).</li>
+<li><strong>New duplicate-marking step + dupRadar/preseq/featureCounts QC outputs:</strong> new <code>mark_duplicates</code> rule (Picard) feeds <code>rustqc</code>’s dupRadar (duplication rate vs.&nbsp;expression) and preseq (library complexity) modules — net-new QC capability HAROLD didn’t have before, since no dup-marking step existed anywhere in the pipeline previously. featureCounts output (computed internally by dupRadar regardless of whether it’s requested) is also tracked as a reference QC artifact under <code>{sample}/featurecounts/</code>; HAROLD’s actual gene-level quantification is unchanged — still STAR <code>GeneCounts</code> via <code>aggregate_stranded_counts</code>.</li>
+<li>**<code>rustqc</code>‘s RNA-seq-mode Qualimap report:** new <code>{sample}/qualimap_rnaseq/</code> output (5’→3’ coverage bias, genomic origin classification, junction analysis) alongside the existing genomic (<code>bamqc</code>-mode) Qualimap report, which is untouched. <code>rustqc</code> only implements Qualimap’s <code>rnaseq</code> mode, not <code>bamqc</code>, so this is an addition, not a replacement — asked upstream for <code>bamqc</code> mode support: <a href="https://github.com/seqeralabs/RustQC/issues/128">seqeralabs/RustQC#128</a>.</li>
 <li><strong>Additive/spike-in mapped reads in <code>alignment_summary.tsv</code>:</strong> New <code>{additive}_mapped</code> column per configured additive (e.g.&nbsp;<code>ERCC_mapped</code>, <code>BAC16Insert_mapped</code>, <code>4SU1_mapped</code>), reporting primary BAM alignments to each additive/spike-in reference — mirrors the existing per-virus <code>{virus}_mapped</code> columns. Previously these reads were only visible folded into STAR’s overall <code>reads_mapped_to_assembly</code> figure (<a href="https://github.com/dremellab/HAROLD/issues/52">#52</a>).</li>
 <li><strong><code>4SU1</code> additive documented:</strong> <code>4SU1</code> (a synthetic spike-in control for 4-thiouridine metabolic-labeling RNA-seq, already usable via the generic additives mechanism) is now listed alongside <code>ERCC</code>/<code>BAC16Insert</code> in <code>harold --help</code>, <code>docs/prereq.md</code>, <code>docs/inputs.md</code>, <code>docs/usage.md</code>, <code>docs/outputs.md</code>, and <code>config/config.yaml</code> (<a href="https://github.com/dremellab/HAROLD/issues/53">#53</a>).</li>
 <li><strong>Guard against submitting/unlocking into an already-running workdir:</strong> <code>harold -m=run</code>/<code>runlocal</code>/<code>unlock</code> now refuse to proceed (and point at the file) if <code>${WORKDIR}/pipeline.running</code> already exists, since two runs racing on the same workdir/state (or unlocking a genuinely still-active run) can corrupt pipeline state. <code>dryrun</code> still runs normally against such a workdir (it’s read-only), but now warns prominently at the end if a run may already be in progress, and skips the <code>Submit run with: harold -m=run</code> hint in that case (<a href="https://github.com/dremellab/HAROLD/issues/54">#54</a>).</li>
 <li><strong><code>pipeline.failed</code> now says which job(s) failed:</strong> previously it only held the last progress snapshot. It (and the <code>pipeline.status.json</code> sidecar’s new <code>num_failed_rules</code>/<code>failed_rules</code> fields) now include, per failed job: rule name, sample/wildcards, internal Snakemake jobid, external SLURM jobid, SLURM failure state (OOM/timeout/etc.), and the real per-job log path — parsed from Snakemake’s own log, with jobs that ultimately succeeded on a later retry (<code>restart-times: 3</code>) correctly excluded (<a href="https://github.com/dremellab/HAROLD/issues/55">#55</a>).</li>
+<li><strong>Fail fast on a single-level batch column:</strong> when <code>diffex.use_batch</code> is <code>true</code>/<code>both</code>, HAROLD now validates at config-parse time (so <code>dryrun</code> catches it too) that <code>batch_column</code> has at least 2 distinct values — across all samples for <code>diffex_normalized_counts</code>, and among each contrast’s <code>group1</code>/<code>group2</code> samples specifically for <code>diffex_deg_gsea</code>. Previously a single-level batch factor only surfaced deep inside the <code>diffex</code> container, after the DAG had already spent compute on everything upstream, as an opaque limma <code>contrasts can be applied only to factors with 2 or more levels</code> error.</li>
 </ul>
 </section>
 <section id="changed" class="level3">
 <h3 class="anchored" data-anchor-id="changed">Changed</h3>
 <ul>
+<li><strong>TIN now runs at full read depth via <code>rustqc</code>, not RSeQC’s downsampled <code>tin.py</code>:</strong> benchmarked on a real combined host+virus BAM (<code>N_Mock_4h</code>, 689M reads, full hg38 GTF) at ~45min total for the whole <code>rustqc rna</code> module suite (TIN’s own marginal cost, isolated via a <code>--skip-tin</code> diff, is ~12min of that) — vs.&nbsp;7.5–13 hours per sample for RSeQC’s <code>tin.py</code> on a 50M-read downsample in production, with repeated Slurm timeouts and resubmissions. The <code>downsample_bam_for_tin</code> rule this pipeline briefly had is gone entirely — no BAM downsampling happens before TIN anymore. TIN values will not match prior runs byte-for-byte — full depth vs.&nbsp;an ~8–12%-of-data downsample changes the input population by construction — so don’t expect exact agreement diffing historical TIN output against post-migration runs.</li>
 <li><strong>Final-state <code>pipeline.*</code> progress reporting:</strong> <code>pipeline.completed</code> now reports the final step tally (<code>N / N steps complete (100%)</code>, <code>Remaining: 0 steps</code>) instead of being an empty marker file, matching the live format <code>pipeline.running</code> already used. <code>pipeline.failed</code> now preserves the last known progress snapshot instead of being emptied, so a failed run shows how far it got before failing. <code>runlocal</code> (previously untracked) now gets the same live progress monitoring as SLURM <code>run</code> jobs, via a tee’d Snakemake log.</li>
 <li><strong><code>diffex</code> container bumped <code>0.5.2</code> → <code>0.5.5</code>:</strong> picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA <code>+Inf</code>/<code>-Inf</code> rank-clamp fix (v0.5.5, <a href="https://github.com/dremellab/DiffEx/pull/41">dremellab/DiffEx#41</a>) that HAROLD’s own <code>_sanitize_rnk.py</code> pre-processing step was working around. Switched to <code>docker://seqinfomics/diffex:0.5.5</code> (Docker Hub) rather than <code>ghcr.io/dremellab/diffex</code>, since no image newer than <code>0.5.2</code> has been published to GHCR (<a href="https://github.com/dremellab/DiffEx/issues/40">dremellab/DiffEx#40</a>).</li>
 </ul>
@@ -489,6 +497,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="fixed" class="level3">
 <h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
 <ul>
+<li><strong><code>rseqc_geneBody_coverage</code> no longer blocks <code>rule all</code>/<code>multiqc</code>/S3 transfer:</strong> the rule reliably fails to complete for a majority of samples in practice (observed on a real 12-sample run: 8 samples never finished across a week of retries — TIMEOUT, CANCELLED, and FAILED attempts, 0-byte output). It was required by both <code>PIPELINE_TARGETS</code> and <code>multiqc</code>’s own input list, so those failures blocked the whole pipeline (<code>rule all</code> can never be satisfied) and the S3-transfer gate, which waits for everything else to finish first. It’s no longer a required terminal target — still runnable standalone on demand — and <code>rustqc</code>’s new rnaseq-mode Qualimap coverage profile (see Added above) is a working interim gene-body-coverage-style signal in <code>multiqc</code> in the meantime (<a href="https://github.com/dremellab/HAROLD/issues/56">dremellab/HAROLD#56</a>).</li>
 <li><strong><code>fastq_validate_sample</code> OOM on large FASTQ files:</strong> the rule had no memory override, so it used the pipeline-wide 40 GB default. <code>fastQValidator</code> runs unconditionally before <code>cutadapt</code> and blocks it on failure, so an OOM here (observed killed at ~40 GB validating a ~20-22 GB gzip R1/R2 pair) silently blocks the whole sample with no config workaround. Bumped to 120 GB (<code>config/rivanna/config.yaml</code>, matching the existing <code>cutadapt</code> allocation for the same files).</li>
 </ul>
 </section>
