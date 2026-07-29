@@ -62,6 +62,45 @@ rule qualimap:
             -nt {threads}
         """
 
+rule mark_duplicates:
+    # rustqc's dupRadar module requires duplicate-marked (not removed) alignments -- without this,
+    # it silently reports 0% duplication for every gene (confirmed in validation testing), which is
+    # misleading rather than merely uninformative. No dup-marking step exists anywhere else in HAROLD
+    # today, so this is net new. Output is consumed only by rustqc_rna_combined/rustqc_rna_combined_probe;
+    # every other consumer of the STAR bam (split_bam, sort_star's flagstat/stats/idxstats, STAR
+    # GeneCounts, alignment_summary) keeps using the original, unmarked bam.
+    input:
+        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
+    output:
+        bam = temp(join(TEMPDIR, "mark_duplicates", "{sample}", "{sample}.markdup.bam")),
+        bai = temp(join(TEMPDIR, "mark_duplicates", "{sample}", "{sample}.markdup.bam.bai")),
+        metrics = join(RESULTSDIR, "{sample}", "STAR", "{sample}.markdup_metrics.txt"),
+    params:
+        tmpdir = f"{TEMPDIR}/{str(uuid.uuid4())}",
+    container:
+        config['containers']['picard'],
+    threads: _get_threads("mark_duplicates", profile_config)
+    shell:
+        r"""
+        set -exo pipefail
+        mkdir -p {params.tmpdir}
+        outdir=$(dirname {output.bam})
+        mkdir -p $outdir
+        java_mem_mb=$(( {resources.mem_mb} * 80 / 100 ))
+        java_mem_g=$(( java_mem_mb / 1024 ))
+        if [ "$java_mem_g" -lt 4 ]; then
+            java_mem_g=4
+        fi
+        picard -Xmx${{java_mem_g}}g -Djava.io.tmpdir={params.tmpdir} MarkDuplicates \
+            I={input.bam} \
+            O={output.bam} \
+            M={output.metrics} \
+            ASSUME_SORTED=true \
+            TMP_DIR={params.tmpdir}
+        picard -Xmx${{java_mem_g}}g BuildBamIndex I={output.bam} O={output.bai}
+        ls -larth $outdir
+        """
+
 localrules: gtf2genepred
 rule gtf2genepred:
     input:
@@ -90,90 +129,152 @@ rule genepred2bed12:
         genePredToBed {input.genepred} {output.bed12}
         """
 
-rule rseqc_read_distribution:
+rule rustqc_rna_combined_probe:
+    # Only ever built when USE_INFER_STRANDEDNESS == "true" -- rustqc_rna_combined's own --stranded
+    # lookup (params.stranded, via _get_rustqc_stranded below) is the only consumer of this rule's
+    # output, and it only requests it in inference mode; in manifest-driven mode this rule never runs.
+    #
+    # --stranded here is a throwaway placeholder ("unstranded"): infer_experiment's own output is
+    # unaffected by this flag (it empirically detects strandedness regardless, same as RSeQC's own
+    # infer_experiment.py), and every other module this pass produces is discarded -- only
+    # infer_experiment.txt is kept. rustqc's dupRadar/featureCounts modules cannot be disabled via
+    # --config (confirmed empirically -- only tin/qualimap can), so this "probe" pass still runs the
+    # full module suite; there is no cheaper way to isolate just infer_experiment in rustqc 0.2.1.
     input:
-        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
-        bed12 = join(REF_DIR, "ref.genes.bed12"),
+        bam = join(TEMPDIR, "mark_duplicates", "{sample}", "{sample}.markdup.bam"),
+        bai = join(TEMPDIR, "mark_duplicates", "{sample}", "{sample}.markdup.bam.bai"),
+        gtf = join(REF_DIR, "ref.fixed.gtf"),
     output:
-        read_distribution = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt"),
+        infer_experiment = temp(join(TEMPDIR, "rustqc_probe", "{sample}", "{sample}.Aligned.sortedByCoord.out.infer_experiment.txt")),
     params:
         sample = "{sample}",
+        peorse = get_peorse,
+        scratch = f"{TEMPDIR}/rustqc_probe_scratch/{str(uuid.uuid4())}",
     container:
-        config['containers']['rseqc'],
-    threads: _get_threads("rseqc_read_distribution", profile_config)
+        config['containers']['rustqc'],
+    threads: _get_threads("rustqc_rna_combined_probe", profile_config)
     shell:
         r"""
         set -exo pipefail
-        outdir=$(dirname {output.read_distribution})
-        mkdir -p $outdir
-        cd $outdir
-        read_distribution.py \
-            -i {input.bam} \
-            -r {input.bed12} \
-            > {output.read_distribution}
-        ls -alrth $outdir
-        """
-
-rule downsample_bam_for_tin:
-    # tin.py's runtime scales poorly with read depth (see docs/pipeline.qmd), so cap the
-    # BAM it sees at `rseqc_tin_downsample_reads` primary-mapped reads, counted the
-    # samtools-flagstat way (each mate counted separately, so ~2x the fragment/pair
-    # count for paired-end data). samtools view -s hashes on QNAME, so both mates of a
-    # pair get the same keep/drop decision -- no singletons. Output keeps the exact
-    # input basename since tin.py derives its output filenames from it.
-    input:
-        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
-        flagstat = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.flagstat"),
-    output:
-        bam = temp(join(TEMPDIR, "rseqc_tin_input", "{sample}", "{sample}.Aligned.sortedByCoord.out.bam")),
-        bai = temp(join(TEMPDIR, "rseqc_tin_input", "{sample}", "{sample}.Aligned.sortedByCoord.out.bam.bai")),
-    params:
-        max_reads = config.get("rseqc_tin_downsample_reads", 50000000),
-        seed = 100,
-    container:
-        config['containers']['samtools'],
-    threads: _get_threads("downsample_bam_for_tin", profile_config)
-    shell:
-        r"""
-        set -exo pipefail
-        outdir=$(dirname {output.bam})
-        mkdir -p $outdir
-
-        total=$(grep "primary mapped" {input.flagstat} | head -1 | cut -d' ' -f1)
-
-        if [ "$total" -gt {params.max_reads} ]; then
-            frac=$(awk -v t="$total" -v m={params.max_reads} 'BEGIN{{printf "%.6f", m/t}}')
-            samtools view -@ {threads} -b -s {params.seed}${{frac#0}} -o {output.bam} {input.bam}
-            samtools index -@ {threads} {output.bam}
-        else
-            ln -f {input.bam} {output.bam} || cp -f {input.bam} {output.bam}
-            samtools index -@ {threads} {output.bam}
+        mkdir -p {params.scratch}
+        mkdir -p $(dirname {output.infer_experiment})
+        stem={params.sample}.Aligned.sortedByCoord.out
+        paired_flag=""
+        if [ "{params.peorse}" == "PE" ]; then
+            paired_flag="--paired"
         fi
-        ls -larth $outdir
+        rustqc rna {input.bam} \
+            --gtf {input.gtf} \
+            ${{paired_flag}} \
+            --stranded unstranded \
+            --sample-name ${{stem}} \
+            --threads {threads} \
+            --flat-output \
+            --outdir {params.scratch}
+        cp {params.scratch}/${{stem}}.infer_experiment.txt {output.infer_experiment}
         """
 
-rule rseqc_tin:
+def _rustqc_rna_combined_input(wildcards):
+    d = {
+        "bam": join(TEMPDIR, "mark_duplicates", wildcards.sample, f"{wildcards.sample}.markdup.bam"),
+        "bai": join(TEMPDIR, "mark_duplicates", wildcards.sample, f"{wildcards.sample}.markdup.bam.bai"),
+        "gtf": join(REF_DIR, "ref.fixed.gtf"),
+    }
+    if USE_INFER_STRANDEDNESS == "true":
+        d["probe_infer_experiment"] = join(
+            TEMPDIR, "rustqc_probe", wildcards.sample, f"{wildcards.sample}.Aligned.sortedByCoord.out.infer_experiment.txt"
+        )
+    return d
+
+def _get_rustqc_stranded(wildcards, input):
+    if USE_INFER_STRANDEDNESS == "true":
+        return _infer_strand_from_rseqc_infer_experiment(str(input.probe_infer_experiment), INFER_FRACTION_THRESHOLD)
+    return SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, STRANDEDNESS_COLUMN].values[0]
+
+rule rustqc_rna_combined:
+    # Replaces infer_strandedness (quantify.smk), rseqc_read_distribution, and
+    # downsample_bam_for_tin/rseqc_tin (this file) with a single rustqc invocation on the combined,
+    # duplicate-marked bam, run at full depth (no downsampling -- see dremellab/HAROLD#56 and the
+    # 2026-07-28 full-scale benchmark: ~45min total vs. 7.5-13h/sample for RSeQC's tin.py on a
+    # downsampled input). Also adds dupRadar/preseq/featureCounts (net-new QC capability) and
+    # rustqc's rnaseq-mode Qualimap (new, alongside the untouched bamqc-mode `qualimap` rule) --
+    # one invocation covers all of this since rustqc always computes its whole module suite
+    # regardless of which specific output is wanted.
     input:
-        bam = join(TEMPDIR, "rseqc_tin_input", "{sample}", "{sample}.Aligned.sortedByCoord.out.bam"),
-        bed12 = join(REF_DIR, "ref.genes.bed12"),
+        unpack(_rustqc_rna_combined_input),
     output:
-        tin = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt"),
-        xls = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls"),
+        strandedness = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt"),
+        read_distribution = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt"),
+        tin_summary = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt"),
+        tin_xls = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls"),
+        dupradar_matrix = join(RESULTSDIR, "{sample}", "dupradar", "{sample}_dupMatrix.txt"),
+        dupradar_intercept_mqc = join(RESULTSDIR, "{sample}", "dupradar", "{sample}_dup_intercept_mqc.txt"),
+        dupradar_curve_mqc = join(RESULTSDIR, "{sample}", "dupradar", "{sample}_duprateExpDensCurve_mqc.txt"),
+        preseq = join(RESULTSDIR, "{sample}", "preseq", "{sample}.lc_extrap.txt"),
+        featurecounts = join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.featureCounts.tsv"),
+        featurecounts_summary = join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.featureCounts.tsv.summary"),
+        biotype_counts = join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.biotype_counts.tsv"),
+        biotype_counts_mqc = join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.biotype_counts_mqc.tsv"),
+        biotype_counts_rrna_mqc = join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.biotype_counts_rrna_mqc.tsv"),
+        qualimap_rnaseq_html = join(RESULTSDIR, "{sample}", "qualimap_rnaseq", "qualimapReport.html"),
+        qualimap_rnaseq_txt = join(RESULTSDIR, "{sample}", "qualimap_rnaseq", "rnaseq_qc_results.txt"),
     params:
         sample = "{sample}",
+        peorse = get_peorse,
+        stranded = _get_rustqc_stranded,
+        scratch = f"{TEMPDIR}/rustqc_combined_scratch/{str(uuid.uuid4())}",
     container:
-        config['containers']['rseqc'],
-    threads: _get_threads("rseqc_tin", profile_config)
+        config['containers']['rustqc'],
+    threads: _get_threads("rustqc_rna_combined", profile_config)
     shell:
         r"""
         set -exo pipefail
-        outdir=$(dirname {output.tin})
-        mkdir -p $outdir
-        cd $outdir
-        tin.py \
-            -i {input.bam} \
-            -r {input.bed12}
-        ls -larth $outdir
+        mkdir -p {params.scratch}
+        stem={params.sample}.Aligned.sortedByCoord.out
+        paired_flag=""
+        if [ "{params.peorse}" == "PE" ]; then
+            paired_flag="--paired"
+        fi
+        rustqc rna {input.bam} \
+            --gtf {input.gtf} \
+            ${{paired_flag}} \
+            --stranded {params.stranded} \
+            --sample-name ${{stem}} \
+            --threads {threads} \
+            --flat-output \
+            --outdir {params.scratch}
+
+        mkdir -p $(dirname {output.strandedness})
+        mkdir -p $(dirname {output.dupradar_matrix})
+        mkdir -p $(dirname {output.preseq})
+        mkdir -p $(dirname {output.featurecounts})
+        mkdir -p $(dirname {output.qualimap_rnaseq_html})
+
+        cp {params.scratch}/${{stem}}.infer_experiment.txt {output.strandedness}
+        cp {params.scratch}/${{stem}}.read_distribution.txt {output.read_distribution}
+        cp {params.scratch}/${{stem}}.summary.txt {output.tin_summary}
+        cp {params.scratch}/${{stem}}.tin.xls {output.tin_xls}
+        cp {params.scratch}/${{stem}}_dupMatrix.txt {output.dupradar_matrix}
+        cp {params.scratch}/${{stem}}_dup_intercept_mqc.txt {output.dupradar_intercept_mqc}
+        cp {params.scratch}/${{stem}}_duprateExpDensCurve_mqc.txt {output.dupradar_curve_mqc}
+        cp {params.scratch}/${{stem}}.lc_extrap.txt {output.preseq}
+        cp {params.scratch}/${{stem}}.featureCounts.tsv {output.featurecounts}
+        cp {params.scratch}/${{stem}}.featureCounts.tsv.summary {output.featurecounts_summary}
+        cp {params.scratch}/${{stem}}.biotype_counts.tsv {output.biotype_counts}
+        cp {params.scratch}/${{stem}}.biotype_counts_mqc.tsv {output.biotype_counts_mqc}
+        cp {params.scratch}/${{stem}}.biotype_counts_rrna_mqc.tsv {output.biotype_counts_rrna_mqc}
+
+        # Qualimap's own report layout isn't stem-prefixed (unlike every other rustqc module) and its
+        # raw_data_qualimapReport/images_qualimapReport subdirs are Qualimap's own internal convention,
+        # not rustqc's -- copy them explicitly rather than assuming --flat-output touches them too.
+        cp {params.scratch}/qualimapReport.html {output.qualimap_rnaseq_html}
+        cp {params.scratch}/rnaseq_qc_results.txt {output.qualimap_rnaseq_txt}
+        for d in raw_data_qualimapReport images_qualimapReport; do
+            if [ -d "{params.scratch}/$d" ]; then
+                cp -r "{params.scratch}/$d" $(dirname {output.qualimap_rnaseq_html})/
+            fi
+        done
+        ls -larth $(dirname {output.strandedness})
         """
 
 rule aggregate_tin:
@@ -292,32 +393,69 @@ rule rseqc_read_gc:
         ls -larth $outdir
         """
 
-rule rseqc_junction_annotation:
+def _rustqc_rna_region_input(wildcards):
+    d = {
+        "bam": join(RESULTSDIR, wildcards.sample, "STAR", f"{wildcards.sample}.{wildcards.regionname}.bam"),
+        "gtf": join(REF_DIR, "ref.fixed.gtf"),
+    }
+    if USE_INFER_STRANDEDNESS == "true":
+        d["probe_infer_experiment"] = join(
+            TEMPDIR, "rustqc_probe", wildcards.sample, f"{wildcards.sample}.Aligned.sortedByCoord.out.infer_experiment.txt"
+        )
+    return d
+
+rule rustqc_rna_region:
+    # Replaces rseqc_junction_annotation. Runs per {regionname} split bam (same wildcard split_bam in
+    # visualize.smk already produces) -- not touched by mark_duplicates, since duplicates aren't
+    # relevant to junction detection and this bam was never claimed to be duplicate-marked, hence
+    # --skip-dup-check here (unlike rustqc_rna_combined, which legitimately is fed a marked bam and
+    # wants that check enforced). TIN and qualimap are explicitly disabled since only junction_annotation
+    # is used from this pass -- dupRadar/featureCounts still run regardless (can't be disabled, see
+    # rustqc_rna_combined_probe's comment) but are simply left unused/undeclared here.
     input:
-        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam"),
-        bed12 = join(REF_DIR, "ref.genes.bed12"),
+        unpack(_rustqc_rna_region_input),
     output:
         junctions = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.junction.bed"),
     params:
         sample = "{sample}",
         regionname = "{regionname}",
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        peorse = get_peorse,
+        stranded = _get_rustqc_stranded,
+        scratch = f"{TEMPDIR}/rustqc_region_scratch/{str(uuid.uuid4())}",
     container:
-        config['containers']['rseqc'],
-    threads: _get_threads("rseqc_junction_annotation", profile_config)
+        config['containers']['rustqc'],
+    threads: _get_threads("rustqc_rna_region", profile_config)
     shell:
         r"""
         set -exo pipefail
+        mkdir -p {params.scratch}
         outdir="$(dirname {output.junctions})"
         mkdir -p "${{outdir}}"
-        mkdir -p {params.tmpdir}
-        cd "${{outdir}}"
-        junction_annotation.py \
-            -i {input.bam} \
-            -r {input.bed12} \
-            -o "${{outdir}}/{params.sample}.{params.regionname}" | tee {params.sample}.{params.regionname}.junction.bed.log || true
+        stem={params.sample}.{params.regionname}
+        paired_flag=""
+        if [ "{params.peorse}" == "PE" ]; then
+            paired_flag="--paired"
+        fi
+        cat > {params.scratch}/skip_qualimap.yaml <<'YAML'
+rna:
+  qualimap:
+    enabled: false
+YAML
+        rustqc rna {input.bam} \
+            --gtf {input.gtf} \
+            ${{paired_flag}} \
+            --stranded {params.stranded} \
+            --sample-name ${{stem}} \
+            --skip-dup-check \
+            --skip-tin \
+            --config {params.scratch}/skip_qualimap.yaml \
+            --threads {threads} \
+            --flat-output \
+            --outdir {params.scratch}
         # Create output file if it doesn't exist (no junctions found case)
-        if [[ ! -f "{output.junctions}" ]]; then
+        if [ -f "{params.scratch}/${{stem}}.junction.bed" ]; then
+            cp "{params.scratch}/${{stem}}.junction.bed" "{output.junctions}"
+        else
             touch "{output.junctions}"
         fi
         ls -larth "${{outdir}}"
@@ -365,9 +503,15 @@ rule multiqc:
         expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                              ,sample=SAMPLES),
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        # rseqc_geneBody_coverage is deliberately NOT required here -- it fails to complete for most
+        # samples in production (see dremellab/HAROLD#56); qualimap_rnaseq's coverage profile below is
+        # the practical interim gene-body-coverage-style signal instead.
         expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
         expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "dupradar", "{sample}_dupMatrix.txt")                           ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "preseq", "{sample}.lc_extrap.txt")                             ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.featureCounts.tsv")                  ,sample=SAMPLES),
+        expand(join(RESULTSDIR, "{sample}", "qualimap_rnaseq", "qualimapReport.html")                       ,sample=SAMPLES),
     output:
         multiqc = join(RESULTSDIR, "multiqc_report.html"),
     container:

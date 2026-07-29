@@ -112,12 +112,20 @@ PIPELINE_TARGETS = [
         *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
         # rseqc infer_experiment
         *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
-        # genebody_coverage
-        *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        # genebody_coverage: rseqc_geneBody_coverage is NOT a required terminal target -- it fails to
+        # complete for most samples in production (RSeQC's tool hangs/times out; see dremellab/HAROLD#56).
+        # The rule stays in the codebase and is still runnable standalone; qualimap_rnaseq's coverage
+        # profile output (below) is the practical interim gene-body-coverage-style signal instead.
         # rseqc tin
         *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
         *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls")          ,sample=SAMPLES),
         join(RESULTSDIR, "counts", "aggregate_tin.tsv"),
+        # rustqc: dupRadar, preseq, featureCounts (QC artifacts only -- not used for quantification),
+        # and rustqc's rnaseq-mode Qualimap (new, alongside the existing bamqc-mode qualimap above)
+        *expand(join(RESULTSDIR, "{sample}", "dupradar", "{sample}_dupMatrix.txt")                           ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "preseq", "{sample}.lc_extrap.txt")                             ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.featureCounts.tsv")                  ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "qualimap_rnaseq", "qualimapReport.html")                       ,sample=SAMPLES),
         # rseqc read GC
         *(expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.GC.xls"),                       sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else []),
         # rseqc junction bb

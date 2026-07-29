@@ -37,6 +37,36 @@ def get_peorse(wildcards):
 
 ###################################################################################
 
+def _infer_strand_from_rseqc_infer_experiment(file_path, fraction_threshold=0.8):
+    """
+    Parse an RSeQC/rustqc-format infer_experiment.py output file and return the inferred
+    strand ("forward"/"reverse"/"unstranded"). Mirrors
+    workflow/scripts/_aggregate_counts_by_strandedness.py's infer_strandedness() -- duplicated
+    here (rather than imported) since that script is a standalone CLI tool, not a module, and
+    this is used by rustqc_rna_combined's --stranded probe-parsing (qc.smk), a separate
+    consumer of the same file format.
+    """
+    with open(file_path) as f:
+        content = f.read()
+    if "Fraction of reads explained by" not in content:
+        return "unstranded"
+    match = re.findall(r"Fraction of reads explained by \"(.*?)\": (\d+\.\d+)", content)
+    if not match:
+        return "unstranded"
+    fractions = {read_type: float(value) for read_type, value in match}
+    for key in ("1+-,1-+,2++,2--", "+-,-+"):
+        if key in fractions:
+            frac = fractions[key]
+            if frac > fraction_threshold:
+                return "reverse"
+            elif frac < (1 - fraction_threshold):
+                return "forward"
+            else:
+                return "unstranded"
+    return "unstranded"
+
+###################################################################################
+
 def get_fastqs(wildcards):
     d = dict()
     peorse = SAMPLESDF.loc[SAMPLESDF['sampleName'] == wildcards.sample, 'PEorSE'].values[0]
