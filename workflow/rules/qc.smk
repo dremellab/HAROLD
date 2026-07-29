@@ -80,6 +80,11 @@ rule mark_duplicates:
     container:
         config['containers']['picard'],
     threads: _get_threads("mark_duplicates", profile_config)
+    resources:
+        # No real memory data for this rule yet (see set-resources comment in
+        # config/rivanna/config.yaml) -- double the base mem_mb on each retry so a
+        # too-low first guess doesn't OOM identically on every attempt.
+        mem_mb=lambda wildcards, attempt: _get_mem_mb("mark_duplicates", profile_config) * (2 ** (attempt - 1)),
     shell:
         r"""
         set -exo pipefail
@@ -153,6 +158,11 @@ rule rustqc_rna_combined_probe:
     container:
         config['containers']['rustqc'],
     threads: _get_threads("rustqc_rna_combined_probe", profile_config)
+    resources:
+        # Observed OOM in production at the pipeline-wide 40G default (MaxRSS ~42GB) before
+        # this rule's own set-resources entry was synced into the run's profile -- double the
+        # base mem_mb on each retry as a safety net against future under-sizing too.
+        mem_mb=lambda wildcards, attempt: _get_mem_mb("rustqc_rna_combined_probe", profile_config) * (2 ** (attempt - 1)),
     shell:
         r"""
         set -exo pipefail
@@ -226,6 +236,10 @@ rule rustqc_rna_combined:
     container:
         config['containers']['rustqc'],
     threads: _get_threads("rustqc_rna_combined", profile_config)
+    resources:
+        # Same rationale as rustqc_rna_combined_probe above -- double the base mem_mb on
+        # each retry rather than failing identically on every attempt.
+        mem_mb=lambda wildcards, attempt: _get_mem_mb("rustqc_rna_combined", profile_config) * (2 ** (attempt - 1)),
     shell:
         r"""
         set -exo pipefail
@@ -425,6 +439,10 @@ rule rustqc_rna_region:
     container:
         config['containers']['rustqc'],
     threads: _get_threads("rustqc_rna_region", profile_config)
+    resources:
+        # Same rationale as rustqc_rna_combined_probe above -- double the base mem_mb on
+        # each retry rather than failing identically on every attempt.
+        mem_mb=lambda wildcards, attempt: _get_mem_mb("rustqc_rna_region", profile_config) * (2 ** (attempt - 1)),
     shell:
         r"""
         set -exo pipefail

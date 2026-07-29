@@ -113,6 +113,21 @@ def _get_runtime(rule_name, profile_config):
         return profile_config["set-resources"][rule_name]["runtime"]
     return profile_config["default-resources"]["runtime"]
 
+def _get_mem_mb(rule_name, profile_config):
+    """
+    Return the per-attempt BASE mem_mb (megabytes) for a rule from profile_config.
+    Falls back to default if not defined. Meant to be doubled per Snakemake `attempt`
+    in a rule's `resources:` block, for jobs with no prior real-scale memory data that
+    risk being OOM-killed on the first try (attempt 1 = base, 2 = 2x, 3 = 4x, 4 = 8x).
+    """
+    if (
+        "set-resources" in profile_config
+        and rule_name in profile_config["set-resources"]
+        and "mem_mb" in profile_config["set-resources"][rule_name]
+    ):
+        return profile_config["set-resources"][rule_name]["mem_mb"]
+    return profile_config["default-resources"]["mem_mb"]
+
 ## Load cluster.json
 # with open(config["cluster"]) as json_file:
 #     CLUSTER = yaml.safe_load(json_file)
