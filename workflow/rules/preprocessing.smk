@@ -63,22 +63,10 @@ rule fastq_validate_sample:
         touch "{output.ok}"
         """
 
-rule fastq_validate_all:
-    input:
-        expand(join(RESULTSDIR, "{sample}", "fastq_validation", "{sample}.ok"), sample=SAMPLES),
-    output:
-        ok=join(RESULTSDIR, "fastq_validation", "all_inputs.ok"),
-    shell:
-        r"""
-        set -euo pipefail
-        mkdir -p "$(dirname "{output.ok}")"
-        echo "All input FASTQ files passed fastQValidator." > "{output.ok}"
-        """
-
 rule cutadapt:
     input:
         unpack(get_fastqs),
-        validation=rules.fastq_validate_all.output.ok,
+        validation=rules.fastq_validate_sample.output.ok,
     output:
         of1=join(WORKDIR, "results", "{sample}", "trim", "{sample}.R1.trim.fastq.gz"),
         of2=join(WORKDIR, "results", "{sample}", "trim", "{sample}.R2.trim.fastq.gz"),
