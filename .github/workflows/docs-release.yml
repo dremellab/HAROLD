@@ -44,21 +44,39 @@ jobs:
               config['metadata'] = {}
           config['metadata']['version'] = version
 
-          # Update navbar: set version text and rebuild version menu
+          # Update navbar: set version text and mark this version "current" in the
+          # menu, keeping every other entry (dev + prior releases) already committed
+          # in _quarto.yml -- rather than replacing the whole menu with just
+          # [this version, dev], which is all the previous version of this script
+          # did (every versioned page only ever knew about itself + dev, never any
+          # sibling releases). Self-healing: if this version isn't in the list yet
+          # (the normal case -- the dev-docs entry for a new version is usually
+          # added *after* the release build, per _quarto.yml's own instructions),
+          # it's inserted rather than skipped.
+          current_href = f'{base_url}/{version}/docs/index.html'
           navbar = config.get('website', {}).get('navbar', {})
           right_items = navbar.get('right', [])
           for item in right_items:
               if isinstance(item, dict) and 'menu' in item:
+                  order = []
+                  text_by_href = {}
+                  for entry in item.get('menu', []):
+                      href = entry['href']
+                      text = entry['text'].replace(' (current)', '')
+                      if href not in text_by_href:
+                          order.append(href)
+                      text_by_href[href] = text
+                  text_by_href[current_href] = version
+                  if current_href not in order:
+                      order.append(current_href)
+
                   item['text'] = f"Version: {version}"
                   item['menu'] = [
                       {
-                          'text': f'{version} (current)',
-                          'href': f'{base_url}/{version}/docs/index.html'
-                      },
-                      {
-                          'text': 'dev',
-                          'href': f'{base_url}/dev/docs/index.html'
+                          'text': f'{version} (current)' if href == current_href else text_by_href[href],
+                          'href': href,
                       }
+                      for href in [current_href] + [h for h in order if h != current_href]
                   ]
 
           with open('_quarto.yml', 'w') as f:

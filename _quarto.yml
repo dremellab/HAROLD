@@ -22,13 +22,17 @@ website:
     right:
       - text: "Docs"
         href: docs/index.md
-      # Version menu shown on the DEV docs site. docs-release.yml patches its own
-      # ephemeral copy of this file during a release build to render that one
-      # version's page (showing just "{version} (current)" + "dev") -- that patch
-      # is never committed back to any branch, so it does NOT keep this list here
-      # in sync. After every tagged release, manually add a "{version}" entry
-      # below (newest first, right after "dev (current)") so the dev docs site's
-      # dropdown links to it.
+      # Version menu shown on the DEV docs site. This committed list is also the
+      # source docs-release.yml's "Patch _quarto.yml for release" step starts from
+      # when it builds a tagged release's own ephemeral copy -- it marks the
+      # version being tagged as "(current)" (inserting it if not already present
+      # here) and otherwise keeps every entry below as-is, so a versioned page
+      # shows the same full history this list does at the time it's built. That
+      # patch is never committed back to any branch, though, so THIS list (the one
+      # the dev docs site actually renders) still needs a manual "{version}" entry
+      # added below after every tagged release -- otherwise the dev docs dropdown
+      # itself won't link to the new version (older already-built versioned pages
+      # are frozen snapshots and can't pick up later additions either way).
       - text: "Version: dev"
         menu:
           - text: "dev (current)"
