@@ -481,9 +481,8 @@ ul.task-list li input[type="checkbox"] {
 │   ├── ref.fa                        # Combined host + additives + viral FASTA
 │   ├── ref.fa.fai                    # FASTA index
 │   ├── ref.gtf                       # Concatenated GTF annotation
-│   ├── ref.fixed.gtf                 # Cleaned GTF for Snakemake
-│   ├── ref.genes.bed                 # Gene regions in BED format
-│   ├── ref.genes.bed12               # Gene regions in BED12 format
+│   ├── ref.fixed.gtf                 # Cleaned GTF for Snakemake/rustqc
+│   ├── ref.genes.bed12               # Gene regions in BED12 format (RSeQC's geneBody_coverage/read_GC only)
 │   ├── ref.genes.genepred            # GenePred format annotation
 │   ├── ref.genes.genepred_w_geneid   # GenePred with gene IDs
 │   ├── STAR_no_GTF/                  # STAR genome index directory
@@ -496,8 +495,14 @@ ul.task-list li input[type="checkbox"] {
 │   │   ├── trim/                     # Adapter-trimmed FASTQ files
 │   │   ├── STAR/                     # Alignment BAM files and metrics
 │   │   ├── bigwigs/                  # Normalized coverage tracks
-│   │   ├── qualimap/                 # Quality-mapping reports
-│   │   ├── rseqc/                    # RNA-seq QC metrics
+│   │   ├── qualimap/                 # Genomic BAM QC report (Qualimap bamqc)
+│   │   ├── qualimap_rnaseq/          # RNA-seq-specific QC report (rustqc's Qualimap rnaseq module)
+│   │   ├── rseqc/                    # RNA-seq QC metrics (strandedness/read_distribution/TIN/junction via
+│   │   │                             #   rustqc; geneBodyCoverage/GC.xls still via RSeQC directly, see below)
+│   │   ├── dupradar/                 # Duplication rate vs. expression (rustqc's dupRadar module)
+│   │   ├── preseq/                   # Library complexity estimate (rustqc's preseq module)
+│   │   ├── featurecounts/            # Gene/biotype counts (rustqc's featureCounts module -- QC
+│   │   │                             #   reference only, NOT the pipeline's quantification source)
 │   │   ├── kraken2/                  # Pathogen detection reports
 │   │   ├── counts/                   # Per-sample count matrices
 │   │   └── fastq_validation/         # FASTQ validation logs (always produced, blocks Cutadapt on failure)
@@ -541,8 +546,8 @@ ul.task-list li input[type="checkbox"] {
 <td><strong>Cleaned GTF</strong> with normalized formatting for Snakemake compatibility.</td>
 </tr>
 <tr class="even">
-<td><code>ref/ref.genes.bed</code> / <code>.bed12</code></td>
-<td><strong>BED format gene annotations</strong> derived from GTF. Used by RSeQC tools for read distribution analysis and junction detection.</td>
+<td><code>ref/ref.genes.bed12</code></td>
+<td><strong>BED12 format gene annotations</strong> derived from GTF. Used by the RSeQC tools that still run directly (<code>geneBody_coverage.py</code>, <code>read_GC.py</code>) — <code>rustqc</code>’s modules (read distribution, TIN, junction detection) read the GTF directly instead.</td>
 </tr>
 <tr class="odd">
 <td><code>ref/ref.genes.genepred</code> / <code>.genepred_w_geneid</code></td>
@@ -661,7 +666,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td>CIGAR</td>
 <td>Alignment operations (M, I, D, N, S, H).</td>
-<td>Used by RSeQC, bedtools for exon overlap.</td>
+<td>Used by <code>rustqc</code>, RSeQC, bedtools for exon overlap.</td>
 </tr>
 <tr class="odd">
 <td>RNEXT, PNEXT</td>
@@ -934,9 +939,9 @@ ENSG00000000005 500 100 400</code></pre>
 </section>
 <section id="quality-control" class="level3">
 <h3 class="anchored" data-anchor-id="quality-control">Quality Control</h3>
-<section id="qualimap-reports-qualimapqualimapreport.html" class="level4">
-<h4 class="anchored" data-anchor-id="qualimap-reports-qualimapqualimapreport.html">Qualimap Reports: <code>qualimap/qualimapReport.html</code></h4>
-<p><strong>Format:</strong> Self-contained HTML with embedded JavaScript and CSS <strong>Tool:</strong> Qualimap <code>bamqc</code> module <strong>Contents:</strong> Interactive QC dashboard</p>
+<section id="qualimap-genomic-bam-qc-qualimapqualimapreport.html" class="level4">
+<h4 class="anchored" data-anchor-id="qualimap-genomic-bam-qc-qualimapqualimapreport.html">Qualimap (Genomic BAM QC): <code>qualimap/qualimapReport.html</code></h4>
+<p><strong>Format:</strong> Self-contained HTML with embedded JavaScript and CSS <strong>Tool:</strong> Qualimap <code>bamqc</code> module (unchanged by the <code>rustqc</code> migration below) <strong>Contents:</strong> Interactive QC dashboard</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -971,12 +976,49 @@ ENSG00000000005 500 100 400</code></pre>
 </tr>
 </tbody>
 </table>
+<hr>
 </section>
-<section id="per-sample-rseqc-metrics" class="level4">
-<h4 class="anchored" data-anchor-id="per-sample-rseqc-metrics">Per-Sample RSeQC Metrics</h4>
+<section id="qualimap-rna-seq-qc-qualimap_rnaseqqualimapreport.html" class="level4">
+<h4 class="anchored" data-anchor-id="qualimap-rna-seq-qc-qualimap_rnaseqqualimapreport.html">Qualimap (RNA-seq QC): <code>qualimap_rnaseq/qualimapReport.html</code></h4>
+<p><strong>Format:</strong> Self-contained HTML with embedded JavaScript and CSS, plus <code>rnaseq_qc_results.txt</code> (plain text) and coverage-profile TSVs/plots under <code>raw_data_qualimapReport/</code>/<code>images_qualimapReport/</code> <strong>Tool:</strong> Qualimap <code>rnaseq</code> module, reimplemented by <code>rustqc</code> — a separate, additional report from the genomic <code>bamqc</code> one above, not a replacement for it. <code>rustqc</code> only implements Qualimap’s <code>rnaseq</code> mode (there’s no <code>report.pdf</code> here, unlike the <code>bamqc</code> report). <strong>Contents:</strong> RNA-seq-specific QC — this is where gene-body 5’→3’ coverage bias lives, since HAROLD’s RSeQC-based <code>geneBody_coverage.py</code> (below) is not guaranteed to run</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Reads Genomic Origin</strong></td>
+<td>% of reads classified as exonic / intronic / intergenic / overlapping. High intronic/intergenic suggests degraded RNA or protocol issues.</td>
+</tr>
+<tr class="even">
+<td><strong>5’→3’ Coverage Bias</strong></td>
+<td>Coverage profile across 100 percentile bins of the transcript body. Flat = good; skewed toward one end suggests RNA degradation.</td>
+</tr>
+<tr class="odd">
+<td><strong>Junction Analysis</strong></td>
+<td>Known vs.&nbsp;novel splice junction counts.</td>
+</tr>
+<tr class="even">
+<td><strong>Strand Specificity (SSP)</strong></td>
+<td>Independent strand-specificity estimate from this module — cross-check against <code>rseqc/{sample}.strandedness.txt</code> below, which remains the pipeline’s actual source of truth for strand.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="per-sample-rna-seq-qc-metrics-rseqc" class="level4">
+<h4 class="anchored" data-anchor-id="per-sample-rna-seq-qc-metrics-rseqc">Per-Sample RNA-seq QC Metrics (<code>rseqc/</code>)</h4>
+<p>Everything under <code>rseqc/</code> comes from <code>rustqc</code> 0.2.1 now, <strong>except</strong> <code>geneBodyCoverage.txt</code> and <code>{regionname}.GC.xls</code>, which stay on RSeQC directly (<code>rustqc</code> doesn’t implement those two tools). Output formats/paths for the migrated tools are unchanged from RSeQC’s own — text content is byte-for-byte identical to what RSeQC produced, so anything parsing these files doesn’t need to change.</p>
 <section id="rseqcsample.read_distribution.txt" class="level5">
 <h5 class="anchored" data-anchor-id="rseqcsample.read_distribution.txt"><code>rseqc/{sample}.read_distribution.txt</code></h5>
-<p><strong>Format:</strong> Tab-separated text file (RSeQC output) <strong>Contents:</strong> Read distribution across gene features from <code>read_distribution.py</code></p>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC-format-identical <code>rustqc</code> output) <strong>Contents:</strong> Read distribution across gene features</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1016,7 +1058,7 @@ ENSG00000000005 500 100 400</code></pre>
 </section>
 <section id="rseqcsample.strandedness.txt" class="level5">
 <h5 class="anchored" data-anchor-id="rseqcsample.strandedness.txt"><code>rseqc/{sample}.strandedness.txt</code></h5>
-<p><strong>Format:</strong> Raw text output from RSeQC <code>infer_experiment.py</code></p>
+<p><strong>Format:</strong> Raw text output, RSeQC <code>infer_experiment.py</code> format (produced by <code>rustqc</code>’s <code>infer_experiment</code> module now)</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1046,9 +1088,9 @@ ENSG00000000005 500 100 400</code></pre>
 <p><strong>Interpretation:</strong> HAROLD uses this to infer strand (&gt; 0.8 fraction = confident; otherwise unstranded). Value is <strong>the source of truth</strong> for strand inference; manifest values override only if <code>use_infer_strandedness: false</code>.</p>
 <hr>
 </section>
-<section id="rseqcsample.genebodycoverage.txt" class="level5">
-<h5 class="anchored" data-anchor-id="rseqcsample.genebodycoverage.txt"><code>rseqc/{sample}.geneBodyCoverage.txt</code></h5>
-<p><strong>Format:</strong> Tab-separated text file (RSeQC output)</p>
+<section id="rseqcsample.genebodycoverage.txt-best-effort-no-longer-a-required-output" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.genebodycoverage.txt-best-effort-no-longer-a-required-output"><code>rseqc/{sample}.geneBodyCoverage.txt</code> (Best-effort — no longer a required output)</h5>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC output — still runs <code>geneBody_coverage.py</code> directly; <code>rustqc</code> doesn’t implement this tool)</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1072,11 +1114,12 @@ ENSG00000000005 500 100 400</code></pre>
 </tbody>
 </table>
 <p><strong>Interpretation:</strong> Uniform coverage across all percentiles (flat line) = good quality. 5’ or 3’ skew (elevation at ends) suggests RNA degradation or protocol bias.</p>
+<p><strong>Note:</strong> This rule reliably fails to complete for some samples in production (RSeQC’s <code>geneBody_coverage.py</code> can hang/time out on large BAMs) and is <strong>no longer a required output</strong> — the pipeline won’t block on it, and it’s still runnable standalone if needed. The Qualimap RNA-seq report above (<code>qualimap_rnaseq/</code>) provides a working 5’→3’ coverage-bias signal for every sample regardless.</p>
 <hr>
 </section>
 <section id="rseqcsample.aligned.sortedbycoord.out.summary.txt" class="level5">
 <h5 class="anchored" data-anchor-id="rseqcsample.aligned.sortedbycoord.out.summary.txt"><code>rseqc/{sample}.Aligned.sortedByCoord.out.summary.txt</code></h5>
-<p><strong>Format:</strong> Single-line text file with semicolon-delimited metrics</p>
+<p><strong>Format:</strong> Single-line text file with semicolon-delimited metrics (produced by <code>rustqc</code>’s <code>tin</code> module now)</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1112,12 +1155,12 @@ ENSG00000000005 500 100 400</code></pre>
 </tbody>
 </table>
 <p><strong>Use case:</strong> Quick per-sample RNA quality check from command line: <code>grep "Mean TIN" {sample}.Aligned.sortedByCoord.out.summary.txt</code></p>
-<p><strong>Note:</strong> <code>tin.py</code>’s runtime scales poorly with read depth, so samples with more than <code>rseqc_tin_downsample_reads</code> (config; default 50,000,000) primary-mapped reads have their BAM randomly downsampled to that many reads before TIN is calculated. This count follows the <code>samtools flagstat</code> convention of counting each mate separately, so for paired-end data it is roughly twice the fragment/pair count (e.g.&nbsp;the default of 50,000,000 reads is ~25,000,000 pairs). Mates of a pair are always kept or dropped together, so no singleton mates are introduced. This is a runtime workaround and does not affect samples below the threshold.</p>
+<p><strong>Note:</strong> TIN now runs at <strong>full read depth</strong> — the BAM downsampling workaround this pipeline previously needed (RSeQC’s <code>tin.py</code> scaled poorly with read depth) is gone; <code>rustqc</code>’s TIN module doesn’t need it (benchmarked at ~12 minutes of marginal cost on a 689M-read combined BAM, vs.&nbsp;7.5–13 hours per sample for RSeQC’s <code>tin.py</code> on a downsampled input). TIN values from post-migration runs will not match older, downsampled runs byte-for-byte — full depth vs.&nbsp;an ~8–12%-of-data downsample changes the input population by construction.</p>
 <hr>
 </section>
 <section id="rseqcsample.regionname.gc.xls-optional" class="level5">
 <h5 class="anchored" data-anchor-id="rseqcsample.regionname.gc.xls-optional"><code>rseqc/{sample}.{regionname}.GC.xls</code> (Optional)</h5>
-<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per GC% bin (0%, 10%, …, 100%)</p>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC output — still runs <code>read_GC.py</code> directly; <code>rustqc</code> doesn’t implement this tool) <strong>Rows:</strong> One row per GC% bin (0%, 10%, …, 100%)</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1153,7 +1196,7 @@ ENSG00000000005 500 100 400</code></pre>
 </section>
 <section id="rseqcsample.regionname.junction.bb-optional" class="level5">
 <h5 class="anchored" data-anchor-id="rseqcsample.regionname.junction.bb-optional"><code>rseqc/{sample}.{regionname}.junction.bb</code> (Optional)</h5>
-<p><strong>Format:</strong> UCSC BigBed format (binary, compressed BED) <strong>Contents:</strong> Splice junctions detected in this sample for this region</p>
+<p><strong>Format:</strong> UCSC BigBed format (binary, compressed BED) <strong>Contents:</strong> Splice junctions detected in this sample for this region, from <code>rustqc</code>’s <code>junction_annotation</code> module (<code>{sample}.{regionname}.junction.bed</code>, converted to BigBed unchanged)</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -1189,7 +1232,78 @@ ENSG00000000005 500 100 400</code></pre>
 </tbody>
 </table>
 <p><strong>Use case:</strong> Load in IGV or UCSC Genome Browser to visualize expressed junctions region-by-region (host vs.&nbsp;per-virus).</p>
+<hr>
 </section>
+</section>
+<section id="duplication-qc-dupradarsample_dupmatrix.txt" class="level4">
+<h4 class="anchored" data-anchor-id="duplication-qc-dupradarsample_dupmatrix.txt">Duplication QC: <code>dupradar/{sample}_dupMatrix.txt</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Tool:</strong> <code>rustqc</code>’s dupRadar module — requires duplicate-marked alignments (see <code>mark_duplicates</code> below); net-new QC capability, not present before this migration</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>geneLength</code>, <code>allCountsMulti</code>/<code>allCounts</code></td>
+<td>Gene length and read counts (multi-mapper-inclusive / unique only).</td>
+</tr>
+<tr class="even">
+<td><code>dupRateMulti</code>/<code>dupRate</code></td>
+<td><strong>Duplication rate at this gene’s expression level</strong> (0–1).</td>
+</tr>
+<tr class="odd">
+<td><code>RPKMulti</code>/<code>RPKM</code></td>
+<td>Expression level (reads per kb).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Plot <code>dupRate</code> vs.&nbsp;<code>RPKM</code> (log scale) — a healthy library shows low, roughly flat duplication rate across expression levels; a steep rise at low expression indicates PCR over-amplification. Also see <code>dupradar/{sample}_dup_intercept_mqc.txt</code>/<code>{sample}_duprateExpDensCurve_mqc.txt</code> (MultiQC custom-content summaries of the same fit) and the <code>{sample}_duprateExpBoxplot.png</code>/<code>{sample}_duprateExpDens.png</code> plots.</p>
+<p><strong>Requires duplicate marking:</strong> <code>mark_duplicates</code> (Picard) runs on the combined BAM before this module — without it, dupRadar would silently report 0% duplication for every gene, which is misleading rather than merely uninformative. This marked-up BAM is a temporary intermediate, not a pipeline output.</p>
+<hr>
+</section>
+<section id="library-complexity-preseqsample.lc_extrap.txt" class="level4">
+<h4 class="anchored" data-anchor-id="library-complexity-preseqsample.lc_extrap.txt">Library Complexity: <code>preseq/{sample}.lc_extrap.txt</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Tool:</strong> <code>rustqc</code>’s preseq module — net-new QC capability, not present before this migration</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TOTAL_READS</code></td>
+<td>Sequencing depth (extrapolated beyond the observed data).</td>
+</tr>
+<tr class="even">
+<td><code>EXPECTED_DISTINCT</code></td>
+<td>Predicted number of distinct (non-duplicate) reads at that depth.</td>
+</tr>
+<tr class="odd">
+<td><code>LOWER_0.95CI</code>/<code>UPPER_0.95CI</code></td>
+<td>95% confidence interval on the prediction.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> A curve that keeps rising roughly linearly with <code>TOTAL_READS</code> indicates the library still has complexity to give at deeper sequencing; a curve that plateaus early indicates the library is close to fully sequenced (further sequencing would mostly return duplicates).</p>
+<hr>
+</section>
+<section id="featurecounts-qc-reference-only-featurecountssample.featurecounts.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="featurecounts-qc-reference-only-featurecountssample.featurecounts.tsv">featureCounts (QC reference only): <code>featurecounts/{sample}.featureCounts.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file, plus <code>{sample}.biotype_counts.tsv</code> (biotype breakdown) and MultiQC custom-content variants (<code>{sample}.biotype_counts_mqc.tsv</code>, <code>{sample}.biotype_counts_rrna_mqc.tsv</code>) <strong>Tool:</strong> <code>rustqc</code>’s featureCounts module — computed internally as a dependency of dupRadar above regardless of whether it’s requested, so it’s exposed as a reference artifact rather than discarded</p>
+<p><strong>Important:</strong> This is <strong>not</strong> HAROLD’s quantification method — gene-level counts for differential expression still come from STAR’s own <code>--quantMode GeneCounts</code> (<code>counts_matrix.tsv</code> below). Treat this file as a QC cross-check / biotype-composition reference only.</p>
 </section>
 <section id="pathogen-detection-kraken2sample.kraken2.report.txt" class="level4">
 <h4 class="anchored" data-anchor-id="pathogen-detection-kraken2sample.kraken2.report.txt">Pathogen Detection: <code>kraken2/{sample}.kraken2.report.txt</code></h4>
@@ -1706,7 +1820,7 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <h3 class="anchored" data-anchor-id="rna-quality-transcript-integrity-number-aggregate">RNA Quality: Transcript Integrity Number Aggregate</h3>
 <section id="per-transcript-tin-details-samplesample.aligned.sortedbycoord.out.tin.xls" class="level4">
 <h4 class="anchored" data-anchor-id="per-transcript-tin-details-samplesample.aligned.sortedbycoord.out.tin.xls">Per-Transcript TIN Details: <code>{sample}/{sample}.Aligned.sortedByCoord.out.tin.xls</code></h4>
-<p><strong>Format:</strong> Tab-separated text file with header row (generated by RSeQC) <strong>Rows:</strong> One row per transcript detected in the BAM file</p>
+<p><strong>Format:</strong> Tab-separated text file with header row, RSeQC-format-identical (produced by <code>rustqc</code>’s <code>tin</code> module now, at full read depth — see the full-depth note above) <strong>Rows:</strong> One row per transcript detected in the BAM file</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -1749,7 +1863,7 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <tr class="even">
 <td>Additional columns</td>
 <td></td>
-<td>RSeQC includes other metrics (median_cv, min_cv, etc.); the TIN column is the primary metric for quality assessment.</td>
+<td>Other metrics (median_cv, min_cv, etc.); the TIN column is the primary metric for quality assessment.</td>
 </tr>
 </tbody>
 </table>
@@ -1827,7 +1941,7 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <tbody>
 <tr class="odd">
 <td><code>multiqc_report.html</code></td>
-<td><strong>Interactive HTML dashboard</strong> aggregating QC metrics from FastQC, Cutadapt, STAR, RSeQC, Qualimap, and Kraken2 across all samples. <strong>Start here for a high-level overview of experiment quality.</strong> Open in any web browser; includes interactive plots, tables, and cross-sample comparisons.</td>
+<td><strong>Interactive HTML dashboard</strong> aggregating QC metrics from FastQC, Cutadapt, STAR, <code>rustqc</code> (RSeQC-equivalent modules, dupRadar, preseq, featureCounts), the genomic and RNA-seq Qualimap reports, and Kraken2 across all samples. <strong>Start here for a high-level overview of experiment quality.</strong> Open in any web browser; includes interactive plots, tables, and cross-sample comparisons.</td>
 </tr>
 <tr class="even">
 <td><code>multiqc_data/</code></td>

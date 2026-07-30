@@ -621,16 +621,18 @@ Singularity Pull Dir: /scratch/cud2td/singularity/images</code></pre>
 </section>
 <section id="reference-bundle-created-inside-each-work-directory" class="level2">
 <h2 class="anchored" data-anchor-id="reference-bundle-created-inside-each-work-directory">7. Reference bundle created inside each work directory</h2>
-<p>When you run <code>harold -m init</code>, the wrapper stages a full copy of <code>config/</code> plus your <code>samples.tsv</code> under the new working directory. The first Snakemake jobs (<code>create_index</code>, <code>gtf_to_bed</code>, and friends) then build a composite reference bundle under:</p>
+<p>When you run <code>harold -m init</code>, the wrapper stages a full copy of <code>config/</code> plus your <code>samples.tsv</code> under the new working directory. The first Snakemake jobs (<code>create_index</code>, <code>gtf2genepred</code>/<code>genepred2bed12</code>, and friends) then build a composite reference bundle under:</p>
 <pre><code>$WORKDIR/ref/
 ├── ref.fa                         # combined host + additives + virus FASTA
 ├── ref.fa.regions                 # BED-like regions file used for per-genome splitting
 ├── ref.fa.regions.host(.*)        # host-only slices for BAM splitting
 ├── ref.fa.regions.viruses(.*)     # virus-only slices
 ├── ref.gtf                        # concatenated transcript annotation
-├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake consume
-├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC
-├── ref.genes.(bed|bed12)          # BED exports for GTF → BED jobs
+├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake/rustqc consume
+├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC (transcript FPKM/TPM quantification)
+├── ref.genes.bed12                # BED12 export, used by the RSeQC tools that still run directly
+│                                   #   (geneBody_coverage.py, read_GC.py) -- rustqc's modules read
+│                                   #   ref.fixed.gtf directly instead
 └── STAR_no_GTF/                   # STAR genome index</code></pre>
 <p>These files are built entirely inside the work directory so multiple HAROLD runs cannot interfere with each other. Re-running <code>harold -m dryrun</code> or <code>harold -m run</code> in the same directory will skip any reference assets that already exist unless you remove the files manually or use <code>harold -m reset</code>.</p>
 <hr>

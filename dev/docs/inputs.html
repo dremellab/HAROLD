@@ -520,14 +520,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><code>infer_strandedness</code></td>
 <td><code>use_infer_strandedness</code></td>
-<td>Controls whether to use RSeQC-inferred strandedness (<code>true</code>, default) or manifest values (<code>false</code>) for count extraction.</td>
+<td>Controls whether to use inferred strandedness (<code>true</code>, default) or manifest values (<code>false</code>) for count extraction. Inference itself is via <code>rustqc</code>’s <code>infer_experiment</code> module (was RSeQC’s <code>infer_experiment.py</code> before the QC-tooling migration — same output format, so this doesn’t change anything below).</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Important:</strong> HAROLD <strong>always infers and reports</strong> strandedness via RSeQC regardless of this setting. The config key only controls which strand assignment is <strong>used for quantification</strong>:</p>
+<p><strong>Important:</strong> HAROLD <strong>always infers and reports</strong> strandedness regardless of this setting. The config key only controls which strand assignment is <strong>used for quantification</strong>:</p>
 <ul>
-<li><strong><code>use_infer_strandedness: true</code></strong> (default) — Manifest <code>strandedness</code> column ignored; RSeQC inference is authoritative.</li>
-<li><strong><code>use_infer_strandedness: false</code></strong> — Manifest <code>strandedness</code> column required and used; overrides RSeQC inference.</li>
+<li><strong><code>use_infer_strandedness: true</code></strong> (default) — Manifest <code>strandedness</code> column ignored; inference is authoritative.</li>
+<li><strong><code>use_infer_strandedness: false</code></strong> — Manifest <code>strandedness</code> column required and used; overrides inference.</li>
 </ul>
 <p><strong>Migration:</strong> If you have existing <code>config.yaml</code> files with <code>infer_strandedness</code>, rename the key. The behavior remains the same; this is purely a naming clarification.</p>
 <hr>
@@ -570,7 +570,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><code>strandedness</code></td>
-<td><strong>Required if <code>use_infer_strandedness=false</code>.</strong> Library strandedness (<code>forward</code>, <code>reverse</code>, or <code>unstranded</code>). HAROLD always infers strandedness via RSeQC and reports it in output. The <code>use_infer_strandedness</code> config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.</td>
+<td><strong>Required if <code>use_infer_strandedness=false</code>.</strong> Library strandedness (<code>forward</code>, <code>reverse</code>, or <code>unstranded</code>). HAROLD always infers strandedness (via <code>rustqc</code>’s <code>infer_experiment</code> module) and reports it in output. The <code>use_infer_strandedness</code> config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.</td>
 </tr>
 </tbody>
 </table>
@@ -593,14 +593,14 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <li><strong>groupName:</strong> Must be non-empty for all samples.</li>
 <li><strong>Batch consistency:</strong> If any sample has a batch value, <strong>all samples must have one</strong> (no mixing of filled and empty batch cells).</li>
 <li><strong>FASTQ files:</strong> R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).</li>
-<li><strong>Strandedness values:</strong> Required and validated (must be <code>forward</code>, <code>reverse</code>, or <code>unstranded</code>, case-insensitive) only when <code>use_infer_strandedness=false</code>. Values are normalized to lowercase internally (Forward → forward, REVERSE → reverse, etc.). HAROLD always infers strandedness via RSeQC regardless of this setting.</li>
+<li><strong>Strandedness values:</strong> Required and validated (must be <code>forward</code>, <code>reverse</code>, or <code>unstranded</code>, case-insensitive) only when <code>use_infer_strandedness=false</code>. Values are normalized to lowercase internally (Forward → forward, REVERSE → reverse, etc.). HAROLD always infers strandedness regardless of this setting.</li>
 </ul>
 <p>If validation fails, HAROLD reports the specific error and stops before initialization.</p>
 <section id="strandedness-inference-vs.-manifest-values" class="level4">
 <h4 class="anchored" data-anchor-id="strandedness-inference-vs.-manifest-values">Strandedness Inference vs.&nbsp;Manifest Values</h4>
 <p>HAROLD employs a <strong>two-step strandedness strategy</strong>:</p>
 <ol type="1">
-<li><p><strong>Inference (always happens):</strong> RSeQC <code>infer_experiment.py</code> analyzes read pair orientation and reports a stranded result (forward, reverse, or unstranded based on confidence threshold). This inference is output in <code>results/{sample}/rseqc/{sample}.strandedness.txt</code> and aggregated in <code>results/counts/sample_strandedness.tsv</code>.</p></li>
+<li><p><strong>Inference (always happens):</strong> <code>rustqc</code>’s <code>infer_experiment</code> module (RSeQC <code>infer_experiment.py</code>-format-identical output) analyzes read pair orientation and reports a stranded result (forward, reverse, or unstranded based on confidence threshold). This inference is output in <code>results/{sample}/rseqc/{sample}.strandedness.txt</code> and aggregated in <code>results/counts/sample_strandedness.tsv</code>. When <code>use_infer_strandedness: true</code>, this inference step runs as its own dedicated pass (<code>rustqc_rna_combined_probe</code>) before the rest of <code>rustqc</code>’s modules run, since those need the strand result as an input — see <a href="../docs/pipeline.html">Pipeline Architecture</a> for details.</p></li>
 <li><p><strong>Selection (config-driven):</strong> The <code>use_infer_strandedness</code> config key selects which strandedness is <strong>used for count extraction</strong>:</p>
 <ul>
 <li><strong>true (default):</strong> Use inferred strandedness; manifest column ignored.</li>
