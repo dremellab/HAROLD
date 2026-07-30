@@ -12,35 +12,39 @@ graph TD
     B --> C["Cutadapt<br/>(adapter trimming, QC filtering)"]
     C --> D["STAR Alignment<br/>(2-pass mapping, splice detection)"]
     D --> E["Parallel QC & Processing"]
-    
-    E --> E1["Qualimap<br/>(coverage, GC bias)"]
-    E --> E2["RSeQC Metrics<br/>(strandedness, TIN, distribution)"]
+
+    D --> E0["mark_duplicates<br/>(Picard, feeds rustqc dupRadar)"]
+    E0 --> E1["rustqc_rna_combined<br/>(strandedness, read_distribution, TIN,<br/>dupRadar, preseq, featureCounts, Qualimap rnaseq)"]
+    D --> E1b["rustqc_rna_region<br/>(junction_annotation, per region)"]
+    E --> E1c["Qualimap bamqc<br/>(genomic coverage, GC bias)"]
+    E --> E1d["geneBody_coverage / read_GC<br/>(RSeQC, best-effort, not required)"]
     E --> E3["Kraken2<br/>(pathogen detection)"]
     E --> E4["Split BAMs<br/>(per-region extraction)"]
-    
+
     E1 --> F["Quantification"]
-    E2 --> F
+    E1b --> F
+    E1c --> F
     E3 --> F
     E4 --> F
-    
+
     F --> F1["Gene-Level Counts<br/>(STAR ReadsPerGene)"]
     F --> F2["Transcript-Level Counts<br/>(RSeQC FPKM_count)"]
-    
+
     F1 --> G["Normalization & Aggregation"]
     F2 --> G
-    
+
     G --> G1["Raw Counts Matrix"]
     G --> G2["RPKM Normalized"]
     G --> G3["TPM Normalized"]
     G --> G4["Strandedness Summary"]
-    
+
     E1 --> H["Report Generation"]
-    E2 --> H
+    E1c --> H
     E3 --> H
     G1 --> H
-    
+
     H --> I["MultiQC Report<br/>(integrated QC dashboard)"]
-    
+
     G1 --> J{"S3 Push<br/>Enabled?"}
     J -->|Yes| K["S3 Deposition<br/>(optional)"]
     J -->|No| L["Pipeline Complete"]
@@ -136,17 +140,27 @@ graph TD
 
 #### **4a. Qualimap (Coverage Profiling)**
 
-- Comprehensive alignment QC: coverage distribution, GC bias, insert size, mismatch rates
-- Output: `qualimap/qualimapReport.html` (interactive HTML report)
+Two separate reports, not one — `rustqc` only implements Qualimap's `rnaseq` mode, so the existing genomic `bamqc` report stays on real Qualimap unchanged, and the RNA-seq report is a new addition rather than a replacement.
 
-#### **4b. RSeQC Metrics**
+- **Genomic (`bamqc` mode, real Qualimap):** coverage distribution, GC bias, insert size, mismatch rates. Output: `qualimap/qualimapReport.html`.
+- **RNA-seq (`rnaseq` mode, `rustqc`):** reads genomic origin, 5'→3' coverage bias, junction analysis, strand-specificity cross-check. Output: `qualimap_rnaseq/qualimapReport.html`.
 
-- `read_distribution.py` — Reads per gene feature (CDS, UTR, intron, intergenic)
-- `infer_experiment.py` — Strandedness inference from read pair orientation
-- `geneBodyCoverage.py` — Coverage uniformity across transcript body (detect 3' bias)
-- `FPKM_count.py` — Per-transcript quantification (FPKM, TPM)
-- `tin.py` — Transcript Integrity Number per transcript (RNA quality)
-- Outputs: `rseqc/{sample}.*` (various text/xls files, `junction.bb` files)
+#### **4b. `mark_duplicates` + `rustqc_rna_combined`/`rustqc_rna_region`**
+
+As of the `rustqc` 0.2.1 migration, most of what used to be separate RSeQC tool invocations are now modules of a single `rustqc rna` pass:
+
+- **`mark_duplicates`** (Picard) runs on the combined BAM first — a duplicate-marking step this pipeline didn't previously need, added specifically because `rustqc`'s dupRadar module requires duplicate-marked (not removed) alignments to report anything meaningful. The marked-up BAM is a temporary intermediate, not a pipeline output.
+- **`rustqc_rna_combined`** then runs once on that marked-up combined BAM, producing (all under `rseqc/`, `dupradar/`, `preseq/`, `featurecounts/`, `qualimap_rnaseq/`):
+  - `strandedness.txt` — strandedness inference (RSeQC `infer_experiment.py`-format-identical output)
+  - `read_distribution.txt` — reads per gene feature (CDS, UTR, intron, intergenic)
+  - `{sample}.Aligned.sortedByCoord.out.summary.txt`/`.tin.xls` — Transcript Integrity Number, now at **full read depth** (see the TIN note under Bottlenecks below — no BAM downsampling happens anymore)
+  - `dupradar/{sample}_dupMatrix.txt` (+ MultiQC-custom-content/plot files) — duplication rate vs. expression (new capability)
+  - `preseq/{sample}.lc_extrap.txt` — library complexity estimate (new capability)
+  - `featurecounts/{sample}.featureCounts.tsv` (+ biotype breakdown) — QC reference only, **not** used for quantification (STAR `ReadsPerGene` remains the actual counting method)
+  - `qualimap_rnaseq/qualimapReport.html` — the RNA-seq Qualimap report described above
+- **`rustqc_rna_region`** runs once per `{regionname}` split BAM (host/per-virus), replacing the old per-region `junction_annotation.py` step, producing `rseqc/{sample}.{regionname}.junction.bed` (→ `junction.bb` in Stage 6, unchanged).
+- **Strandedness resolution:** when `use_infer_strandedness: true` (default), `rustqc` needs a `--stranded` value *before* it can run its counting-sensitive modules (featureCounts/dupRadar/Qualimap-rnaseq) — but that value is normally determined *from* this same pass's own `infer_experiment` output. HAROLD resolves this by running the combined pass **twice**: a `rustqc_rna_combined_probe` pass first (throwaway `--stranded`, only its `infer_experiment` output is kept) to determine the real strand, then `rustqc_rna_combined` again with the now-correct value for everything else. When `use_infer_strandedness: false`, the manifest's `strandedness` column is already known up front, so only one pass runs.
+- **Still separately on RSeQC** (`rustqc` 0.2.1 doesn't implement these two tools): `geneBody_coverage.py` (`rseqc/{sample}.geneBodyCoverage.txt`) and `read_GC.py` (`rseqc/{sample}.{regionname}.GC.xls`, per-region). `geneBody_coverage` in particular is **best-effort, not a required pipeline output** — it reliably fails to complete for some samples in production, so it no longer blocks `rule all`/`multiqc`/S3-transfer; the Qualimap RNA-seq report above provides a working 5'→3' coverage-bias signal regardless.
 
 #### **4c. Kraken2 (Pathogen Detection)**
 
@@ -230,7 +244,7 @@ graph TD
 
 1. Generate BigWig coverage tracks from split BAM files (one per genomic region)
 2. Normalize coverage to RPM (reads per million) per region
-3. Create BigBed junction tracks from RSeQC output
+3. Create BigBed junction tracks from `rustqc`'s `junction_annotation` output
 
 **Outputs per sample:**
 
@@ -248,7 +262,7 @@ graph TD
 
 **What happens:**
 
-1. Aggregate QC metrics from Cutadapt, STAR, Qualimap, RSeQC, FastQValidator, Kraken2
+1. Aggregate QC metrics from Cutadapt, STAR, both Qualimap reports (genomic + RNA-seq), `rustqc` (RSeQC-equivalent modules, dupRadar, preseq, featureCounts), FastQValidator, Kraken2
 2. Generate interactive HTML dashboard with:
    - Per-sample summary tables (QC stats, mapping rates, strandedness)
    - Cross-sample comparison plots (coverage distribution, adapter content, strandedness consistency)
@@ -287,8 +301,11 @@ Raw FASTQ
 Trimmed FASTQ (Cutadapt)
    ↓
 Aligned BAM (STAR, 2-pass)
-   ├─ → Qualimap (QC)
-   ├─ → RSeQC (strandedness, TIN, distribution)
+   ├─ → Qualimap bamqc (genomic QC)
+   ├─ → mark_duplicates → rustqc_rna_combined (strandedness, TIN, distribution,
+   │                       dupRadar, preseq, featureCounts, Qualimap rnaseq)
+   ├─ → rustqc_rna_region (junction_annotation, per split region)
+   ├─ → geneBody_coverage / read_GC (RSeQC, best-effort, not required)
    ├─ → Kraken2 (contamination check)
    └─ → BAM Split (per-region extraction)
    ↓
@@ -323,8 +340,11 @@ Aligned BAM (STAR, 2-pass)
 | Reference creation | 10–30 min | Once per workdir; parallelization limited (index build single-threaded) |
 | Cutadapt | 30 min – 2 h | Scales with read count (100M reads ≈ 1 h) |
 | STAR alignment | 2–8 h | Scales with read count and reference size; multi-threaded (8 cores default) |
-| Qualimap | 30 min – 2 h | Scales with BAM size and coverage |
-| RSeQC (all modules) | 1–4 h | TIN calculation slowest; BAMs above `rseqc_tin_downsample_reads` (default 50M reads, i.e. ~25M pairs) are downsampled first to bound runtime; set runtime to 36 h on Rivanna |
+| Qualimap bamqc | 30 min – 2 h | Scales with BAM size and coverage |
+| `mark_duplicates` | ~unbenchmarked at scale | Picard MarkDuplicates on the full combined BAM; no prior production timing data yet, sized generously (see Bottlenecks below) |
+| `rustqc_rna_combined`/`_probe` (strandedness, read_distribution, TIN, dupRadar, preseq, featureCounts, Qualimap rnaseq) | ~45 min – 2 h per pass | Benchmarked at ~45 min total on a real 689M-read combined BAM (full hg38 GTF); runs **twice** (probe + final) when `use_infer_strandedness: true`, once otherwise — see Stage 4b. TIN's own marginal cost is only ~12 min of that, now that it runs at full depth instead of RSeQC's downsampled workaround. |
+| `rustqc_rna_region` (junction_annotation, per region) | Faster — much smaller per-region BAMs | Full GTF parse cost dominates regardless of BAM size (~5 min minimum observed) |
+| `geneBody_coverage`/`read_GC` (RSeQC, best-effort) | 1–4 h, or hangs | Not a required output — reliably fails to complete for some samples in production; doesn't block the pipeline |
 | Kraken2 | 10–30 min | Quick; fast k-mer based classification |
 | Quantification (aggregation) | 30 min – 2 h | Per-sample FPKM parallel; aggregation single-threaded |
 | Visualization (BigWigs) | 30 min – 2 h | Scales with per-region coverage; fast |
@@ -351,14 +371,16 @@ With full Slurm parallelization (default on Rivanna):
 ### **Bottlenecks**
 
 1. **STAR alignment:** Slowest single-stage. Increase `star_threads` in config (default 8; max 16 practical on Rivanna)
-2. **RSeQC TIN:** Scales poorly with high coverage. BAMs above `rseqc_tin_downsample_reads` (default 50M primary-mapped reads — counted per mate, i.e. ~25M pairs for paired-end data) are randomly downsampled first (mates kept together, no singletons) to bound TIN's runtime. Increase `rseqc_tin_runtime` in Rivanna profile if still needed (default 36 h; usually sufficient)
+2. **`geneBody_coverage`/`read_GC` (RSeQC):** These two tools aren't reimplemented by `rustqc` 0.2.1 and stay on RSeQC directly. `geneBody_coverage.py` in particular can hang/time out on large BAMs and reliably fails to complete for some samples in production — it's intentionally **not a required output** for this reason (see Stage 4b), so a slow/failing run of just this tool no longer blocks the rest of the pipeline. TIN no longer has this problem: it moved to `rustqc`'s TIN module, which runs at full read depth in ~12 minutes of marginal cost (vs. RSeQC's `tin.py`, which needed the now-removed downsampling workaround and still took 7.5–13 hours per sample on downsampled input)
 3. **Reference creation:** If re-building reference (e.g., new virus added), index build is single-threaded; allocate extra wall-clock time
 
 ### **Memory Requirements**
 
 - **STAR:** 30–50 GB (scales with reference size; larger for multi-virus references)
-- **Qualimap:** 10–20 GB (scales with BAM size and coverage)
-- **RSeQC:** 4–8 GB per module
+- **Qualimap bamqc:** 10–20 GB (scales with BAM size and coverage)
+- **`mark_duplicates`, `rustqc_rna_combined`/`_probe`:** 120 GB configured (no real-scale memory data yet at time of writing; sized generously and set to double per retry attempt rather than fail identically on every attempt — see `config/rivanna/config.yaml`)
+- **`rustqc_rna_region`:** 40 GB (per-region BAMs are much smaller than the combined BAM)
+- **`geneBody_coverage`/`read_GC` (RSeQC):** 4–8 GB per module
 - **Kraken2:** 8–16 GB (depends on database size)
 
 Rivanna job profiles pre-allocate resources; overrides possible via config.

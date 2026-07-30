@@ -12,12 +12,12 @@ HAROLD accepts a small set of clearly defined inputs that ensure each run is rep
 
 | Old Key | New Key | Behavior |
 |---|---|---|
-| `infer_strandedness` | `use_infer_strandedness` | Controls whether to use RSeQC-inferred strandedness (`true`, default) or manifest values (`false`) for count extraction. |
+| `infer_strandedness` | `use_infer_strandedness` | Controls whether to use inferred strandedness (`true`, default) or manifest values (`false`) for count extraction. Inference itself is via `rustqc`'s `infer_experiment` module (was RSeQC's `infer_experiment.py` before the QC-tooling migration — same output format, so this doesn't change anything below). |
 
-**Important:** HAROLD **always infers and reports** strandedness via RSeQC regardless of this setting. The config key only controls which strand assignment is **used for quantification**:
+**Important:** HAROLD **always infers and reports** strandedness regardless of this setting. The config key only controls which strand assignment is **used for quantification**:
 
-- **`use_infer_strandedness: true`** (default) — Manifest `strandedness` column ignored; RSeQC inference is authoritative.
-- **`use_infer_strandedness: false`** — Manifest `strandedness` column required and used; overrides RSeQC inference.
+- **`use_infer_strandedness: true`** (default) — Manifest `strandedness` column ignored; inference is authoritative.
+- **`use_infer_strandedness: false`** — Manifest `strandedness` column required and used; overrides inference.
 
 **Migration:** If you have existing `config.yaml` files with `infer_strandedness`, rename the key. The behavior remains the same; this is purely a naming clarification.
 
@@ -34,7 +34,7 @@ The **sample manifest** (also called `samples.tsv` or `manifest.tsv`) is require
 | `batch`            | **Optional.** Sequencing batch identifier for batch-effect correction. If used, **all samples must have a batch value** (no mixing of filled and empty values).                                               |
 | `path_to_R1_fastq` | **Required.** Path to Read 1 FASTQ file (absolute or relative; must exist and be readable).                                                                                                                 |
 | `path_to_R2_fastq` | **Required (PE) / Optional (SE).** Path to Read 2 FASTQ file. Leave empty for single-end libraries.                                                                                                        |
-| `strandedness`     | **Required if `use_infer_strandedness=false`.** Library strandedness (`forward`, `reverse`, or `unstranded`). HAROLD always infers strandedness via RSeQC and reports it in output. The `use_infer_strandedness` config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.       |
+| `strandedness`     | **Required if `use_infer_strandedness=false`.** Library strandedness (`forward`, `reverse`, or `unstranded`). HAROLD always infers strandedness (via `rustqc`'s `infer_experiment` module) and reports it in output. The `use_infer_strandedness` config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.       |
 
 ### Example Sample Manifest
 
@@ -57,7 +57,7 @@ Before execution, HAROLD validates the manifest automatically to prevent misconf
 - **groupName:** Must be non-empty for all samples.
 - **Batch consistency:** If any sample has a batch value, **all samples must have one** (no mixing of filled and empty batch cells).
 - **FASTQ files:** R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).
-- **Strandedness values:** Required and validated (must be `forward`, `reverse`, or `unstranded`, case-insensitive) only when `use_infer_strandedness=false`. Values are normalized to lowercase internally (Forward → forward, REVERSE → reverse, etc.). HAROLD always infers strandedness via RSeQC regardless of this setting.
+- **Strandedness values:** Required and validated (must be `forward`, `reverse`, or `unstranded`, case-insensitive) only when `use_infer_strandedness=false`. Values are normalized to lowercase internally (Forward → forward, REVERSE → reverse, etc.). HAROLD always infers strandedness regardless of this setting.
 
 If validation fails, HAROLD reports the specific error and stops before initialization.
 
@@ -65,7 +65,7 @@ If validation fails, HAROLD reports the specific error and stops before initiali
 
 HAROLD employs a **two-step strandedness strategy**:
 
-1. **Inference (always happens):** RSeQC `infer_experiment.py` analyzes read pair orientation and reports a stranded result (forward, reverse, or unstranded based on confidence threshold). This inference is output in `results/{sample}/rseqc/{sample}.strandedness.txt` and aggregated in `results/counts/sample_strandedness.tsv`.
+1. **Inference (always happens):** `rustqc`'s `infer_experiment` module (RSeQC `infer_experiment.py`-format-identical output) analyzes read pair orientation and reports a stranded result (forward, reverse, or unstranded based on confidence threshold). This inference is output in `results/{sample}/rseqc/{sample}.strandedness.txt` and aggregated in `results/counts/sample_strandedness.tsv`. When `use_infer_strandedness: true`, this inference step runs as its own dedicated pass (`rustqc_rna_combined_probe`) before the rest of `rustqc`'s modules run, since those need the strand result as an input — see [Pipeline Architecture](pipeline.qmd) for details.
 
 2. **Selection (config-driven):** The `use_infer_strandedness` config key selects which strandedness is **used for count extraction**:
    - **true (default):** Use inferred strandedness; manifest column ignored.

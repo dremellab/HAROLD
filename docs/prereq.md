@@ -178,7 +178,7 @@ On compute nodes, the jobscript reuses the shared image directory when available
 
 ## 7. Reference bundle created inside each work directory
 
-When you run `harold -m init`, the wrapper stages a full copy of `config/` plus your `samples.tsv` under the new working directory. The first Snakemake jobs (`create_index`, `gtf_to_bed`, and friends) then build a composite reference bundle under:
+When you run `harold -m init`, the wrapper stages a full copy of `config/` plus your `samples.tsv` under the new working directory. The first Snakemake jobs (`create_index`, `gtf2genepred`/`genepred2bed12`, and friends) then build a composite reference bundle under:
 
 ```
 $WORKDIR/ref/
@@ -187,9 +187,11 @@ $WORKDIR/ref/
 ├── ref.fa.regions.host(.*)        # host-only slices for BAM splitting
 ├── ref.fa.regions.viruses(.*)     # virus-only slices
 ├── ref.gtf                        # concatenated transcript annotation
-├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake consume
-├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC
-├── ref.genes.(bed|bed12)          # BED exports for GTF → BED jobs
+├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake/rustqc consume
+├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC (transcript FPKM/TPM quantification)
+├── ref.genes.bed12                # BED12 export, used by the RSeQC tools that still run directly
+│                                   #   (geneBody_coverage.py, read_GC.py) -- rustqc's modules read
+│                                   #   ref.fixed.gtf directly instead
 └── STAR_no_GTF/                   # STAR genome index
 ```
 

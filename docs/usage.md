@@ -151,7 +151,7 @@ Every SLURM task writes a dedicated log file under `$WORKDIR/logs`, grouped by r
 logs/
 ├── rule_cutadapt/Uninf_RLIG1_R2/7130520.log
 ├── rule_star_align_two_pass/Inf_NTC_R1/7130711.log
-├── rule_rseqc_tin/Uninf_RLIG1_R2/7130807.log
+├── rule_rustqc_rna_combined/Uninf_RLIG1_R2/7130807.log
 └── ...
 ```
 
