@@ -78,11 +78,24 @@ jobs:
           destination_dir: ${{ steps.version.outputs.VERSION }}
           keep_files: true
 
-      - name: Deploy to /latest/
+      - name: Build /latest/ redirect to dev docs
+        run: |
+          mkdir -p _latest
+          cat > _latest/index.html << 'EOF'
+          <html xmlns="http://www.w3.org/1999/xhtml">
+            <head>
+              <title>Redirect to dev docs</title>
+              <meta http-equiv="refresh" content="0;URL='https://dremellab.github.io/HAROLD/dev/docs/index.html'" />
+            </head>
+            <body></body>
+          </html>
+          EOF
+
+      - name: Deploy /latest/ redirect
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_site
+          publish_dir: ./_latest
           destination_dir: latest
           keep_files: true
 
