@@ -82,7 +82,7 @@ rule cutadapt:
         cutadapt_O=config["cutadapt_O"],
         cutadapt_q=config["cutadapt_q"],
         adapters=join(RESOURCES_DIR, "adapters.fa"),
-        tmpdir=temp(f"{TEMPDIR}/{str(uuid.uuid4())}"),
+        tmpdir=lambda wildcards: join(TEMPDIR, "cutadapt", wildcards.sample, str(uuid.uuid4())),
     container: config['containers']['cutadapt']
     # threads: getthreads("cutadapt")
     # threads: 4
@@ -144,4 +144,6 @@ rule cutadapt:
                 {params.tmpdir}/${{of1bn}}
 
         fi
+
+        rm -rf {params.tmpdir}
         """
