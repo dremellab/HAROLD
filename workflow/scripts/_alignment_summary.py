@@ -186,29 +186,65 @@ def main() -> int:
         star_log = sample_dir / "STAR" / f"{sample}.Log.final.out"
         bam = sample_dir / "STAR" / f"{sample}.Aligned.sortedByCoord.out.bam"
 
-        if (
-            not cutadapt_report.exists()
-            or not fastqvalidator_report.exists()
-            or not star_log.exists()
-            or not bam.exists()
-        ):
-            continue
+        missing = [
+            str(p)
+            for p in (cutadapt_report, fastqvalidator_report, star_log, bam)
+            if not p.exists()
+        ]
+        if missing:
+            print(
+                f"WARNING: sample {sample!r} missing input(s), reporting NA for "
+                f"affected columns: {', '.join(missing)}",
+                file=sys.stderr,
+            )
 
-        cutadapt_metrics = parse_cutadapt_report(cutadapt_report)
-        raw_reads = parse_fastqvalidator_report(fastqvalidator_report)
-        star_metrics = parse_star_log(star_log)
+        if cutadapt_report.exists():
+            cutadapt_metrics = parse_cutadapt_report(cutadapt_report)
+        else:
+            cutadapt_metrics = {
+                "library_type": "NA",
+                "total_reads": "NA",
+                "trimmed_reads": "NA",
+            }
+
+        raw_reads = (
+            parse_fastqvalidator_report(fastqvalidator_report)
+            if fastqvalidator_report.exists()
+            else "NA"
+        )
+
+        if star_log.exists():
+            star_metrics = parse_star_log(star_log)
+        else:
+            star_metrics = {key: "NA" for key in STAR_METRIC_PATTERNS}
+            star_metrics["reads_mapped_to_assembly"] = "NA"
         star_metrics = scale_star_metrics_for_library_type(
             star_metrics, str(cutadapt_metrics["library_type"])
         )
-        mapped_by_contig = count_primary_alignments_by_contig(bam)
 
-        chrr_mapped = sum_contigs(mapped_by_contig, chrr_contigs)
-        host_total_mapped = sum_contigs(mapped_by_contig, host_contigs)
-        host_mapped = (
-            host_total_mapped - chrr_mapped
-            if host_total_mapped >= chrr_mapped
-            else host_total_mapped
-        )
+        if bam.exists():
+            mapped_by_contig = count_primary_alignments_by_contig(bam)
+            chrr_mapped_int = sum_contigs(mapped_by_contig, chrr_contigs)
+            host_total_mapped = sum_contigs(mapped_by_contig, host_contigs)
+            host_mapped = str(
+                host_total_mapped - chrr_mapped_int
+                if host_total_mapped >= chrr_mapped_int
+                else host_total_mapped
+            )
+            chrr_mapped = str(chrr_mapped_int)
+            virus_values = {
+                virus: str(sum_contigs(mapped_by_contig, virus_genomes[virus]))
+                for virus in virus_names
+            }
+            additive_values = {
+                additive: str(sum_contigs(mapped_by_contig, additive_genomes[additive]))
+                for additive in additive_names
+            }
+        else:
+            host_mapped = "NA"
+            chrr_mapped = "NA"
+            virus_values = {virus: "NA" for virus in virus_names}
+            additive_values = {additive: "NA" for additive in additive_names}
 
         row = {
             "sample": sample,
@@ -223,17 +259,16 @@ def main() -> int:
             ),
             "multi_mapped_reads": int_or_na(star_metrics["multi_mapped_reads"]),
             "too_many_loci_reads": int_or_na(star_metrics["too_many_loci_reads"]),
-            "host_mapped": str(host_mapped),
-            "chrR_mapped": str(chrr_mapped),
+            "host_mapped": host_mapped,
+            "chrR_mapped": chrr_mapped,
         }
-        for virus in virus_names:
-            row[f"{virus}_mapped"] = str(
-                sum_contigs(mapped_by_contig, virus_genomes[virus])
-            )
-        for additive in additive_names:
-            row[f"{additive}_mapped"] = str(
-                sum_contigs(mapped_by_contig, additive_genomes[additive])
-            )
+        row.update({f"{virus}_mapped": virus_values[virus] for virus in virus_names})
+        row.update(
+            {
+                f"{additive}_mapped": additive_values[additive]
+                for additive in additive_names
+            }
+        )
         rows.append(row)
 
     fieldnames = [
