@@ -13,7 +13,7 @@ rule star_align_two_pass:
     params:
         sample = "{sample}",
         star_index = STAR_INDEX_DIR,
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir=lambda wildcards: join(TEMPDIR, "star_align_two_pass", wildcards.sample, str(uuid.uuid4())),
         flanksize = config.get("star_flanksize", 15),
         alignTranscriptsPerReadNmax = config.get("star_alignTranscriptsPerReadNmax", 30000),
         out_prefix = join(RESULTSDIR, "{sample}", "STAR", "{sample}."),
@@ -79,7 +79,7 @@ rule sort_star:
         stats = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.stats"),
         idxstats = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.idxstats")
     params:
-        tmpdir = f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir = lambda wildcards: join(TEMPDIR, "sort_star", wildcards.sample, str(uuid.uuid4())),
     threads: _get_threads("sort_star", profile_config)
     container: config['containers']['samtools']
     shell:

@@ -40,7 +40,7 @@ rule rseqc_fpkm:
         fpkm = join(RESULTSDIR, "{sample}", "counts", "{sample}.rseqc_fpkm_tpm.tsv"),
     params:
         sample = "{sample}",
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir=lambda wildcards: join(TEMPDIR, "rseqc_fpkm", wildcards.sample, str(uuid.uuid4())),
         peorse = get_peorse,
         script1 = join(SCRIPTS_DIR, "_get_strand.py"),
         script2 = join(SCRIPTS_DIR, "_rseqc_fpkm_add_tpm.py"),

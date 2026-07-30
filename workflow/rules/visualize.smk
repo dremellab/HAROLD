@@ -8,7 +8,7 @@ rule split_bam:
         sample = "{sample}",
         outdir = join(RESULTSDIR, "{sample}", "STAR"),
         regions = REF_REGIONS_HOST_VIRUSES,
-        tmpdir = f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir = lambda wildcards: join(TEMPDIR, "split_bam", wildcards.sample, str(uuid.uuid4())),
     threads:
         _get_threads("split_bam", profile_config)
     container:

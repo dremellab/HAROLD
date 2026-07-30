@@ -76,7 +76,7 @@ rule mark_duplicates:
         bai = temp(join(TEMPDIR, "mark_duplicates", "{sample}", "{sample}.markdup.bam.bai")),
         metrics = join(RESULTSDIR, "{sample}", "STAR", "{sample}.markdup_metrics.txt"),
     params:
-        tmpdir = f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir = lambda wildcards: join(TEMPDIR, "mark_duplicates_tmp", wildcards.sample, str(uuid.uuid4())),
     container:
         config['containers']['picard'],
     threads: _get_threads("mark_duplicates", profile_config)
@@ -154,7 +154,7 @@ rule rustqc_rna_combined_probe:
     params:
         sample = "{sample}",
         peorse = get_peorse,
-        scratch = f"{TEMPDIR}/rustqc_probe_scratch/{str(uuid.uuid4())}",
+        scratch = lambda wildcards: join(TEMPDIR, "rustqc_probe_scratch", wildcards.sample, str(uuid.uuid4())),
     container:
         config['containers']['rustqc'],
     threads: _get_threads("rustqc_rna_combined_probe", profile_config)
@@ -182,6 +182,7 @@ rule rustqc_rna_combined_probe:
             --flat-output \
             --outdir {params.scratch}
         cp {params.scratch}/${{stem}}.infer_experiment.txt {output.infer_experiment}
+        rm -rf {params.scratch}
         """
 
 def _rustqc_rna_combined_input(wildcards):
@@ -232,7 +233,7 @@ rule rustqc_rna_combined:
         sample = "{sample}",
         peorse = get_peorse,
         stranded = _get_rustqc_stranded,
-        scratch = f"{TEMPDIR}/rustqc_combined_scratch/{str(uuid.uuid4())}",
+        scratch = lambda wildcards: join(TEMPDIR, "rustqc_combined_scratch", wildcards.sample, str(uuid.uuid4())),
     container:
         config['containers']['rustqc'],
     threads: _get_threads("rustqc_rna_combined", profile_config)
@@ -289,6 +290,7 @@ rule rustqc_rna_combined:
             fi
         done
         ls -larth $(dirname {output.strandedness})
+        rm -rf {params.scratch}
         """
 
 rule aggregate_tin:
@@ -390,7 +392,7 @@ rule rseqc_read_gc:
     params:
         sample = "{sample}",
         regionname = "{regionname}",
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir=lambda wildcards: join(TEMPDIR, "rseqc_read_gc", wildcards.sample, wildcards.regionname, str(uuid.uuid4())),
     container:
         config['containers']['rseqc'],
     threads: _get_threads("rseqc_read_gc", profile_config)
@@ -435,7 +437,7 @@ rule rustqc_rna_region:
         regionname = "{regionname}",
         peorse = get_peorse,
         stranded = _get_rustqc_stranded,
-        scratch = f"{TEMPDIR}/rustqc_region_scratch/{str(uuid.uuid4())}",
+        scratch = lambda wildcards: join(TEMPDIR, "rustqc_region_scratch", wildcards.sample, wildcards.regionname, str(uuid.uuid4())),
     container:
         config['containers']['rustqc'],
     threads: _get_threads("rustqc_rna_region", profile_config)
@@ -477,6 +479,7 @@ YAML
             touch "{output.junctions}"
         fi
         ls -larth "${{outdir}}"
+        rm -rf {params.scratch}
         """
 
 rule junctions_to_bigbed:
@@ -488,7 +491,7 @@ rule junctions_to_bigbed:
     params:
         sample = "{sample}",
         regionname = "{regionname}",
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir=lambda wildcards: join(TEMPDIR, "junctions_to_bigbed", wildcards.sample, wildcards.regionname, str(uuid.uuid4())),
     container:
         config['containers']['bedToBigBed'],
     threads: _get_threads("junctions_to_bigbed", profile_config)
