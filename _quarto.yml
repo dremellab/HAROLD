@@ -22,13 +22,19 @@ website:
     right:
       - text: "Docs"
         href: docs/index.md
-      # Version menu: automatically patched during release builds (docs-release.yml)
-      # For dev docs, this shows dev as current; for release docs, it shows the release version as current
-      # and links to dev. Do not manually edit the menu items below—they are auto-updated during releases.
+      # Version menu shown on the DEV docs site. docs-release.yml patches its own
+      # ephemeral copy of this file during a release build to render that one
+      # version's page (showing just "{version} (current)" + "dev") -- that patch
+      # is never committed back to any branch, so it does NOT keep this list here
+      # in sync. After every tagged release, manually add a "{version}" entry
+      # below (newest first, right after "dev (current)") so the dev docs site's
+      # dropdown links to it.
       - text: "Version: dev"
         menu:
           - text: "dev (current)"
             href: https://dremellab.github.io/HAROLD/dev/docs/index.html
+          - text: "2.0.0"
+            href: https://dremellab.github.io/HAROLD/2.0.0/docs/index.html
           - text: "1.2.1"
             href: https://dremellab.github.io/HAROLD/1.2.1/docs/index.html
       - icon: github
