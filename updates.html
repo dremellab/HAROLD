@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HAROLD Updates</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    line-height: 1.6;
+    color: #222;
+  }
+  h2 {
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.3rem;
+  }
+  h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.3rem;
+  }
+  ul {
+    margin-top: 0.3rem;
+  }
+  li {
+    margin-bottom: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<h2>Updates</h2>
+
+<h3>Added DEG + GSEA</h3>
+<ul>
+  <li>The pipeline can now run differential gene expression and gene set enrichment as a built-in step, instead of that being a separate manual process. This is the headline feature of the upcoming v2.0.0 release.</li>
+  <li>v0.5.5 of DiffEx created to correct for possibility of -Inf/Inf ranking scores resulting from very small p-values.</li>
+</ul>
+
+<h3>4SU1</h3>
+<ul>
+  <li>Added support for a new spike-in control (4SU1) so studies using it are now fully recognized by the pipeline.</li>
+  <li>The summary report will now show how many reads mapped to spike-in controls (like ERCC or 4SU1) for each sample.</li>
+</ul>
+
+<h3>Tracking and logging improvements</h3>
+<ul>
+  <li>INFO/NEXT/OK etc. prefix to each line on terminal at run-time making it easier for the user to follow what is currently happening during pipeline run.</li>
+  <li>Added clearer run tracking and logging, so it's easier to tell what stage a run is in and whether it succeeded, failed, or is still going. Added pipeline.running/.failed/.completed files in the output folder.</li>
+</ul>
+
+<h3>Other maintenance/improvements</h3>
+<ul>
+  <li>Fixed several reliability issues: runs sometimes reported the wrong status, occasionally got "stuck" (failed to release their lock), and cloud (S3) uploads could start before results were fully ready.</li>
+  <li>Fixed a memory error that was causing sample-file validation to crash on larger datasets.</li>
+  <li>Packaged and documented version 2.0.0 — release notes, a full documentation review/cleanup, and fixes to inaccuracies found during that review.</li>
+</ul>
+
+</body>
+</html>

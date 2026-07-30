@@ -20,43 +20,32 @@ pd.set_option("display.max_colwidth", None)
 min_version("5.24")
 
 def oncomplete():
-    from datetime import datetime
     import subprocess
     import shutil
 
-    # Get timestamp
-    now = datetime.now().isoformat(timespec="seconds").replace(":", "-")
-    log_copy = f"snakemake.{now}.log"
-    # jobby_output = f"{log_copy}.jobby.tsv"
-
     try:
-        # Step 1: Copy the log file
-        shutil.copyfile("snakemake.log", log_copy)
-        print(f"📁 Copied snakemake.log to {log_copy}")
-
-        # Step 2: Run jobby on the copied log
-        jobby_bin = shutil.which("jobby")
-        if not jobby_bin:
-            raise FileNotFoundError("jobby not found in PATH")
-
         log_dir = Path(".snakemake/log")
         latest = max(log_dir.glob("*.snakemake.log"), key=lambda p: p.stat().st_mtime)
         print(f"Using log file: {latest}")
-        jobby_output = f"{latest}.jobby.tsv"
-        print(f"Running jobby command: {jobby_bin} {latest} --tsv > {jobby_output}")
+        jobbyplus_bin = shutil.which("jobbyplus")
+        if not jobbyplus_bin:
+            raise FileNotFoundError("jobbyplus not found in PATH")
+
+        jobby_output = f"{latest}.jobbyplus"
+        print(f"Running jobbyplus command: {jobbyplus_bin} {latest} > {jobby_output}")
         with open(jobby_output, "w") as f:
-            result = subprocess.run(
-                [jobby_bin, latest, "--tsv"],
+            subprocess.run(
+                [jobbyplus_bin, str(latest)],
                 stdout=f,
-                stderr=subprocess.PIPE,  # still capture errors
+                stderr=subprocess.PIPE,
                 text=True,
                 check=True
             )
 
-        print(f"✅ jobby output saved to {jobby_output}")
+        print(f"✅ jobbyplus output saved to {jobby_output}")
 
     except subprocess.CalledProcessError as e:
-        print("❌ jobby command failed!")
+        print("❌ jobbyplus command failed!")
         print(f"Return code: {e.returncode}")
         print("stderr:", e.stderr.strip())
 
@@ -65,65 +54,95 @@ def oncomplete():
 
 include: "rules/init.smk"
 
-rule all:
-    input:
+# Every non-S3 terminal output of the pipeline. Shared between `rule all` (so
+# Snakemake knows what to build) and `s3_transfer_if_enabled` (so the S3 push
+# only starts once everything else has actually finished, instead of racing
+# ahead on a hand-picked subset of "key" outputs). Kept as a plain list (not a
+# function) since it's built from names -- SAMPLES, RESULTSDIR, CONTRASTS,
+# VARIANTS, METHODS, DIFFEX_DEG_GSEA, DIFFEX_NORMALIZED_COUNTS, HOST_VIRUSES --
+# that are already fixed by the time init.smk finishes.
+PIPELINE_TARGETS = [
         # create ref index
         join(REF_DIR, "ref.genes.genepred_w_geneid"),
         join(STAR_INDEX_DIR, "SA"),
 
         # trimmed fastq files
-        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
-        expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R1.trim.fastq.gz")                            ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "trim", "{sample}.R2.trim.fastq.gz")                            ,sample=SAMPLES),
 
         # STAR alignment
-        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam")               ,sample=SAMPLES),
-        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.bai")           ,sample=SAMPLES),
-        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab")                        ,sample=SAMPLES),
-        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.SJ.out.tab")                                  ,sample=SAMPLES),
-        expand(
+        *expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam")               ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam.bai")           ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.ReadsPerGene.out.tab")                        ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.SJ.out.tab")                                  ,sample=SAMPLES),
+        *(expand(
             join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.toTranscriptome.out.bam")                ,sample=SAMPLES
-        ) if config.get("star_save_transcript_sam", False) else [],
+        ) if config.get("star_save_transcript_sam", False) else []),
 
         # split bams and bigwigs
-        expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam")                            ,sample=SAMPLES,regionname=HOST_VIRUSES),
-        expand(join(RESULTSDIR, "{sample}", "bigwigs", "{sample}.{regionname}.bw")                          ,sample=SAMPLES,regionname=HOST_VIRUSES),
+        *expand(join(RESULTSDIR, "{sample}", "STAR", "{sample}.{regionname}.bam")                            ,sample=SAMPLES,regionname=HOST_VIRUSES),
+        *expand(join(RESULTSDIR, "{sample}", "bigwigs", "{sample}.{regionname}.bw")                          ,sample=SAMPLES,regionname=HOST_VIRUSES),
 
         # counts matrix
         join(RESULTSDIR,"counts","counts_matrix.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.rpkm.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.tpm.tsv"),
+        join(RESULTSDIR, "alignmentqc", "alignment_summary.tsv"),
 
         # transcript quantification with rseqc
-        expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.rseqc_fpkm_tpm.tsv")                        ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.rseqc_fpkm_tpm.tsv")                        ,sample=SAMPLES),
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.rpkm.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.tpm.tsv"),
 
         # diffex normalized counts
-        join(RESULTSDIR,"counts","normalized_counts","normalize.html") if DIFFEX_NORMALIZED_COUNTS == "true" else [],
+        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"), variant=list(VARIANTS.keys()))
+               if DIFFEX_NORMALIZED_COUNTS == "true" else []),
+
+        # diffex DEG + GSEA
+        *(expand(join(RESULTSDIR, "counts", "DEG", "{contrast}_{variant}", "{method}_deg", "{method}_results.tsv"),
+               contrast=CONTRASTS, variant=list(VARIANTS.keys()), method=METHODS) if DIFFEX_DEG_GSEA == "true" else []),
+        *(expand(join(RESULTSDIR, "counts", "GSEA", "{contrast}_{variant}", "{method}", "gsea.html"),
+               contrast=CONTRASTS, variant=list(VARIANTS.keys()), method=METHODS) if DIFFEX_DEG_GSEA == "true" else []),
 
         # qc
         # qualimap
-        expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                              ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "qualimap", "qualimapReport.html")                              ,sample=SAMPLES),
         # rseqc read_distribution
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.read_distribution.txt")                      ,sample=SAMPLES),
         # rseqc infer_experiment
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
-        # genebody_coverage
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.geneBodyCoverage.txt")                       ,sample=SAMPLES),  # times out with 8 hours as well .. commenting out for now
+        *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt")                           ,sample=SAMPLES),
+        # genebody_coverage: rseqc_geneBody_coverage is NOT a required terminal target -- it fails to
+        # complete for most samples in production (RSeQC's tool hangs/times out; see dremellab/HAROLD#56).
+        # The rule stays in the codebase and is still runnable standalone; qualimap_rnaseq's coverage
+        # profile output (below) is the practical interim gene-body-coverage-style signal instead.
         # rseqc tin
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls")          ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.summary.txt")      ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.Aligned.sortedByCoord.out.tin.xls")          ,sample=SAMPLES),
         join(RESULTSDIR, "counts", "aggregate_tin.tsv"),
+        # rustqc: dupRadar, preseq, featureCounts (QC artifacts only -- not used for quantification),
+        # and rustqc's rnaseq-mode Qualimap (new, alongside the existing bamqc-mode qualimap above)
+        *expand(join(RESULTSDIR, "{sample}", "dupradar", "{sample}_dupMatrix.txt")                           ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "preseq", "{sample}.lc_extrap.txt")                             ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "featurecounts", "{sample}.featureCounts.tsv")                  ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "qualimap_rnaseq", "qualimapReport.html")                       ,sample=SAMPLES),
         # rseqc read GC
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.GC.xls"),                       sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else [],
+        *(expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.GC.xls"),                       sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else []),
         # rseqc junction bb
-        expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.junction.bb"),                  sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else [],
+        *(expand(join(RESULTSDIR, "{sample}", "rseqc", "{sample}.{regionname}.junction.bb"),                  sample=SAMPLES, regionname=HOST_VIRUSES) if HOST_VIRUSES != [] else []),
 
         # kraken2
-        expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
+        *expand(join(RESULTSDIR, "{sample}", "kraken2", "{sample}.kraken2.report.txt")                       ,sample=SAMPLES),
         # multiqc
         join(RESULTSDIR, "multiqc_report.html"),
+]
+
+rule all:
+    input:
+        *PIPELINE_TARGETS,
+
+        # S3 transfer (optional - only if push_to_s3=true AND s3_sample_set_name is set)
+        ".s3_transfer.done" if (config.get("push_to_s3", False) and config.get("s3_sample_set_name", "")) else [],
 
 include: "rules/create_index.smk"
 
@@ -135,7 +154,11 @@ include: "rules/visualize.smk"
 
 include: "rules/quantify.smk"
 
+include: "rules/deg_gsea.smk"
+
 include: "rules/qc.smk"
+
+include: "rules/s3_transfer.smk"
 
 onsuccess:
     oncomplete()

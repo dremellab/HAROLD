@@ -8,6 +8,7 @@ rule split_bam:
         sample = "{sample}",
         outdir = join(RESULTSDIR, "{sample}", "STAR"),
         regions = REF_REGIONS_HOST_VIRUSES,
+        tmpdir = lambda wildcards: join(TEMPDIR, "split_bam", wildcards.sample, str(uuid.uuid4())),
     threads:
         _get_threads("split_bam", profile_config)
     container:
@@ -15,15 +16,24 @@ rule split_bam:
     shell:
         r"""
         set -exo pipefail
+        mkdir -p {params.tmpdir}
         while read regionname regions; do
             outbam={params.outdir}/{params.sample}.${{regionname}}.bam
+            tmpbam={params.tmpdir}/{params.sample}.${{regionname}}.bam
 
-            samtools view -@ {threads} -b {input.bam} ${{regions}} > ${{outbam}}
-            samtools index -@ {threads} ${{outbam}}
-            samtools flagstat -@ {threads} ${{outbam}} > ${{outbam}}.flagstat
-            samtools stats -@ {threads} ${{outbam}} > ${{outbam}}.stats
-            samtools idxstats -@ {threads} ${{outbam}} > ${{outbam}}.idxstats
+            samtools view -@ {threads} -b {input.bam} ${{regions}} > ${{tmpbam}}
+            samtools index -@ {threads} ${{tmpbam}}
+            samtools flagstat -@ {threads} ${{tmpbam}} > ${{tmpbam}}.flagstat
+            samtools stats -@ {threads} ${{tmpbam}} > ${{tmpbam}}.stats
+            samtools idxstats -@ {threads} ${{tmpbam}} > ${{tmpbam}}.idxstats
+
+            mv -f ${{tmpbam}} ${{outbam}}
+            mv -f ${{tmpbam}}.bai ${{outbam}}.bai
+            mv -f ${{tmpbam}}.flagstat ${{outbam}}.flagstat
+            mv -f ${{tmpbam}}.stats ${{outbam}}.stats
+            mv -f ${{tmpbam}}.idxstats ${{outbam}}.idxstats
         done < {params.regions}
+        rm -rf {params.tmpdir}
         """
 
 
@@ -46,11 +56,16 @@ rule bam_to_bigwig:
         r"""
         set -exo pipefail
         mkdir -p $(dirname {output.bw})
-        bamCoverage \
-            --bam {input.bam} \
-            --outFileName {output.bw} \
-            --outFileFormat bigwig \
-            --binSize {params.binSize} \
-            --normalizeUsing {params.normalize} \
-            --numberOfProcessors {threads}
+        mapped_reads=$(python -c 'import pysam, sys; bam = pysam.AlignmentFile(sys.argv[1], "rb"); print(sum(stat.mapped for stat in bam.get_index_statistics()))' {input.bam})
+        if [ "$mapped_reads" -eq 0 ]; then
+            touch {output.bw}
+        else
+            bamCoverage \
+                --bam {input.bam} \
+                --outFileName {output.bw} \
+                --outFileFormat bigwig \
+                --binSize {params.binSize} \
+                --normalizeUsing {params.normalize} \
+                --numberOfProcessors {threads}
+        fi
         """

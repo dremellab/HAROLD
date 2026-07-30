@@ -75,6 +75,7 @@ HOSTS:
 ADDITIVES:
   * ERCC          [External RNA Control Consortium sequences]
   * BAC16Insert   [insert from rKSHV.219-derived BAC clone of the full-length KSHV genome]
+  * 4SU1          [synthetic spike-in control for 4-thiouridine (4sU) metabolic-labeling RNA-seq]
 
 VIRUSES:
   * NC_007605.1   [Human gammaherpesvirus 4 (Epstein-Barr virus)]
@@ -109,7 +110,7 @@ Required Arguments:
 
 Optional Arguments:
 --host|-g       : supply host genome (hg38 or mm39) (--runmode=init only)
---additives|-a  : supply comma-separated list of additives (ERCC or BAC16Insert) (--runmode=init only)
+--additives|-a  : supply comma-separated list of additives (ERCC, BAC16Insert, or 4SU1) (--runmode=init only)
 --viruses|-v    : supply comma-separated list of viruses (--runmode=init only)
 --manifest|-s   : absolute path to samples.tsv (--runmode=init only)
 --help|-h       : print this help
@@ -177,7 +178,7 @@ On compute nodes, the jobscript reuses the shared image directory when available
 
 ## 7. Reference bundle created inside each work directory
 
-When you run `harold -m init`, the wrapper stages a full copy of `config/` plus your `samples.tsv` under the new working directory. The first Snakemake jobs (`create_index`, `gtf_to_bed`, and friends) then build a composite reference bundle under:
+When you run `harold -m init`, the wrapper stages a full copy of `config/` plus your `samples.tsv` under the new working directory. The first Snakemake jobs (`create_index`, `gtf2genepred`/`genepred2bed12`, and friends) then build a composite reference bundle under:
 
 ```
 $WORKDIR/ref/
@@ -186,9 +187,11 @@ $WORKDIR/ref/
 ├── ref.fa.regions.host(.*)        # host-only slices for BAM splitting
 ├── ref.fa.regions.viruses(.*)     # virus-only slices
 ├── ref.gtf                        # concatenated transcript annotation
-├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake consume
-├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC
-├── ref.genes.(bed|bed12)          # BED exports for GTF → BED jobs
+├── ref.fixed.gtf                  # cleaned-up GTF that STAR/Snakemake/rustqc consume
+├── ref.genes.genepred(_w_geneid)  # formats used by RSeQC (transcript FPKM/TPM quantification)
+├── ref.genes.bed12                # BED12 export, used by the RSeQC tools that still run directly
+│                                   #   (geneBody_coverage.py, read_GC.py) -- rustqc's modules read
+│                                   #   ref.fixed.gtf directly instead
 └── STAR_no_GTF/                   # STAR genome index
 ```
 
@@ -222,3 +225,27 @@ Key things to know:
 - The final “Job stats” table is Snakemake’s count of how many times each rule would execute. This lets you gauge how much work is queued before launching a real run.
 
 Because `--dry-run` never touches data, you can use it freely after editing `config.yaml` or `samples.tsv` to confirm HAROLD recognizes the changes. Once you are satisfied with the dry-run summary, re-run `harold -m run` (or `runlocal`) from the same work directory to start the actual workflow.
+
+---
+
+## 9. Other Runmodes: `unlock`, `reconfig`, `reset`, `printbinds`
+
+Beyond `init`/`dryrun`/`run`/`runlocal`, `harold`'s `--runmode` accepts a few maintenance modes. Each still requires `-w=WORKDIR`.
+
+- **`unlock`** — If a previous `run`/`runlocal` was interrupted uncleanly (node failure, `scancel`, a dropped VPN connection, Ctrl-C), Snakemake's lock on the working directory can be left in place, and the next `dryrun`/`run` will fail with a locking error. `harold -w=WORKDIR -m=unlock` clears it. Only run this if you're sure no other HAROLD process is still actively using that WORKDIR — the lock exists specifically to prevent two concurrent Snakemake instances from writing to the same directory at once.
+
+- **`reconfig`** — ⚠️ **Regenerates `config.yaml` from the pipeline's pristine template, completely overwriting the current file.** This discards *any* manual edits you've made since `init` — DEG/GSEA settings, S3 settings, custom GTF paths, threshold tweaks, everything. Per the tool's own internal comment, this mode exists for pipeline development (e.g. picking up newly-added config keys after a HAROLD update), not routine use. If you need a new config key in an existing WORKDIR without losing your customizations, copy that one key in by hand instead of running `reconfig`.
+
+- **`reset`** — **Deletes the entire WORKDIR** (`rm -rf`) and re-initializes it from scratch. Irreversible — all results, logs, and config edits in that directory are gone for good. Only use this for a broken WORKDIR you're willing to lose entirely, not as a way to "start fresh" on a run whose partial results you might still want.
+
+- **`printbinds`** — Prints the Apptainer/Singularity bind-mount paths HAROLD would use for the given WORKDIR/manifest, without running anything. Useful when a container-based rule fails with a "file not found" error despite the file clearly existing on the host filesystem — that usually means the file lives outside every bound path, and this command shows you exactly which paths are (and aren't) bound.
+
+---
+
+## 10. Cluster Profiles (`config/rivanna`, `config/local`, `config/unknown`)
+
+Every `init`'d WORKDIR gets a copy of `config/`, which contains a Snakemake profile subdirectory per execution context — SLURM resource defaults, container bind paths, executor type, and per-rule overrides. You don't choose one directly; `harold` picks it for you:
+
+- **`rivanna`** — Used automatically for `run` when `harold` detects it's executing on Rivanna. Fully tuned for the cluster: SLURM partitions, per-rule memory/thread overrides, and the shared Apptainer image directory paths described in [section 6](#shared-apptainer-images-and-cache-layout).
+- **`local`** — Used automatically by `runlocal`/`local` runmode: executes Snakemake directly on the current node (no SLURM submission), regardless of which cluster you're on.
+- **`unknown`** — The fallback `run` profile used when `harold` doesn't recognize the current cluster (i.e., anywhere that isn't Rivanna). It's a generic starting-point SLURM profile with Rivanna-specific settings (bind paths, partition names) commented out — this is what the `harold --help` banner means by "edit the files in `config/unknown/` & `config.yaml` for compatibility with your computing environment." As noted at the top of this page, **HAROLD is tested and supported exclusively on Rivanna** — running on another cluster via `unknown` is unsupported and will need manual tuning of that profile.

@@ -1,49 +1,8 @@
 
-localrules: gtf_to_bed
-rule gtf_to_bed:
-    input:
-        gtf = join(REF_DIR, "ref.fixed.gtf"),
-    output:
-        bed = join(REF_DIR, "ref.genes.bed"),
-    params:
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
-    container:
-        config['containers']['gffread']
-    shell:
-        r"""
-        set -exo pipefail
-        mkdir -p {params.tmpdir}
-        outdir=$(dirname {output.bed})
-        gffread {input.gtf} -T -o {params.tmpdir}/temp.gtf
-        awk '$3 == "exon" {{
-            gsub(/[";]/, "", $10);
-            print $1"\t"($4-1)"\t"$5"\t"$10"\t0\t"$7
-        }}' {params.tmpdir}/temp.gtf > {output.bed}
-        """
-
-rule infer_strandedness:
-    input:
-        bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
-        bed = join(REF_DIR, "ref.genes.bed"),
-    output:
-        strandedness = join(RESULTSDIR, "{sample}", "rseqc", "{sample}.strandedness.txt"),
-    params:
-        sample = "{sample}",
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
-    container:
-        config['containers']['rseqc']
-    threads: _get_threads("rseqc_infer_strandedness", profile_config)
-    shell:
-        r"""
-        set -exo pipefail
-        outdir=$(dirname {output.strandedness})
-        mkdir -p $outdir
-        mkdir -p {params.tmpdir}
-        infer_experiment.py \
-            -i {input.bam} \
-            -r {input.bed} \
-            > {output.strandedness}
-        """
+# infer_strandedness (RSeQC infer_experiment.py) and its gtf_to_bed input were replaced by
+# rustqc_rna_combined (workflow/rules/qc.smk), which produces the same
+# {sample}.strandedness.txt at the same path. gtf_to_bed's plain-BED output (ref.genes.bed) had
+# no other consumer, so it was removed alongside infer_strandedness rather than left orphaned.
 
 localrules: aggregate_stranded_counts
 rule aggregate_stranded_counts:
@@ -58,7 +17,7 @@ rule aggregate_stranded_counts:
         strand = join(RESULTSDIR,"counts","sample_strandedness.tsv")
     params:
         regions = REF_REGIONS,
-        infer_strandedness = INFER_STRANDEDNESS,
+        use_infer_strandedness = USE_INFER_STRANDEDNESS,
         infer_strandedness_fraction = INFER_FRACTION_THRESHOLD,
         manifest_file = MANIFEST_FILE,
         strandinfo_column = STRANDEDNESS_COLUMN,
@@ -68,7 +27,7 @@ rule aggregate_stranded_counts:
         os.makedirs(os.path.dirname(output.counts), exist_ok=True)
         counts_list = ",".join(input.counts_files)
         strandedness_list = ",".join(input.strandedness_files)
-        strand_arg = "--infer_strandedness" if params.infer_strandedness == "true" else "--no-infer_strandedness"
+        strand_arg = "--infer_strandedness" if params.use_infer_strandedness == "true" else "--no-infer_strandedness"
         shell(f"python {params.script1} --counts {counts_list} --strandinfo {strandedness_list} --output_counts {output.counts} --output_strand {output.strand} --gtf {input.gtf} --regions {params.regions} {strand_arg} --manifest_file {params.manifest_file} --strandinfo_column {params.strandinfo_column} --infer_strandedness_fraction {params.infer_strandedness_fraction}")
         shell(f"python {params.script2} --input {output.counts} --samples {params.manifest_file} --rpkm_output {output.counts_rpkm} --tpm_output {output.counts_tpm}")
 
@@ -81,13 +40,24 @@ rule rseqc_fpkm:
         fpkm = join(RESULTSDIR, "{sample}", "counts", "{sample}.rseqc_fpkm_tpm.tsv"),
     params:
         sample = "{sample}",
-        tmpdir=f"{TEMPDIR}/{str(uuid.uuid4())}",
+        tmpdir=lambda wildcards: join(TEMPDIR, "rseqc_fpkm", wildcards.sample, str(uuid.uuid4())),
         peorse = get_peorse,
         script1 = join(SCRIPTS_DIR, "_get_strand.py"),
         script2 = join(SCRIPTS_DIR, "_rseqc_fpkm_add_tpm.py"),
     container:
         config['containers']['rseqc']
     threads: _get_threads("rseqc_fpkm", profile_config)
+    resources:
+        # FPKM_count.py's runtime scales with transcript count (observed:
+        # ~230k+ transcripts still unfinished at the 4h default on a full
+        # hg38 annotation), so a single static cap either wastes allocation
+        # on small references or isn't enough on large ones. `attempt` is
+        # bumped by Snakemake on every restart (restart-times: 3, set in
+        # the profile config), so this scales the per-rule base runtime
+        # (set-resources.rseqc_fpkm.runtime in the profile, e.g.
+        # config/rivanna/config.yaml) up on each retry instead of failing
+        # identically on every attempt.
+        runtime=lambda wildcards, attempt: _get_runtime("rseqc_fpkm", profile_config) * attempt,
     shell:
         r"""
         set -exo pipefail
@@ -148,14 +118,16 @@ rule normalized_counts:
         counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
-        html = join(RESULTSDIR,"counts","normalized_counts","normalize.html")
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html")
+    wildcard_constraints:
+        variant = "|".join(VARIANTS.keys()) if VARIANTS else "NOVARIANT",
     params:
         manifest_file = MANIFEST_FILE,
-        user_ercc = str(config.get('diffex_normalized_counts', {}).get('use_ercc', 'false')).lower(),
-        ercc_mix = str(config.get('diffex_normalized_counts', {}).get('ercc_mix', '1')).lower(),
-        user_batch = str(config.get('diffex_normalized_counts', {}).get('use_batch', 'false')).lower(),
-        batch_column = str(config.get('diffex_normalized_counts', {}).get('batch_column', 'batch')),
-        genes_selection = str(config.get('diffex_normalized_counts', {}).get('genes_selection', 'both')).lower(),
+        user_ercc = lambda wc: VARIANTS[wc.variant][0],
+        user_batch = lambda wc: VARIANTS[wc.variant][1],
+        ercc_mix = str(config.get('diffex', {}).get('ercc_mix', '1')).lower(),
+        batch_column = str(config.get('diffex', {}).get('batch_column', 'batch')),
+        genes_selection = str(config.get('diffex', {}).get('genes_selection', 'both')).lower(),
         host = DIFFEX_HOST,
     container:
         config['containers']['diffex']
@@ -165,12 +137,12 @@ rule normalized_counts:
         set -exo pipefail
         outdir=$(dirname {output.html})
         mkdir -p $outdir
-        if [ "{params.user_ercc}" = "true" ]; then
+        if [ "{params.user_ercc}" = "True" ]; then
             ercc_arg="--use-ercc --ercc-mix {params.ercc_mix}"
         else
             ercc_arg=""
         fi
-        if [ "{params.user_batch}" = "true" ]; then
+        if [ "{params.user_batch}" = "True" ]; then
             batch_arg="--use-batch --batch-column {params.batch_column}"
         else
             batch_arg=""

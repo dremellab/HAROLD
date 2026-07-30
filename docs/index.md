@@ -37,11 +37,17 @@ HAROLD automates the process from raw FASTQ files to normalized count matrices a
 
 - **HAROLD includes seamless HPC integration.** The pipeline can be run on clusters like Rivanna through a single wrapper script that supports initialization, dry-run validation, and SLURM-based execution for efficient job scheduling.
 
-- **HAROLD produces a comprehensive MultiQC report.** This report aggregates extensive quality-control metrics, incorporating results from FastQC, FastQ Screen, RSeQC tools such as tin.py, and other QC modules that evaluate read quality, mapping bias, coverage uniformity, and gene body integrity. The MultiQC report provides an interactive dashboard where users can assess sample-level performance and experiment-wide consistency.
+- **HAROLD produces a comprehensive MultiQC report.** This report aggregates extensive quality-control metrics, incorporating results from FastQC, FastQ Screen, `rustqc` (strandedness, read distribution, Transcript Integrity Number, dupRadar, preseq, featureCounts), Qualimap, and other QC modules that evaluate read quality, mapping bias, coverage uniformity, duplication, and library complexity. The MultiQC report provides an interactive dashboard where users can assess sample-level performance and experiment-wide consistency.
 
 - **HAROLD is designed for direct downstream compatibility.** The pipeline produces raw count matrices and an input sample manifest that are ready for import into **DiffEx** or other RNA-seq analysis frameworks.
 
-- **HAROLD can autodetect strandedness.** Users can specify strandedness directly in the sample manifest if it is known, or let HAROLD infer it automatically using RSeQC utilities, ensuring accurate quantification across diverse library preparation protocols.
+- **HAROLD can autodetect strandedness.** Users can specify strandedness directly in the sample manifest if it is known, or let HAROLD infer it automatically (via `rustqc`), ensuring accurate quantification across diverse library preparation protocols.
+
+- **HAROLD supports optional S3 cloud deposition.** Outputs can be automatically transferred to Amazon S3 buckets for cloud storage, collaboration, and downstream analysis without local disk overhead. Configurable storage classes optimize costs (GLACIER for BAMs, GLACIER_IR for metadata/reports).
+
+- **HAROLD can run DEG and GSEA directly.** Given a `contrasts.tsv` manifest, HAROLD runs differential expression (limma, DESeq2, edgeR) and gene set enrichment analysis per contrast via **DiffEx**, with tri-state ERCC/batch variants and interactive reports — no separate manual DiffEx invocation required.
+
+- **HAROLD tracks and reports its own run state.** Every run writes `pipeline.{running,completed,failed,canceled}` markers and a `pipeline.status.json` sidecar to the working directory, with live progress updates during execution (SLURM `run` or `runlocal` alike) and a final step tally on completion, so status can be checked without parsing logs.
 
 ---
 

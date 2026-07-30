@@ -1,1 +1,0 @@
-# 📥 HAROLD Workflow diagram

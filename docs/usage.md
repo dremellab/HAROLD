@@ -21,7 +21,7 @@ The initialization step prepares the working directory and configuration for the
 
 - `--workdir` or `-w`: The absolute or relative path to the directory where HAROLD will create output files.
 - `--host` or `-g`: The host genome to use (`hg38` for human or `mm39` for mouse).
-- `--additives` or `-a`: Additive control sequences such as `ERCC` or `BAC16Insert`. Multiple values can be supplied as a comma-separated list.
+- `--additives` or `-a`: Additive control sequences such as `ERCC`, `BAC16Insert`, or `4SU1`. Multiple values can be supplied as a comma-separated list.
 - `--viruses` or `-v`: One or more virus accessions (for example, `NC_009333.1` for KSHV or `NC_045512.2` for SARS-CoV-2). Multiple accessions can also be supplied as a comma-separated list.
 - `--manifest` or `-s`: The path to the sample manifest file, usually a tab-separated file listing sample names and FASTQ file paths.
 
@@ -69,6 +69,69 @@ The workflow will now begin executing on Rivanna’s compute nodes. Each rule (s
 
 When the pipeline finishes, the working directory will contain organized subfolders for `counts`, `alignment`, `logs`, and `reports`. The main outputs include raw count matrices, sample manifest copies, BAM/BAI alignment files, bigWig coverage tracks, and the MultiQC report summarizing quality control results.
 
+### Tracking run state
+
+Every `runlocal`/`run` invocation writes a state marker and JSON status sidecar to `WORKDIR` so you can check pipeline status without digging through logs:
+
+- **State marker** — exactly one of `pipeline.running`, `pipeline.completed`, `pipeline.failed`, or `pipeline.canceled` exists in `WORKDIR` at any time, replaced as the run progresses. While a run is active (`run` on SLURM or `runlocal`), `pipeline.running` is periodically rewritten with a live progress summary (steps complete, percent done, steps remaining) parsed from Snakemake's own step-completion output, so `cat $WORKDIR/pipeline.running` gives an at-a-glance status. On success, `pipeline.completed` carries the same summary showing the final tally (100% done, 0 remaining) rather than being left empty; on failure, `pipeline.failed` preserves whatever progress was last recorded, so you can see how far the run got before failing.
+- **`pipeline.status.json`** — a structured sidecar with `state`, `reason`, `runmode`, `slurm_job_id`, `host`, and `timestamp_utc`, updated at submission, success, failure, and on cancellation (SIGTERM/SIGINT, e.g. `scancel`).
+
+```bash
+cat $WORKDIR/pipeline.running        # live progress, while a run is active
+cat $WORKDIR/pipeline.completed      # final tally, once finished successfully
+cat $WORKDIR/pipeline.status.json    # structured status snapshot
+```
+
+`harold` command output itself is also leveled (`INFO`/`STEP`/`OK`/`WARN`/`ERROR`/`NEXT`), with `NEXT` lines suggesting the next command to run after `init`, `dryrun`, and job submission.
+
+---
+
+## Step 4 (Optional): DEG & GSEA
+
+HAROLD can run differential expression (DEG) and gene set enrichment analysis (GSEA) directly on its count matrices via DiffEx. This step is **optional** and requires a contrasts manifest.
+
+To enable it:
+1. Create a `contrasts.tsv` file (tab-delimited, `group1`/`group2` columns) listing which `groupName` pairs from your `samples.tsv` to compare. Each row is one contrast; `group1`/`group2` must match `groupName` values in your `samples.tsv` exactly.
+
+   ```text
+   group1	group2
+   Treatment	Control
+   Treatment_2h	Control_2h
+   Treatment_6h	Control_6h
+   ```
+
+2. Supply it at `init` time with `--contrasts` or `-x` (it is copied to `WORKDIR/contrasts.tsv`), or add it to an already-initialized workdir and re-run `init`:
+   ```bash
+   harold -w=/scratch/$USER/harold_test -m=init \
+     --host=hg38 \
+     --additives=ERCC,BAC16Insert \
+     --viruses=NC_009333.1,NC_045512.2 \
+     --manifest=/project/$USER/samples.tsv \
+     --contrasts=/project/$USER/contrasts.tsv
+   ```
+3. Set `diffex_deg_gsea: true` in `config.yaml`.
+
+Per contrast, HAROLD runs `diffex deg` (limma, DESeq2, and edgeR) against the counts matrix, then `diffex gsea` on each method's ranked gene list. ERCC/batch handling is controlled by the shared `diffex:` config block (`use_ercc`/`use_batch`, tri-state `false`/`true`/`both`), which also governs the aggregate `diffex_normalized_counts` step so the two never disagree on how the matrix was normalized; `both` runs a given step once per variant and keeps all of them. See [Outputs: DEG and GSEA](outputs.md#deg-and-gsea-diffex-integration) for the full output layout.
+
+If `use_ercc` is `true` or `both`, also set `ercc_mix` (`1` or `2`) in the same `diffex:` block to match whichever ERCC spike-in mix was actually added to your libraries during prep. ERCC spike-ins ship as two mixes containing the same 92 synthetic transcripts at different known relative concentrations — using the wrong mix number here doesn't cause an error, it just silently normalizes against the wrong expected concentrations, so double-check it against your wet-lab protocol rather than leaving it at the default.
+
+---
+
+## Step 5 (Optional): S3 Deposition
+
+HAROLD can automatically upload results to Amazon S3 for cloud storage and sharing. This step is **optional** and requires prior configuration.
+
+To enable S3 transfer:
+1. Ensure you have AWS credentials and access to an S3 bucket (see [S3/Globus Access Guide](https://dremellab.github.io/howtos/guides/s3-globus-access/s3_globus_access_guide.html) if needed)
+2. Update your `config.yaml`:
+   ```yaml
+   push_to_s3: true
+   s3_sample_set_name: "my_exp_batch1"  # Choose a meaningful name
+   ```
+3. Re-run the pipeline (S3 transfer will execute automatically upon successful completion of all other stages)
+
+See the [S3 Configuration Guide](s3_configuration.md) for detailed instructions on setup, cost estimation, storage classes, and troubleshooting.
+
 ---
 
 ## Monitoring SLURM jobs and locating rule-specific logs
@@ -88,7 +151,7 @@ Every SLURM task writes a dedicated log file under `$WORKDIR/logs`, grouped by r
 logs/
 ├── rule_cutadapt/Uninf_RLIG1_R2/7130520.log
 ├── rule_star_align_two_pass/Inf_NTC_R1/7130711.log
-├── rule_rseqc_tin/Uninf_RLIG1_R2/7130807.log
+├── rule_rustqc_rna_combined/Uninf_RLIG1_R2/7130807.log
 └── ...
 ```
 
