@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - **Fail fast on a single-level batch column:** when `diffex.use_batch` is `true`/`both`, HAROLD now validates at config-parse time (so `dryrun` catches it too) that `batch_column` has at least 2 distinct values — across all samples for `diffex_normalized_counts`, and among each contrast's `group1`/`group2` samples specifically for `diffex_deg_gsea`. Previously a single-level batch factor only surfaced deep inside the `diffex` container, after the DAG had already spent compute on everything upstream, as an opaque limma `contrasts can be applied only to factors with 2 or more levels` error.
 
 ### Changed
+- **Legacy config migration guidance:** older run directories using the deprecated `infer_strandedness` flag or nested DiffEx option blocks should move to `use_infer_strandedness` and the shared top-level `diffex:` block before running on the current pipeline version.
 - S3 namespace hierarchy — Updated `s3_transfer_harold.py` to include pipeline-name in S3 path hierarchy (`_HTS/HAROLD/sample_set/...`) for consistency with Chroma 2; added `s3_pipeline_name` config key (default: `HAROLD`)
 - Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default
 - Default reference path — Updated fasta_gtf reference path to `/project/dremel_lab/workflows/reference_data/fasta_gtf`
