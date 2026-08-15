@@ -98,7 +98,7 @@ rule cutadapt:
 
         tmpdir_parent=$(dirname "{params.tmpdir}")
         mkdir -p "$tmpdir_parent"
-        test -w "$tmpdir_parent" || { echo "cutadapt tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }
+        test -w "$tmpdir_parent" || {{ echo "cutadapt tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
         rm -rf "{params.tmpdir}"
         mkdir -p "{params.tmpdir}"
         trap 'rm -rf "{params.tmpdir}"' EXIT
