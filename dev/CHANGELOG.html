@@ -495,6 +495,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="changed" class="level3">
 <h3 class="anchored" data-anchor-id="changed">Changed</h3>
 <ul>
+<li><strong>Legacy config migration guidance:</strong> older run directories using the deprecated <code>infer_strandedness</code> flag or nested DiffEx option blocks should move to <code>use_infer_strandedness</code> and the shared top-level <code>diffex:</code> block before running on the current pipeline version.</li>
 <li>S3 namespace hierarchy — Updated <code>s3_transfer_harold.py</code> to include pipeline-name in S3 path hierarchy (<code>_HTS/HAROLD/sample_set/...</code>) for consistency with Chroma 2; added <code>s3_pipeline_name</code> config key (default: <code>HAROLD</code>)</li>
 <li>Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default</li>
 <li>Default reference path — Updated fasta_gtf reference path to <code>/project/dremel_lab/workflows/reference_data/fasta_gtf</code></li>
