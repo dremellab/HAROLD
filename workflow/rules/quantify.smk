@@ -67,7 +67,12 @@ rule rseqc_fpkm:
         cd "$outdir"
 
         # Temporary directory and prefix
-        mkdir -p {params.tmpdir}
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "rseqc_fpkm tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
+        mkdir -p "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
         prefix="{params.tmpdir}/{params.sample}"
 
         # Get strand rule
