@@ -46,9 +46,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-d94f0129d652a5a8036266edffbc062c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-ba3a55b1aa12643ba8f77d4963b16f08.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-d94f0129d652a5a8036266edffbc062c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-60383baa369db6667c77bdca9eedff41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1439,7 +1439,7 @@ ENSG00000000005 500 100 400</code></pre>
 <p>Count matrices are the primary output for downstream analysis. All are <strong>tab-separated text files</strong> with rows = genes/transcripts and columns = metadata + sample counts.</p>
 <section id="gene-level-counts-counts_matrix.tsv-raw-counts" class="level4">
 <h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.tsv-raw-counts">Gene-Level Counts: <code>counts_matrix.tsv</code> (Raw Counts)</h4>
-<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per gene/feature (rows are indexed with gene_id|gene_name format) <strong>Columns:</strong> Metadata columns + one column per sample</p>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per gene/feature <strong>Columns:</strong> <code>gene</code> column + metadata columns + one column per sample</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 25%">
@@ -1458,7 +1458,7 @@ ENSG00000000005 500 100 400</code></pre>
 <tbody>
 <tr class="odd">
 <td>1</td>
-<td><code>(index)</code></td>
+<td><code>gene</code></td>
 <td>String</td>
 <td><strong>Gene identifier</strong> in format <code>ENSG00000123456.11\|BRCA1</code> (gene_id|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or “NA” if unavailable).</td>
 </tr>

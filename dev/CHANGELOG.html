@@ -46,9 +46,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-d94f0129d652a5a8036266edffbc062c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-ba3a55b1aa12643ba8f77d4963b16f08.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-d94f0129d652a5a8036266edffbc062c.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-60383baa369db6667c77bdca9eedff41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -510,6 +510,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="fixed" class="level3">
 <h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
 <ul>
+<li><strong><code>counts_matrix.tsv</code> export no longer writes a hidden pandas index as a duplicate leading column:</strong> gene labels are now exported as an explicit <code>gene</code> column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.</li>
 <li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success, and no longer depend on always being invoked as <code>... &amp;&amp; exit 0</code> to do so safely</li>
 <li>Stray user-site packages — <code>harold</code> wrapper and its Slurm job script now set <code>PYTHONNOUSERSITE=1</code> to isolate from <code>~/.local</code> pip <code>--user</code> packages</li>
 <li>Scratch temp dir crowding — Per-job scratch directories now nest under <code>/scratch/$USER/harold_temp/&lt;uuid&gt;</code> instead of <code>/scratch/$USER/&lt;uuid&gt;</code></li>
