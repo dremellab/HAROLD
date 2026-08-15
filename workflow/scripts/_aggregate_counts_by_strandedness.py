@@ -251,7 +251,8 @@ def main(
         + "|"
         + lookup_dict.get(gid, {}).get("gene_name", "NA")
     )
-    final_df.to_csv(output_counts, sep="\t")
+    final_df = final_df.rename_axis("gene").reset_index()
+    final_df.to_csv(output_counts, sep="\t", index=False)
 
     # strand file with 4 columns
     strand_df = pd.DataFrame(

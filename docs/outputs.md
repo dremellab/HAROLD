@@ -465,12 +465,12 @@ Count matrices are the primary output for downstream analysis. All are **tab-sep
 #### Gene-Level Counts: `counts_matrix.tsv` (Raw Counts)
 
 **Format:** Tab-separated text file
-**Rows:** One row per gene/feature (rows are indexed with gene_id|gene_name format)
-**Columns:** Metadata columns + one column per sample
+**Rows:** One row per gene/feature
+**Columns:** `gene` column + metadata columns + one column per sample
 
 | Column Position | Column Name | Data Type | Description |
 |---|---|---|---|
-| 1 | `(index)` | String | **Gene identifier** in format `ENSG00000123456.11\|BRCA1` (gene_id\|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or "NA" if unavailable). |
+| 1 | `gene` | String | **Gene identifier** in format `ENSG00000123456.11\|BRCA1` (gene_id\|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or "NA" if unavailable). |
 | 2 | `species` | String | **Genome origin**: `hg38`, `mm39`, or viral accession ID (e.g., `NC_009333.1`). Identifies which reference genome this gene belongs to. |
 | 3 | `gene_chr` | String | **Chromosome/contig** where gene is located (e.g., `chr1`, `NC_009333.1:1-137895`). |
 | 4 | `gene_start` | Integer | **0-based gene start coordinate** in the reference genome. |

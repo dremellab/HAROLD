@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - **`diffex` container bumped `0.5.2` → `0.5.5`:** picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA `+Inf`/`-Inf` rank-clamp fix (v0.5.5, [dremellab/DiffEx#41](https://github.com/dremellab/DiffEx/pull/41)) that HAROLD's own `_sanitize_rnk.py` pre-processing step was working around. Switched to `docker://seqinfomics/diffex:0.5.5` (Docker Hub) rather than `ghcr.io/dremellab/diffex`, since no image newer than `0.5.2` has been published to GHCR ([dremellab/DiffEx#40](https://github.com/dremellab/DiffEx/issues/40)).
 
 ### Fixed
+- **`counts_matrix.tsv` export no longer writes a hidden pandas index as a duplicate leading column:** gene labels are now exported as an explicit `gene` column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.
 - `dryrun`/`touch` exit codes — Now propagate Snakemake's real exit code instead of always reporting success, and no longer depend on always being invoked as `... && exit 0` to do so safely
 - Stray user-site packages — `harold` wrapper and its Slurm job script now set `PYTHONNOUSERSITE=1` to isolate from `~/.local` pip `--user` packages
 - Scratch temp dir crowding — Per-job scratch directories now nest under `/scratch/$USER/harold_temp/<uuid>` instead of `/scratch/$USER/<uuid>`
