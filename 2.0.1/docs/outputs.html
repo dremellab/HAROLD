@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>outputs – HAROLD — RNA-seq Quantification &amp; Normalization</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-60383baa369db6667c77bdca9eedff41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-dark"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = true;
+    const darkModeDefault = authorPrefersDark;
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">HAROLD — RNA-seq Quantification &amp; Normalization</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="../docs/index.html" aria-current="page"> 
+<span class="menu-text">Docs</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version-2.0.1" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Version: 2.0.1</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version-2.0.1">    
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.0.1/docs/index.html">
+ <span class="dropdown-text">2.0.1 (current)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/dev/docs/index.html">
+ <span class="dropdown-text">dev</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.0.0/docs/index.html">
+ <span class="dropdown-text">2.0.0</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/1.2.1/docs/index.html">
+ <span class="dropdown-text">1.2.1</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/dremellab/HAROLD"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/outputs.html">📊 HAROLD Output Files</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Getting Started</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🧬 HAROLD — RNA-seq Quantification Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/prereq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">⚙️ Prerequisites for Running HAROLD on Rivanna</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/usage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🧭 Using HAROLD on Rivanna</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Pipeline</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🔄 HAROLD Pipeline Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">📥 HAROLD Input Requirements</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/outputs.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">📊 HAROLD Output Files</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Cloud &amp; Storage</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/s3_configuration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">☁️ S3 Output Deposition</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Help</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">❓ Help and Support</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#harold-output-files" id="toc-harold-output-files" class="nav-link active" data-scroll-target="#harold-output-files">📊 HAROLD Output Files</a>
+  <ul class="collapse">
+  <li><a href="#output-directory-structure" id="toc-output-directory-structure" class="nav-link" data-scroll-target="#output-directory-structure">Output Directory Structure</a></li>
+  <li><a href="#reference-files" id="toc-reference-files" class="nav-link" data-scroll-target="#reference-files">Reference Files</a></li>
+  <li><a href="#per-sample-output-files" id="toc-per-sample-output-files" class="nav-link" data-scroll-target="#per-sample-output-files">Per-Sample Output Files</a>
+  <ul class="collapse">
+  <li><a href="#trimmed-reads" id="toc-trimmed-reads" class="nav-link" data-scroll-target="#trimmed-reads">Trimmed Reads</a></li>
+  <li><a href="#alignment-files" id="toc-alignment-files" class="nav-link" data-scroll-target="#alignment-files">Alignment Files</a></li>
+  <li><a href="#normalization-and-coverage-tracks-bigwig-files" id="toc-normalization-and-coverage-tracks-bigwig-files" class="nav-link" data-scroll-target="#normalization-and-coverage-tracks-bigwig-files">Normalization and Coverage Tracks: BigWig Files</a></li>
+  <li><a href="#quality-control" id="toc-quality-control" class="nav-link" data-scroll-target="#quality-control">Quality Control</a></li>
+  <li><a href="#fastq-validation" id="toc-fastq-validation" class="nav-link" data-scroll-target="#fastq-validation">FASTQ Validation</a></li>
+  </ul></li>
+  <li><a href="#aggregate-output-files" id="toc-aggregate-output-files" class="nav-link" data-scroll-target="#aggregate-output-files">Aggregate Output Files</a>
+  <ul class="collapse">
+  <li><a href="#count-matrices" id="toc-count-matrices" class="nav-link" data-scroll-target="#count-matrices">Count Matrices</a></li>
+  <li><a href="#alignment-quality-summary-alignmentqcalignment_summary.tsv" id="toc-alignment-quality-summary-alignmentqcalignment_summary.tsv" class="nav-link" data-scroll-target="#alignment-quality-summary-alignmentqcalignment_summary.tsv">Alignment Quality Summary: <code>alignmentqc/alignment_summary.tsv</code></a></li>
+  <li><a href="#rna-quality-transcript-integrity-number-aggregate" id="toc-rna-quality-transcript-integrity-number-aggregate" class="nav-link" data-scroll-target="#rna-quality-transcript-integrity-number-aggregate">RNA Quality: Transcript Integrity Number Aggregate</a></li>
+  <li><a href="#multiqc-report" id="toc-multiqc-report" class="nav-link" data-scroll-target="#multiqc-report">MultiQC Report</a></li>
+  </ul></li>
+  <li><a href="#optional-outputs" id="toc-optional-outputs" class="nav-link" data-scroll-target="#optional-outputs">Optional Outputs</a>
+  <ul class="collapse">
+  <li><a href="#normalized-count-matrices-diffex-integration" id="toc-normalized-count-matrices-diffex-integration" class="nav-link" data-scroll-target="#normalized-count-matrices-diffex-integration">Normalized Count Matrices (DiffEx Integration)</a></li>
+  <li><a href="#deg-and-gsea-diffex-integration" id="toc-deg-and-gsea-diffex-integration" class="nav-link" data-scroll-target="#deg-and-gsea-diffex-integration">DEG and GSEA (DiffEx Integration)</a></li>
+  <li><a href="#s3-transfer-sentinel" id="toc-s3-transfer-sentinel" class="nav-link" data-scroll-target="#s3-transfer-sentinel">S3 Transfer Sentinel</a></li>
+  </ul></li>
+  <li><a href="#output-naming-conventions" id="toc-output-naming-conventions" class="nav-link" data-scroll-target="#output-naming-conventions">Output Naming Conventions</a>
+  <ul class="collapse">
+  <li><a href="#sample-names" id="toc-sample-names" class="nav-link" data-scroll-target="#sample-names">Sample Names</a></li>
+  <li><a href="#genomic-region-names" id="toc-genomic-region-names" class="nav-link" data-scroll-target="#genomic-region-names">Genomic Region Names</a></li>
+  </ul></li>
+  <li><a href="#how-to-use-these-outputs" id="toc-how-to-use-these-outputs" class="nav-link" data-scroll-target="#how-to-use-these-outputs">How to Use These Outputs</a>
+  <ul class="collapse">
+  <li><a href="#for-differential-expression-analysis" id="toc-for-differential-expression-analysis" class="nav-link" data-scroll-target="#for-differential-expression-analysis">For Differential Expression Analysis</a></li>
+  <li><a href="#for-quality-assessment" id="toc-for-quality-assessment" class="nav-link" data-scroll-target="#for-quality-assessment">For Quality Assessment</a></li>
+  <li><a href="#for-visualization" id="toc-for-visualization" class="nav-link" data-scroll-target="#for-visualization">For Visualization</a></li>
+  <li><a href="#for-downstream-integration" id="toc-for-downstream-integration" class="nav-link" data-scroll-target="#for-downstream-integration">For Downstream Integration</a></li>
+  </ul></li>
+  <li><a href="#frequently-asked-questions" id="toc-frequently-asked-questions" class="nav-link" data-scroll-target="#frequently-asked-questions">Frequently Asked Questions</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/outputs.html">📊 HAROLD Output Files</a></li></ol></nav></header>
+
+
+
+
+
+<section id="harold-output-files" class="level1">
+<h1>📊 HAROLD Output Files</h1>
+<p>HAROLD produces a comprehensive set of outputs organized into clearly structured directories within your working directory. This page describes all output types, their locations, file formats, and how to interpret them.</p>
+<hr>
+<section id="output-directory-structure" class="level2">
+<h2 class="anchored" data-anchor-id="output-directory-structure">Output Directory Structure</h2>
+<p>After a successful run, your HAROLD working directory will contain:</p>
+<pre><code>workdir/
+├── ref/                              # Reference files created during initialization
+│   ├── ref.fa                        # Combined host + additives + viral FASTA
+│   ├── ref.fa.fai                    # FASTA index
+│   ├── ref.gtf                       # Concatenated GTF annotation
+│   ├── ref.fixed.gtf                 # Cleaned GTF for Snakemake/rustqc
+│   ├── ref.genes.bed12               # Gene regions in BED12 format (RSeQC's geneBody_coverage/read_GC only)
+│   ├── ref.genes.genepred            # GenePred format annotation
+│   ├── ref.genes.genepred_w_geneid   # GenePred with gene IDs
+│   ├── STAR_no_GTF/                  # STAR genome index directory
+│   ├── ref.fa.regions                # Genome regions metadata
+│   ├── ref.fa.regions.host           # Host genome regions
+│   └── ref.fa.regions.viruses        # Viral genome regions
+│
+├── results/
+│   ├── {sample}/
+│   │   ├── trim/                     # Adapter-trimmed FASTQ files
+│   │   ├── STAR/                     # Alignment BAM files and metrics
+│   │   ├── bigwigs/                  # Normalized coverage tracks
+│   │   ├── qualimap/                 # Genomic BAM QC report (Qualimap bamqc)
+│   │   ├── qualimap_rnaseq/          # RNA-seq-specific QC report (rustqc's Qualimap rnaseq module)
+│   │   ├── rseqc/                    # RNA-seq QC metrics (strandedness/read_distribution/TIN/junction via
+│   │   │                             #   rustqc; geneBodyCoverage/GC.xls still via RSeQC directly, see below)
+│   │   ├── dupradar/                 # Duplication rate vs. expression (rustqc's dupRadar module)
+│   │   ├── preseq/                   # Library complexity estimate (rustqc's preseq module)
+│   │   ├── featurecounts/            # Gene/biotype counts (rustqc's featureCounts module -- QC
+│   │   │                             #   reference only, NOT the pipeline's quantification source)
+│   │   ├── kraken2/                  # Pathogen detection reports
+│   │   ├── counts/                   # Per-sample count matrices
+│   │   └── fastq_validation/         # FASTQ validation logs (always produced, blocks Cutadapt on failure)
+│   │
+│   ├── counts/                       # Aggregate count matrices
+│   ├── alignmentqc/                  # Alignment summary statistics
+│   ├── multiqc_report.html           # Interactive QC dashboard
+│   └── multiqc_data/                 # MultiQC data tables
+│
+├── samples.tsv                       # Copy of input sample manifest
+├── config.yaml                       # Pipeline configuration file
+├── .snakemake/                       # Snakemake metadata
+└── logs/                             # Rule-specific SLURM job logs</code></pre>
+<hr>
+</section>
+<section id="reference-files" class="level2">
+<h2 class="anchored" data-anchor-id="reference-files">Reference Files</h2>
+<p>Created during the first Snakemake run and reused across all subsequent runs in the same work directory.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ref/ref.fa</code></td>
+<td><strong>Combined reference FASTA</strong> containing host genome, additives (ERCC, BAC16Insert, 4SU1), and all selected viral sequences. Single source of truth for all alignments.</td>
+</tr>
+<tr class="even">
+<td><code>ref/ref.gtf</code></td>
+<td><strong>Concatenated GTF</strong> with annotations from host, viruses, and optional tRNA/repeats GTF files.</td>
+</tr>
+<tr class="odd">
+<td><code>ref/ref.fixed.gtf</code></td>
+<td><strong>Cleaned GTF</strong> with normalized formatting for Snakemake compatibility.</td>
+</tr>
+<tr class="even">
+<td><code>ref/ref.genes.bed12</code></td>
+<td><strong>BED12 format gene annotations</strong> derived from GTF. Used by the RSeQC tools that still run directly (<code>geneBody_coverage.py</code>, <code>read_GC.py</code>) — <code>rustqc</code>’s modules (read distribution, TIN, junction detection) read the GTF directly instead.</td>
+</tr>
+<tr class="odd">
+<td><code>ref/ref.genes.genepred</code> / <code>.genepred_w_geneid</code></td>
+<td><strong>GenePred format</strong> used by RSeQC for transcript quantification (FPKM/TPM calculation).</td>
+</tr>
+<tr class="even">
+<td><code>ref/ref.fa.regions*</code></td>
+<td><strong>Metadata files</strong> tracking which genomic regions belong to host vs.&nbsp;viruses. Used internally for splitting alignments.</td>
+</tr>
+<tr class="odd">
+<td><code>ref/STAR_no_GTF/</code></td>
+<td><strong>STAR genome index</strong> directory with all pre-built index files (SA, SAindex, chrLength.txt, etc.). Index is created once and reused for all samples.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="per-sample-output-files" class="level2">
+<h2 class="anchored" data-anchor-id="per-sample-output-files">Per-Sample Output Files</h2>
+<p>Each sample produces the following files under <code>results/{sample}/</code>:</p>
+<section id="trimmed-reads" class="level3">
+<h3 class="anchored" data-anchor-id="trimmed-reads">Trimmed Reads</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>trim/{sample}.R1.trim.fastq.gz</code></td>
+<td><strong>Read 1 FASTQ</strong> after adapter removal by Cutadapt. Quality-filtered and trimmed.</td>
+</tr>
+<tr class="even">
+<td><code>trim/{sample}.R2.trim.fastq.gz</code></td>
+<td><strong>Read 2 FASTQ</strong> (paired-end only) after trimming.</td>
+</tr>
+<tr class="odd">
+<td><code>trim/{sample}.cutadapt.report.txt</code></td>
+<td><strong>Cutadapt statistics</strong> report showing bases trimmed, reads discarded, and adapter detection rates.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="alignment-files" class="level3">
+<h3 class="anchored" data-anchor-id="alignment-files">Alignment Files</h3>
+<section id="starsample.aligned.sortedbycoord.out.bam" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.aligned.sortedbycoord.out.bam"><code>STAR/{sample}.Aligned.sortedByCoord.out.bam</code></h4>
+<p><strong>Format:</strong> BAM (binary SAM) file, coordinate-sorted <strong>Index:</strong> <code>.bai</code> file (must exist for IGV/Samtools random access)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Header (<span class="citation" data-cites="SQ">@SQ</span>)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SN (sequence name)</td>
+<td>Chromosome/contig ID from reference FASTA (e.g., chr1, NC_009333.1:1-137895).</td>
+</tr>
+<tr class="even">
+<td>LN (sequence length)</td>
+<td>Length in bp.</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Alignment Field</th>
+<th>Standard BAM Semantics</th>
+<th>HAROLD Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>QNAME</td>
+<td>Read name.</td>
+<td>As-is from FASTQ.</td>
+</tr>
+<tr class="even">
+<td>FLAG</td>
+<td>Bitwise flags (unmapped, secondary, supplementary, etc.).</td>
+<td>Secondary (256) and supplementary (2048) alignments <strong>excluded</strong> from count matrices; only primary alignments (FLAG ≤ 127) counted.</td>
+</tr>
+<tr class="odd">
+<td>RNAME</td>
+<td>Reference sequence (chromosome).</td>
+<td>Genomic contig from header.</td>
+</tr>
+<tr class="even">
+<td>POS</td>
+<td>1-based leftmost mapping position.</td>
+<td>Genomic coordinate.</td>
+</tr>
+<tr class="odd">
+<td>MAPQ</td>
+<td>Mapping quality. STAR uses: 255 = uniquely mapped, &lt; 255 = multi-mapped (not in counts).</td>
+<td>Only MAPQ=255 reads used for quantification.</td>
+</tr>
+<tr class="even">
+<td>CIGAR</td>
+<td>Alignment operations (M, I, D, N, S, H).</td>
+<td>Used by <code>rustqc</code>, RSeQC, bedtools for exon overlap.</td>
+</tr>
+<tr class="odd">
+<td>RNEXT, PNEXT</td>
+<td>Mate reference and position (paired-end only).</td>
+<td>Standard BAM.</td>
+</tr>
+<tr class="even">
+<td>TLEN</td>
+<td>Template length (inferred insert size, paired-end only).</td>
+<td>Used for strand inference validation.</td>
+</tr>
+<tr class="odd">
+<td>SEQ</td>
+<td>Read sequence.</td>
+<td>Standard BAM.</td>
+</tr>
+<tr class="even">
+<td>QUAL</td>
+<td>Base qualities (Phred-scaled).</td>
+<td>Standard BAM.</td>
+</tr>
+<tr class="odd">
+<td>Optional tags</td>
+<td>AS:i (alignment score), NM:i (edit distance), jM/jI (intron coords), etc.</td>
+<td>STAR-specific tags for advanced filtering.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Key filtering in HAROLD:</strong> Reads with MAPQ &lt; 255 OR FLAG ≥ 256 (secondary/supplementary) are silently excluded from all downstream analyses (counting, visualization, etc.). Use <code>samtools view -F 256 -F 2048</code> to count unique primary alignments.</p>
+<hr>
+</section>
+<section id="starsample.aligned.sortedbycoord.out.bam.bai" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.aligned.sortedbycoord.out.bam.bai"><code>STAR/{sample}.Aligned.sortedByCoord.out.bam.bai</code></h4>
+<p><strong>Format:</strong> BAM index (binary, BAI format) <strong>Purpose:</strong> Random-access index for fast <code>samtools view -b chr1:100-1000</code> queries in BAM file. Auto-generated by STAR. <strong>Required for:</strong> IGV, Samtools, bedtools operations on large BAM files.</p>
+<hr>
+</section>
+<section id="starsample.aligned.totranscriptome.out.bam-optional" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.aligned.totranscriptome.out.bam-optional"><code>STAR/{sample}.Aligned.toTranscriptome.out.bam</code> (Optional)</h4>
+<p><strong>Format:</strong> BAM, transcript-coordinate sorted <strong>Condition:</strong> Only created if <code>star_save_transcript_sam: true</code> in config.yaml (default: false). <strong>Contents:</strong> Same reads as coordinate-sorted BAM, but aligned to transcript coordinates (position within transcript, not genomic position). Useful for quantification tools like Kallisto/Salmon, RSEM. Not used by HAROLD.</p>
+<hr>
+</section>
+<section id="starsample.readspergene.out.tab" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.readspergene.out.tab"><code>STAR/{sample}.ReadsPerGene.out.tab</code></h4>
+<p><strong>Format:</strong> Tab-separated text file (no header) <strong>Rows:</strong> One per gene/feature from GTF + metadata rows</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>String</td>
+<td><strong>Gene ID</strong> (from GTF gene_id). First few rows are metadata: <code>N_unmapped</code>, <code>N_multimapping</code>, <code>N_noFeature</code>, <code>N_ambiguous</code>.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Integer</td>
+<td><strong>Count (unstranded)</strong>: All reads overlapping this gene (regardless of strand).</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Integer</td>
+<td><strong>Count (forward strand)</strong>: Reads on forward strand only.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Integer</td>
+<td><strong>Count (reverse strand)</strong>: Reads on reverse strand only.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<pre><code>N_unmapped  100000  NA  NA
+N_multimapping  50000   NA  NA
+ENSG00000000003 1000    400 600
+ENSG00000000005 500 100 400</code></pre>
+<p><strong>HAROLD usage:</strong> Rows starting with <code>N_</code> are discarded. Columns 3–4 are selected by strandedness (forward-strand = use column 3, reverse-strand = use column 4, unstranded = use column 2). Result is the input to count matrix aggregation.</p>
+<hr>
+</section>
+<section id="starsample.sj.out.tab" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.sj.out.tab"><code>STAR/{sample}.SJ.out.tab</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per detected splice junction (exon-exon boundary)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>String</td>
+<td>Chromosome/contig.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Integer</td>
+<td>Intron start (1-based, position of last base of upstream exon).</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Integer</td>
+<td>Intron end (1-based, position of first base of downstream exon).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>String</td>
+<td>Intron strand (<code>+</code> or <code>-</code>).</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Integer</td>
+<td>Intron motif (1=GT/AG canonical, 2=CT/AC, 3=GC/AG, 4=AT/AC, 0=non-canonical).</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>Integer</td>
+<td>Annotated in GTF? (0=no, 1=yes).</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>Integer</td>
+<td>Unique read count supporting junction (reads with MAPQ &gt; 0).</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>Integer</td>
+<td>Multi-mapped read count (MAPQ = 0).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> QC check for unannotated junctions (potential artifact, virus, or novel isoform). High count of non-canonical (motif=0) junctions suggests contamination or technical error.</p>
+<hr>
+</section>
+<section id="starsample.log.final.out" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.log.final.out"><code>STAR/{sample}.Log.final.out</code></h4>
+<p><strong>Format:</strong> Key-value text file (used by alignment_summary.py script)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Key</th>
+<th>Sample Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Number of input reads</td>
+<td>50000000</td>
+<td>Total reads after trimming (from Cutadapt).</td>
+</tr>
+<tr class="even">
+<td>Uniquely mapped reads number</td>
+<td>48000000</td>
+<td>Primary alignments (MAPQ=255).</td>
+</tr>
+<tr class="odd">
+<td>Number of reads mapped to multiple loci</td>
+<td>1200000</td>
+<td>Multi-mapped reads (excluded from counts).</td>
+</tr>
+<tr class="even">
+<td>Number of reads mapped to too many loci</td>
+<td>300000</td>
+<td>Reads mapping to &gt; 250 loci (excluded).</td>
+</tr>
+<tr class="odd">
+<td>Number of reads unmapped: too many mismatches</td>
+<td>200000</td>
+<td>Quality filter.</td>
+</tr>
+<tr class="even">
+<td>Number of reads unmapped: too short</td>
+<td>150000</td>
+<td>Min length filter.</td>
+</tr>
+<tr class="odd">
+<td>Uniquely mapped reads %</td>
+<td>96.00</td>
+<td>(uniquely_mapped / input) × 100.</td>
+</tr>
+<tr class="even">
+<td>Average mapped length</td>
+<td>150.5</td>
+<td>Mean insert size (PE) or read length (SE).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> Quickly parse mapping metrics without re-scanning BAM: <code>grep "Uniquely mapped" {sample}.Log.final.out</code>.</p>
+<hr>
+</section>
+<section id="starsample.regionname.bam-split-bams" class="level4">
+<h4 class="anchored" data-anchor-id="starsample.regionname.bam-split-bams"><code>STAR/{sample}.{regionname}.bam</code> (Split BAMs)</h4>
+<p><strong>Format:</strong> BAM, coordinate-sorted, subset of main BAM</p>
+<p><strong>Contents:</strong> Reads with <strong>primary alignment</strong> to chromosomes/contigs for this region only.</p>
+<ul>
+<li><code>{sample}.hg38.bam</code> = only reads aligning to host chr1–chrY (or chrM, etc. for selected host)</li>
+<li><code>{sample}.NC_009333.1.bam</code> = only reads aligning to KSHV genome</li>
+<li>etc. for all hosts, additives, and viruses</li>
+</ul>
+<p><strong>Creation:</strong> After primary BAM generation, reads are split by <code>samtools view</code> using reference regions from <code>ref.fa.regions.{host,viruses}</code> files.</p>
+<p><strong>Use case:</strong> Downstream tools that require single-reference BAMs (e.g., MACS2 peak calling per-virus, ataqv per-region).</p>
+</section>
+</section>
+<section id="normalization-and-coverage-tracks-bigwig-files" class="level3">
+<h3 class="anchored" data-anchor-id="normalization-and-coverage-tracks-bigwig-files">Normalization and Coverage Tracks: BigWig Files</h3>
+<section id="bigwigssample.regionname.bw" class="level4">
+<h4 class="anchored" data-anchor-id="bigwigssample.regionname.bw"><code>bigwigs/{sample}.{regionname}.bw</code></h4>
+<p><strong>Format:</strong> BigWig (binary, indexed), compressed WIG format <strong>Source:</strong> Generated from split BAM files via <code>bedtools genomecov</code> + <code>wigToBigWig</code> conversion <strong>Signal values:</strong> RPM-normalized (reads per million)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Data type</td>
+<td>Float (read depth per genomic position)</td>
+</tr>
+<tr class="even">
+<td>Normalization</td>
+<td>RPM = (read count at position / total_aligned_reads_in_region) × 1e6</td>
+</tr>
+<tr class="odd">
+<td>Coverage</td>
+<td>Positive strand shown as positive, negative strand as negative (signed strand info).</td>
+</tr>
+<tr class="even">
+<td>Resolution</td>
+<td>Per-base (1 bp precision) for regions with reads; sparse for zero-coverage regions.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example regions in filename:</strong></p>
+<ul>
+<li><code>{sample}.hg38.bw</code> = host genome coverage (non-viral reads)</li>
+<li><code>{sample}.NC_009333.1.bw</code> = KSHV-specific coverage (reads aligning only to KSHV)</li>
+<li><code>{sample}.ERCC.bw</code> = ERCC spike-in coverage (if ERCC added to reference)</li>
+</ul>
+<p><strong>Use case:</strong> Load all <code>.bw</code> files for a sample into IGV alongside the primary BAM for integrated visualization. Useful for spotting coverage biases, unimodal peaks (POI), GC-correlated coverage dropouts.</p>
+<p><strong>Interpretation:</strong> Peak height (RPM units) directly comparable within region but NOT across regions (each region normalized independently by its own total reads). For cross-region comparisons, normalize BigWigs by region-specific mapping statistics.</p>
+</section>
+</section>
+<section id="quality-control" class="level3">
+<h3 class="anchored" data-anchor-id="quality-control">Quality Control</h3>
+<section id="qualimap-genomic-bam-qc-qualimapqualimapreport.html" class="level4">
+<h4 class="anchored" data-anchor-id="qualimap-genomic-bam-qc-qualimapqualimapreport.html">Qualimap (Genomic BAM QC): <code>qualimap/qualimapReport.html</code></h4>
+<p><strong>Format:</strong> Self-contained HTML with embedded JavaScript and CSS <strong>Tool:</strong> Qualimap <code>bamqc</code> module (unchanged by the <code>rustqc</code> migration below) <strong>Contents:</strong> Interactive QC dashboard</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tab / Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Coverage Profile</strong></td>
+<td>Distribution of read depths (median, Q1/Q3 per contig). Red flag: bimodal/skewed distributions suggest coverage dropout, SVs, or amplification bias.</td>
+</tr>
+<tr class="even">
+<td><strong>GC Content Bias</strong></td>
+<td>X: GC%, Y: read count. Ideal: flat line. Red flag: V-shaped curve indicates uncorrected GC bias (Illumina-specific).</td>
+</tr>
+<tr class="odd">
+<td><strong>Mismatches</strong></td>
+<td>Error rate per read position. Ideal: ≤ 2%. Red flag: 3’ end elevation suggests quality issues in later sequencing cycles.</td>
+</tr>
+<tr class="even">
+<td><strong>Chromosome Stats</strong></td>
+<td>Per-contig mean coverage, stdev, % mapped. Use for sex-chr imbalance detection (XX vs.&nbsp;XY), mitochondrial enrichment checks.</td>
+</tr>
+<tr class="odd">
+<td><strong>Insert Size</strong> (PE)</td>
+<td>Distribution of fragment lengths (TLEN field). Mode reflects library prep protocol (typically 200–800 bp WGS, 100–400 bp low-input). Red flag: multimodal or extreme outliers → contamination/artifacts.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="qualimap-rna-seq-qc-qualimap_rnaseqqualimapreport.html" class="level4">
+<h4 class="anchored" data-anchor-id="qualimap-rna-seq-qc-qualimap_rnaseqqualimapreport.html">Qualimap (RNA-seq QC): <code>qualimap_rnaseq/qualimapReport.html</code></h4>
+<p><strong>Format:</strong> Self-contained HTML with embedded JavaScript and CSS, plus <code>rnaseq_qc_results.txt</code> (plain text) and coverage-profile TSVs/plots under <code>raw_data_qualimapReport/</code>/<code>images_qualimapReport/</code> <strong>Tool:</strong> Qualimap <code>rnaseq</code> module, reimplemented by <code>rustqc</code> — a separate, additional report from the genomic <code>bamqc</code> one above, not a replacement for it. <code>rustqc</code> only implements Qualimap’s <code>rnaseq</code> mode (there’s no <code>report.pdf</code> here, unlike the <code>bamqc</code> report). <strong>Contents:</strong> RNA-seq-specific QC — this is where gene-body 5’→3’ coverage bias lives, since HAROLD’s RSeQC-based <code>geneBody_coverage.py</code> (below) is not guaranteed to run</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Reads Genomic Origin</strong></td>
+<td>% of reads classified as exonic / intronic / intergenic / overlapping. High intronic/intergenic suggests degraded RNA or protocol issues.</td>
+</tr>
+<tr class="even">
+<td><strong>5’→3’ Coverage Bias</strong></td>
+<td>Coverage profile across 100 percentile bins of the transcript body. Flat = good; skewed toward one end suggests RNA degradation.</td>
+</tr>
+<tr class="odd">
+<td><strong>Junction Analysis</strong></td>
+<td>Known vs.&nbsp;novel splice junction counts.</td>
+</tr>
+<tr class="even">
+<td><strong>Strand Specificity (SSP)</strong></td>
+<td>Independent strand-specificity estimate from this module — cross-check against <code>rseqc/{sample}.strandedness.txt</code> below, which remains the pipeline’s actual source of truth for strand.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="per-sample-rna-seq-qc-metrics-rseqc" class="level4">
+<h4 class="anchored" data-anchor-id="per-sample-rna-seq-qc-metrics-rseqc">Per-Sample RNA-seq QC Metrics (<code>rseqc/</code>)</h4>
+<p>Everything under <code>rseqc/</code> comes from <code>rustqc</code> 0.2.1 now, <strong>except</strong> <code>geneBodyCoverage.txt</code> and <code>{regionname}.GC.xls</code>, which stay on RSeQC directly (<code>rustqc</code> doesn’t implement those two tools). Output formats/paths for the migrated tools are unchanged from RSeQC’s own — text content is byte-for-byte identical to what RSeQC produced, so anything parsing these files doesn’t need to change.</p>
+<section id="rseqcsample.read_distribution.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.read_distribution.txt"><code>rseqc/{sample}.read_distribution.txt</code></h5>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC-format-identical <code>rustqc</code> output) <strong>Contents:</strong> Read distribution across gene features</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CDS_exon</td>
+<td>Reads overlapping protein-coding exons (by any base). Count + percentage of total aligned reads.</td>
+</tr>
+<tr class="even">
+<td>5’UTR_exon</td>
+<td>Reads in 5’ untranslated region.</td>
+</tr>
+<tr class="odd">
+<td>3’UTR_exon</td>
+<td>Reads in 3’ untranslated region.</td>
+</tr>
+<tr class="even">
+<td>Intron</td>
+<td>Reads spanning intronic regions (indicates potential 3’ bias or protocol artifacts if high).</td>
+</tr>
+<tr class="odd">
+<td>Intergenic</td>
+<td>Reads in intergenic space (potential contamination or chimeric sequences if high).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Well-sequenced mRNA-seq should show majority of reads in exons (CDS + UTRs); high intronic/intergenic reads suggest issues.</p>
+<hr>
+</section>
+<section id="rseqcsample.strandedness.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.strandedness.txt"><code>rseqc/{sample}.strandedness.txt</code></h5>
+<p><strong>Format:</strong> Raw text output, RSeQC <code>infer_experiment.py</code> format (produced by <code>rustqc</code>’s <code>infer_experiment</code> module now)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Content</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Fraction of reads explained by "1++,1--,2+-,2-+": X</code></td>
+<td><strong>Forward strand fraction</strong> (paired-end). Reads pair orientation consistent with forward strand.</td>
+</tr>
+<tr class="even">
+<td><code>Fraction of reads explained by "1+-,1-+,2++,2--": Y</code></td>
+<td><strong>Reverse strand fraction</strong> (paired-end). Reads pair orientation consistent with reverse strand.</td>
+</tr>
+<tr class="odd">
+<td><code>Fraction of reads explained by other: Z</code></td>
+<td>Ambiguous/unstranded reads.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> HAROLD uses this to infer strand (&gt; 0.8 fraction = confident; otherwise unstranded). Value is <strong>the source of truth</strong> for strand inference; manifest values override only if <code>use_infer_strandedness: false</code>.</p>
+<hr>
+</section>
+<section id="rseqcsample.genebodycoverage.txt-best-effort-no-longer-a-required-output" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.genebodycoverage.txt-best-effort-no-longer-a-required-output"><code>rseqc/{sample}.geneBodyCoverage.txt</code> (Best-effort — no longer a required output)</h5>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC output — still runs <code>geneBody_coverage.py</code> directly; <code>rustqc</code> doesn’t implement this tool)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Percentile</td>
+<td>Position along normalized gene body (0–100).</td>
+</tr>
+<tr class="even">
+<td>Read Count</td>
+<td>Mean read coverage at this percentile (normalized to 1x).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Uniform coverage across all percentiles (flat line) = good quality. 5’ or 3’ skew (elevation at ends) suggests RNA degradation or protocol bias.</p>
+<p><strong>Note:</strong> This rule reliably fails to complete for some samples in production (RSeQC’s <code>geneBody_coverage.py</code> can hang/time out on large BAMs) and is <strong>no longer a required output</strong> — the pipeline won’t block on it, and it’s still runnable standalone if needed. The Qualimap RNA-seq report above (<code>qualimap_rnaseq/</code>) provides a working 5’→3’ coverage-bias signal for every sample regardless.</p>
+<hr>
+</section>
+<section id="rseqcsample.aligned.sortedbycoord.out.summary.txt" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.aligned.sortedbycoord.out.summary.txt"><code>rseqc/{sample}.Aligned.sortedByCoord.out.summary.txt</code></h5>
+<p><strong>Format:</strong> Single-line text file with semicolon-delimited metrics (produced by <code>rustqc</code>’s <code>tin</code> module now)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Total Exons</td>
+<td>Count of exonic regions evaluated.</td>
+</tr>
+<tr class="even">
+<td>Mean TIN</td>
+<td><strong>Mean Transcript Integrity Number</strong> (0–100). Single-number quality metric. &gt; 80 = excellent; 60–80 = acceptable; &lt; 60 = degraded.</td>
+</tr>
+<tr class="odd">
+<td>Median TIN</td>
+<td>Median TIN across transcripts (robust to outliers).</td>
+</tr>
+<tr class="even">
+<td>StdDev TIN</td>
+<td>Standard deviation of TIN scores.</td>
+</tr>
+<tr class="odd">
+<td>Min TIN, Max TIN</td>
+<td>Range of per-transcript TIN values.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> Quick per-sample RNA quality check from command line: <code>grep "Mean TIN" {sample}.Aligned.sortedByCoord.out.summary.txt</code></p>
+<p><strong>Note:</strong> TIN now runs at <strong>full read depth</strong> — the BAM downsampling workaround this pipeline previously needed (RSeQC’s <code>tin.py</code> scaled poorly with read depth) is gone; <code>rustqc</code>’s TIN module doesn’t need it (benchmarked at ~12 minutes of marginal cost on a 689M-read combined BAM, vs.&nbsp;7.5–13 hours per sample for RSeQC’s <code>tin.py</code> on a downsampled input). TIN values from post-migration runs will not match older, downsampled runs byte-for-byte — full depth vs.&nbsp;an ~8–12%-of-data downsample changes the input population by construction.</p>
+<hr>
+</section>
+<section id="rseqcsample.regionname.gc.xls-optional" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.regionname.gc.xls-optional"><code>rseqc/{sample}.{regionname}.GC.xls</code> (Optional)</h5>
+<p><strong>Format:</strong> Tab-separated text file (RSeQC output — still runs <code>read_GC.py</code> directly; <code>rustqc</code> doesn’t implement this tool) <strong>Rows:</strong> One row per GC% bin (0%, 10%, …, 100%)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GC%</td>
+<td>GC content bin.</td>
+</tr>
+<tr class="even">
+<td>Read Count</td>
+<td>Number of reads with this GC content.</td>
+</tr>
+<tr class="odd">
+<td>Expected</td>
+<td>Expected count under uniform distribution.</td>
+</tr>
+<tr class="even">
+<td>Ratio</td>
+<td>(Observed / Expected). Values &gt;&gt; 1 indicate GC bias (Illumina reads show GC bias at extremes).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Ratio ≈ 1.0 across all bins = no GC bias (good). Ratio &gt; 1.5 at GC extremes = strong GC bias (may need GC correction in normalization).</p>
+<hr>
+</section>
+<section id="rseqcsample.regionname.junction.bb-optional" class="level5">
+<h5 class="anchored" data-anchor-id="rseqcsample.regionname.junction.bb-optional"><code>rseqc/{sample}.{regionname}.junction.bb</code> (Optional)</h5>
+<p><strong>Format:</strong> UCSC BigBed format (binary, compressed BED) <strong>Contents:</strong> Splice junctions detected in this sample for this region, from <code>rustqc</code>’s <code>junction_annotation</code> module (<code>{sample}.{regionname}.junction.bed</code>, converted to BigBed unchanged)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>chrom</td>
+<td>Chromosome/contig.</td>
+</tr>
+<tr class="even">
+<td>chromStart</td>
+<td>Junction start (0-based).</td>
+</tr>
+<tr class="odd">
+<td>chromEnd</td>
+<td>Junction end.</td>
+</tr>
+<tr class="even">
+<td>name</td>
+<td>Junction ID.</td>
+</tr>
+<tr class="odd">
+<td>score</td>
+<td>Junction read count (used for coloring in browser; capped at 1000).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use case:</strong> Load in IGV or UCSC Genome Browser to visualize expressed junctions region-by-region (host vs.&nbsp;per-virus).</p>
+<hr>
+</section>
+</section>
+<section id="duplication-qc-dupradarsample_dupmatrix.txt" class="level4">
+<h4 class="anchored" data-anchor-id="duplication-qc-dupradarsample_dupmatrix.txt">Duplication QC: <code>dupradar/{sample}_dupMatrix.txt</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Tool:</strong> <code>rustqc</code>’s dupRadar module — requires duplicate-marked alignments (see <code>mark_duplicates</code> below); net-new QC capability, not present before this migration</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>geneLength</code>, <code>allCountsMulti</code>/<code>allCounts</code></td>
+<td>Gene length and read counts (multi-mapper-inclusive / unique only).</td>
+</tr>
+<tr class="even">
+<td><code>dupRateMulti</code>/<code>dupRate</code></td>
+<td><strong>Duplication rate at this gene’s expression level</strong> (0–1).</td>
+</tr>
+<tr class="odd">
+<td><code>RPKMulti</code>/<code>RPKM</code></td>
+<td>Expression level (reads per kb).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> Plot <code>dupRate</code> vs.&nbsp;<code>RPKM</code> (log scale) — a healthy library shows low, roughly flat duplication rate across expression levels; a steep rise at low expression indicates PCR over-amplification. Also see <code>dupradar/{sample}_dup_intercept_mqc.txt</code>/<code>{sample}_duprateExpDensCurve_mqc.txt</code> (MultiQC custom-content summaries of the same fit) and the <code>{sample}_duprateExpBoxplot.png</code>/<code>{sample}_duprateExpDens.png</code> plots.</p>
+<p><strong>Requires duplicate marking:</strong> <code>mark_duplicates</code> (Picard) runs on the combined BAM before this module — without it, dupRadar would silently report 0% duplication for every gene, which is misleading rather than merely uninformative. This marked-up BAM is a temporary intermediate, not a pipeline output.</p>
+<hr>
+</section>
+<section id="library-complexity-preseqsample.lc_extrap.txt" class="level4">
+<h4 class="anchored" data-anchor-id="library-complexity-preseqsample.lc_extrap.txt">Library Complexity: <code>preseq/{sample}.lc_extrap.txt</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Tool:</strong> <code>rustqc</code>’s preseq module — net-new QC capability, not present before this migration</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TOTAL_READS</code></td>
+<td>Sequencing depth (extrapolated beyond the observed data).</td>
+</tr>
+<tr class="even">
+<td><code>EXPECTED_DISTINCT</code></td>
+<td>Predicted number of distinct (non-duplicate) reads at that depth.</td>
+</tr>
+<tr class="odd">
+<td><code>LOWER_0.95CI</code>/<code>UPPER_0.95CI</code></td>
+<td>95% confidence interval on the prediction.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation:</strong> A curve that keeps rising roughly linearly with <code>TOTAL_READS</code> indicates the library still has complexity to give at deeper sequencing; a curve that plateaus early indicates the library is close to fully sequenced (further sequencing would mostly return duplicates).</p>
+<hr>
+</section>
+<section id="featurecounts-qc-reference-only-featurecountssample.featurecounts.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="featurecounts-qc-reference-only-featurecountssample.featurecounts.tsv">featureCounts (QC reference only): <code>featurecounts/{sample}.featureCounts.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file, plus <code>{sample}.biotype_counts.tsv</code> (biotype breakdown) and MultiQC custom-content variants (<code>{sample}.biotype_counts_mqc.tsv</code>, <code>{sample}.biotype_counts_rrna_mqc.tsv</code>) <strong>Tool:</strong> <code>rustqc</code>’s featureCounts module — computed internally as a dependency of dupRadar above regardless of whether it’s requested, so it’s exposed as a reference artifact rather than discarded</p>
+<p><strong>Important:</strong> This is <strong>not</strong> HAROLD’s quantification method — gene-level counts for differential expression still come from STAR’s own <code>--quantMode GeneCounts</code> (<code>counts_matrix.tsv</code> below). Treat this file as a QC cross-check / biotype-composition reference only.</p>
+</section>
+<section id="pathogen-detection-kraken2sample.kraken2.report.txt" class="level4">
+<h4 class="anchored" data-anchor-id="pathogen-detection-kraken2sample.kraken2.report.txt">Pathogen Detection: <code>kraken2/{sample}.kraken2.report.txt</code></h4>
+<p><strong>Format:</strong> Kraken2 standard tab-separated report (hierarchical taxonomy) <strong>Source:</strong> Classification of reads unmapped to primary reference (pass-through from alignment) <strong>Rows:</strong> Each NCBI taxon ID represented in classified reads</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Float</td>
+<td><strong>% reads in clade</strong> (sum ≈ 100 at root). Includes all subordinate taxa.</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Integer</td>
+<td><strong>Read count in clade</strong>. Direct count (not percentage).</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Integer</td>
+<td><strong>Reads assigned directly</strong> to this taxon (not inherited from parent).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>String</td>
+<td>Rank: superkingdom, phylum, class, order, family, genus, species.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Integer</td>
+<td>NCBI taxonomy ID.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>String</td>
+<td>Scientific name (indented by phylogenetic depth).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong></p>
+<pre><code>100.00  1000000 0   R   1   root
+98.50   985000  0   D   2157    Archaea
+0.50    5000    5000    S   9606    Homo sapiens</code></pre>
+<p><strong>Red flags:</strong></p>
+<ul>
+<li><strong>High unclassified reads</strong> (no taxon assigned) → novel sequences, low-complexity regions, or contaminating low-quality bases</li>
+<li><strong>Unexpected pathogens</strong> → cross-contamination (note: intended viral targets should align to primary reference)</li>
+<li><strong>Unexpectedly high host (Homo sapiens)</strong> → sample mix-up or contamination</li>
+<li><strong>Kit-specific contaminants</strong> (common lab bacteria) → reagent contamination</li>
+</ul>
+</section>
+<section id="per-sample-transcript-quantification-countssample.rseqc_fpkm_tpm.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="per-sample-transcript-quantification-countssample.rseqc_fpkm_tpm.tsv">Per-Sample Transcript Quantification: <code>counts/{sample}.rseqc_fpkm_tpm.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Source:</strong> RSeQC <code>FPKM_count.py</code> per-transcript quantification</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>String</td>
+<td><strong>Transcript ID</strong> from reference GTF (ENST accession).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Float</td>
+<td><strong>FPKM</strong> (Fragments Per Kilobase per Million mapped reads). Strand-aware fragment count divided by transcript length and library depth. Comparable across samples (unlike raw counts). May have decimal places.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Float</td>
+<td><strong>TPM</strong> (Transcripts Per Million). Sum of TPM across all transcripts in sample = 1e6. More stable than FPKM across library depth variations.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Transformations:</strong> No log transformation. Raw FPKM/TPM output from RSeQC, computed using only primary alignments (MAPQ &gt; 0) overlapping transcript exons, strand-aware.</p>
+<p><strong>Use case:</strong> Aggregated per-sample files are merged into transcript-level count matrices (<code>counts_matrix.transcript_level.tsv</code>, etc.) with FPKM/TPM values aggregated across samples.</p>
+</section>
+</section>
+<section id="fastq-validation" class="level3">
+<h3 class="anchored" data-anchor-id="fastq-validation">FASTQ Validation</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>fastq_validation/{sample}.fastq_validator.txt</code></td>
+<td><strong>FASTQ validation log</strong>, always produced for every sample before Cutadapt runs (not config-gated). Reports any formatting issues with input FASTQ files detected by FastQValidator; a failed validation blocks Cutadapt for that sample.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="aggregate-output-files" class="level2">
+<h2 class="anchored" data-anchor-id="aggregate-output-files">Aggregate Output Files</h2>
+<p>Located in <code>results/counts/</code> and <code>results/</code>:</p>
+<section id="count-matrices" class="level3">
+<h3 class="anchored" data-anchor-id="count-matrices">Count Matrices</h3>
+<p>Count matrices are the primary output for downstream analysis. All are <strong>tab-separated text files</strong> with rows = genes/transcripts and columns = metadata + sample counts.</p>
+<section id="gene-level-counts-counts_matrix.tsv-raw-counts" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.tsv-raw-counts">Gene-Level Counts: <code>counts_matrix.tsv</code> (Raw Counts)</h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per gene/feature <strong>Columns:</strong> <code>gene</code> column + metadata columns + one column per sample</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column Position</th>
+<th>Column Name</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>gene</code></td>
+<td>String</td>
+<td><strong>Gene identifier</strong> in format <code>ENSG00000123456.11\|BRCA1</code> (gene_id|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or “NA” if unavailable).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>species</code></td>
+<td>String</td>
+<td><strong>Genome origin</strong>: <code>hg38</code>, <code>mm39</code>, or viral accession ID (e.g., <code>NC_009333.1</code>). Identifies which reference genome this gene belongs to.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>gene_chr</code></td>
+<td>String</td>
+<td><strong>Chromosome/contig</strong> where gene is located (e.g., <code>chr1</code>, <code>NC_009333.1:1-137895</code>).</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>gene_start</code></td>
+<td>Integer</td>
+<td><strong>0-based gene start coordinate</strong> in the reference genome.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>gene_end</code></td>
+<td>Integer</td>
+<td><strong>0-based gene end coordinate</strong> (exclusive).</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>gene_strand</code></td>
+<td>String</td>
+<td><strong>Strand orientation</strong>: <code>+</code> (forward) or <code>-</code> (reverse).</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td><code>gene_length_kb</code></td>
+<td>Float</td>
+<td><strong>Gene length in kilobases</strong> (kb). Calculated as sum of exon lengths per gene (spliced length, not genomic span). <strong>Used for RPKM/TPM normalization.</strong> Units: kilobases, 3 decimal places.</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td><code>gene_type</code></td>
+<td>String</td>
+<td><strong>Gene biotype</strong> from GTF: <code>protein_coding</code>, <code>lncRNA</code>, <code>miRNA</code>, <code>tRNA</code>, <code>rRNA</code>, etc.</td>
+</tr>
+<tr class="odd">
+<td>9+</td>
+<td><code>{sample_name}</code></td>
+<td>Integer</td>
+<td><strong>Raw read count</strong> for this gene in this sample. Counts are the number of uniquely mapped reads (MAPQ ≥ 255) that overlap the gene’s exons. <strong>NOT log-transformed; directly from STAR ReadsPerGene.out.tab after strand selection.</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>ENSG00000000003.15|ENSG00000000003  hg38    chrX    99883667    99894976    -   11.31   protein_coding  42  58  101 73</code></pre>
+<p>Interpretation: Gene ENSG00000000003 on chrX, 11.31 kb, 42 reads in sample 1, 58 in sample 2, etc.</p>
+<p><strong>Transformations applied:</strong> None. Raw counts directly from STAR, selected by strand (inferred or from manifest), with STAR’s “N_” metadata rows (unmapped, ambiguous) removed.</p>
+<hr>
+</section>
+<section id="gene-level-counts-counts_matrix.rpkm.tsv-rpkm-normalized" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.rpkm.tsv-rpkm-normalized">Gene-Level Counts: <code>counts_matrix.rpkm.tsv</code> (RPKM Normalized)</h4>
+<p><strong>Format:</strong> Tab-separated text file (same column structure as <code>counts_matrix.tsv</code>) <strong>Normalization:</strong> RPKM = (ReadCount / GeneLength_kb) / (Total_Mapped_Millions)</p>
+<p><strong>Formula per sample:</strong></p>
+<pre><code>RPKM[gene][sample] = (Count[gene][sample] / gene_length_kb) / (sum_all_genes(Count[gene][sample]) / 1e6)</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–8</td>
+<td><em>Same as raw counts</em></td>
+<td>Metadata columns identical to <code>counts_matrix.tsv</code>.</td>
+</tr>
+<tr class="even">
+<td>9+</td>
+<td>Float</td>
+<td><strong>RPKM-normalized counts</strong>. Accounts for gene length and sequencing depth. Range: 0–10000+ (no fixed upper bound). <strong>Not recommended for statistical testing</strong>, but useful for qualitative comparisons. Can be small (&lt; 0.1) for lowly expressed genes.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong> RPKM = 5.23 means 5.23 reads per kilobase of gene per million mapped reads in that sample.</p>
+<hr>
+</section>
+<section id="gene-level-counts-counts_matrix.tpm.tsv-tpm-normalized" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-counts-counts_matrix.tpm.tsv-tpm-normalized">Gene-Level Counts: <code>counts_matrix.tpm.tsv</code> (TPM Normalized)</h4>
+<p><strong>Format:</strong> Tab-separated text file (same column structure as <code>counts_matrix.tsv</code>) <strong>Normalization:</strong> TPM = (RPKM / sum_all_genes(RPKM)) × 1e6</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–8</td>
+<td><em>Same as raw counts</em></td>
+<td>Metadata columns identical to <code>counts_matrix.tsv</code>.</td>
+</tr>
+<tr class="even">
+<td>9+</td>
+<td>Float</td>
+<td><strong>TPM-normalized counts</strong>. Transcripts Per Million. <strong>Sum of all TPM values in a sample = 1,000,000 by definition.</strong> Easier to interpret than RPKM: “per gene, out of 1 million transcripts in the cell, how many are from this gene?” Range: 0–10000+ with sum = 1M per sample. Not recommended for statistical testing.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example:</strong> TPM = 250.5 means 250.5 genes per million transcripts in that sample (roughly 1 in 4000 total transcripts).</p>
+<hr>
+</section>
+<section id="gene-level-sample-strandedness-sample_strandedness.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="gene-level-sample-strandedness-sample_strandedness.tsv">Gene-Level Sample Strandedness: <code>sample_strandedness.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file, no index column <strong>Rows:</strong> One row per sample (in order of input samples)</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>sample</code></td>
+<td>String</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>inferred_strand</code></td>
+<td>String</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>used_strand</code></td>
+<td>String</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>inference_fraction</code></td>
+<td>Float</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>sample_A    forward forward 0.95
+sample_B    unstranded  unstranded  0.52</code></pre>
+<p>Interpretation: Sample A confidently forward-stranded (95% of pairs); Sample B ambiguous (only 52% show any bias).</p>
+<hr>
+</section>
+<section id="transcript-level-counts-counts_matrix.transcript_level.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="transcript-level-counts-counts_matrix.transcript_level.tsv">Transcript-Level Counts: <code>counts_matrix.transcript_level.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file <strong>Rows:</strong> One row per unique transcript (from GTF transcript_id) <strong>Columns:</strong> Metadata + per-sample counts</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column Position</th>
+<th>Column Name</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>(index)</code></td>
+<td>String</td>
+<td><strong>Transcript identifier</strong> in format <code>ENST00000456328.2\|RP11-34P13.7</code> (transcript_id|gene_name).</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>gene_id</code></td>
+<td>String</td>
+<td>Parent gene ID for this transcript.</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>gene_name</code></td>
+<td>String</td>
+<td>Human-readable gene name.</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>chrom</code></td>
+<td>String</td>
+<td><strong>Chromosome</strong> where transcript is located.</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>tx_start</code></td>
+<td>Integer</td>
+<td><strong>0-based transcript start</strong> coordinate.</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>tx_end</code></td>
+<td>Integer</td>
+<td><strong>0-based transcript end coordinate</strong> (exclusive).</td>
+</tr>
+<tr class="odd">
+<td>7+</td>
+<td><code>{sample_name}</code></td>
+<td>Integer</td>
+<td><strong>Per-transcript read count</strong> from RSeQC FPKM_count output. Reads that overlap exons of this transcript (strand-aware). Lower values than gene-level counts due to no aggregation.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Transformations applied:</strong> Raw counts from RSeQC’s FPKM_count per-transcript output, aggregated across all samples.</p>
+<hr>
+</section>
+<section id="transcript-level-counts-normalized-counts_matrix.transcript_level.rpkm.tsv-.tpm.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="transcript-level-counts-normalized-counts_matrix.transcript_level.rpkm.tsv-.tpm.tsv">Transcript-Level Counts (Normalized): <code>counts_matrix.transcript_level.rpkm.tsv</code> &amp; <code>.tpm.tsv</code></h4>
+<p><strong>Format:</strong> Same structure as transcript-level raw counts, but with RPKM / TPM normalization applied</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–6</td>
+<td><em>Same as raw</em></td>
+<td>Metadata columns.</td>
+</tr>
+<tr class="even">
+<td>7+</td>
+<td>Float</td>
+<td><strong>RPKM or TPM normalized</strong> using same formulas as gene-level counts (normalize by transcript length).</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="alignment-quality-summary-alignmentqcalignment_summary.tsv" class="level3">
+<h3 class="anchored" data-anchor-id="alignment-quality-summary-alignmentqcalignment_summary.tsv">Alignment Quality Summary: <code>alignmentqc/alignment_summary.tsv</code></h3>
+<p><strong>Format:</strong> Tab-separated text file with header row <strong>Rows:</strong> One row per sample (in directory scan order, typically alphabetical)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sample</code></td>
+<td>String</td>
+<td><strong>Sample name</strong> from directory name.</td>
+<td>Sample directory listing</td>
+</tr>
+<tr class="even">
+<td><code>library_type</code></td>
+<td>String</td>
+<td><strong>Sequencing library type</strong>: <code>PE</code> (paired-end) or <code>SE</code> (single-end). Inferred from Cutadapt output.</td>
+<td>Cutadapt report</td>
+</tr>
+<tr class="odd">
+<td><code>total_reads</code></td>
+<td>Integer</td>
+<td><strong>Total number of reads</strong> in input FASTQ file(s) before trimming. For PE: total read PAIRS (counts as 1); for SE: read count directly.</td>
+<td>FastQValidator report</td>
+</tr>
+<tr class="even">
+<td><code>trimmed_reads</code></td>
+<td>Integer</td>
+<td><strong>Reads passing Cutadapt</strong> after quality/adapter trimming. Same definition as total_reads (pairs for PE, reads for SE). To get trimming rate: (trimmed_reads / total_reads) × 100.</td>
+<td>Cutadapt report</td>
+</tr>
+<tr class="odd">
+<td><code>reads_mapped_to_assembly</code></td>
+<td>Integer</td>
+<td><strong>Total reads mapped</strong> to the reference assembly (uniquely + multi-mapped + too_many_loci). Calculated as sum of: uniquely_mapped + multi_mapped + too_many_loci. For PE libraries, multiplied by 2 (each pair = 2 reads).</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="even">
+<td><code>uniquely_mapped_reads</code></td>
+<td>Integer</td>
+<td><strong>Uniquely mapped reads</strong> (MAPQ ≥ 255, no secondary/supplementary alignments). These are the reads used in count matrices. For PE: multiplied by 2.</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="odd">
+<td><code>multi_mapped_reads</code></td>
+<td>Integer</td>
+<td><strong>Multi-mapped reads</strong> (mapped to 2–249 loci equally). Not used in counts. For PE: multiplied by 2.</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="even">
+<td><code>too_many_loci_reads</code></td>
+<td>Integer</td>
+<td><strong>Reads mapping to too many loci</strong> (250+). Filtered out. For PE: multiplied by 2.</td>
+<td>STAR Log.final.out</td>
+</tr>
+<tr class="odd">
+<td><code>host_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to host genome</strong> (e.g., hg38, mm39). Counted from BAM file primary alignment flag.</td>
+<td>BAM analysis</td>
+</tr>
+<tr class="even">
+<td><code>chrR_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to chrR regions</strong> (repeats, rRNA, etc.) if present. Subset of host_mapped.</td>
+<td>BAM analysis</td>
+</tr>
+<tr class="odd">
+<td><code>{virus_accession}_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to each virus</strong> (one column per virus, e.g., NC_009333.1_mapped, NC_045512.2_mapped). Named by RefSeq accession ID.</td>
+<td>BAM analysis</td>
+</tr>
+<tr class="even">
+<td><code>{additive}_mapped</code></td>
+<td>Integer</td>
+<td><strong>Primary alignments to each additive/spike-in</strong> (one column per configured additive, e.g., ERCC_mapped, BAC16Insert_mapped, 4SU1_mapped). Named by additive name.</td>
+<td>BAM analysis</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>sample_A    PE  50000000    48000000    47500000    46000000    1200000 300000  45000000    5000    2500000 250000  150000</code></pre>
+<p>Interpretation: Sample A, paired-end, 50M raw pairs → 48M trimmed (96% pass) → 47.5M mapped → 46M unique (96.8% uniquely map). 45M map to host, 2.5M to virus1, 250K to virus2.</p>
+<p><strong>Mapping rate calculation:</strong> (reads_mapped_to_assembly / trimmed_reads) × 100 <strong>Unique mapping rate:</strong> (uniquely_mapped_reads / reads_mapped_to_assembly) × 100</p>
+<hr>
+</section>
+<section id="rna-quality-transcript-integrity-number-aggregate" class="level3">
+<h3 class="anchored" data-anchor-id="rna-quality-transcript-integrity-number-aggregate">RNA Quality: Transcript Integrity Number Aggregate</h3>
+<section id="per-transcript-tin-details-samplesample.aligned.sortedbycoord.out.tin.xls" class="level4">
+<h4 class="anchored" data-anchor-id="per-transcript-tin-details-samplesample.aligned.sortedbycoord.out.tin.xls">Per-Transcript TIN Details: <code>{sample}/{sample}.Aligned.sortedByCoord.out.tin.xls</code></h4>
+<p><strong>Format:</strong> Tab-separated text file with header row, RSeQC-format-identical (produced by <code>rustqc</code>’s <code>tin</code> module now, at full read depth — see the full-depth note above) <strong>Rows:</strong> One row per transcript detected in the BAM file</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>geneID</code></td>
+<td>String</td>
+<td><strong>Transcript ID</strong> from reference GTF.</td>
+</tr>
+<tr class="even">
+<td><code>chrom</code></td>
+<td>String</td>
+<td><strong>Chromosome</strong> where transcript is located.</td>
+</tr>
+<tr class="odd">
+<td><code>tx_start</code></td>
+<td>Integer</td>
+<td><strong>Transcript start</strong> coordinate (0-based).</td>
+</tr>
+<tr class="even">
+<td><code>tx_end</code></td>
+<td>Integer</td>
+<td><strong>Transcript end</strong> coordinate (exclusive).</td>
+</tr>
+<tr class="odd">
+<td><code>TIN</code></td>
+<td>Integer</td>
+<td><strong>Transcript Integrity Number</strong> (0–100 scale). Measures read coverage uniformity across transcript body. Higher = more uniform coverage = better RNA quality. Interpretation: &gt; 80 = excellent, 60–80 = acceptable, &lt; 60 = degraded/non-uniform.</td>
+</tr>
+<tr class="even">
+<td>Additional columns</td>
+<td></td>
+<td>Other metrics (median_cv, min_cv, etc.); the TIN column is the primary metric for quality assessment.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="aggregate-tin-summary-countsaggregate_tin.tsv" class="level4">
+<h4 class="anchored" data-anchor-id="aggregate-tin-summary-countsaggregate_tin.tsv">Aggregate TIN Summary: <code>counts/aggregate_tin.tsv</code></h4>
+<p><strong>Format:</strong> Tab-separated text file with header row <strong>Rows:</strong> One row per transcript (merged across all samples)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Data Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>geneID</code></td>
+<td>String</td>
+<td><strong>Transcript ID</strong> from GTF.</td>
+</tr>
+<tr class="even">
+<td><code>chrom</code></td>
+<td>String</td>
+<td><strong>Chromosome</strong> where transcript is located.</td>
+</tr>
+<tr class="odd">
+<td><code>tx_start</code></td>
+<td>Integer</td>
+<td><strong>Transcript start coordinate</strong> (0-based).</td>
+</tr>
+<tr class="even">
+<td><code>tx_end</code></td>
+<td>Integer</td>
+<td><strong>Transcript end coordinate</strong> (exclusive).</td>
+</tr>
+<tr class="odd">
+<td><code>{sample_name}</code></td>
+<td>Integer or NaN</td>
+<td><strong>TIN score for this transcript in this sample</strong> (0–100), or NaN if transcript not covered in that sample.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example row:</strong></p>
+<pre><code>ENST00000456328.2   chr1    100000  101000  85  79  82  NaN 88</code></pre>
+<p>Interpretation: Transcript ENST00000456328.2, excellent quality in samples 1,3,5 (TIN ≥ 79); not detected in sample 4.</p>
+<p><strong>Quality assessment:</strong> Calculate mean TIN per sample across all rows:</p>
+<ul>
+<li><strong>Mean TIN &gt; 80:</strong> Excellent RNA quality</li>
+<li><strong>Mean TIN 60–80:</strong> Acceptable quality</li>
+<li><strong>Mean TIN &lt; 60:</strong> Poor RNA quality; consider re-extraction</li>
+<li><strong>Many NaN values:</strong> Sample has low coverage; may not be representative</li>
+</ul>
+</section>
+</section>
+<section id="multiqc-report" class="level3">
+<h3 class="anchored" data-anchor-id="multiqc-report">MultiQC Report</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>multiqc_report.html</code></td>
+<td><strong>Interactive HTML dashboard</strong> aggregating QC metrics from FastQC, Cutadapt, STAR, <code>rustqc</code> (RSeQC-equivalent modules, dupRadar, preseq, featureCounts), the genomic and RNA-seq Qualimap reports, and Kraken2 across all samples. <strong>Start here for a high-level overview of experiment quality.</strong> Open in any web browser; includes interactive plots, tables, and cross-sample comparisons.</td>
+</tr>
+<tr class="even">
+<td><code>multiqc_data/</code></td>
+<td><strong>Data tables and configuration files</strong> backing the MultiQC report. JSON and YAML files that can be parsed programmatically if needed.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="optional-outputs" class="level2">
+<h2 class="anchored" data-anchor-id="optional-outputs">Optional Outputs</h2>
+<section id="normalized-count-matrices-diffex-integration" class="level3">
+<h3 class="anchored" data-anchor-id="normalized-count-matrices-diffex-integration">Normalized Count Matrices (DiffEx Integration)</h3>
+<p>Only generated if <code>diffex_normalized_counts: true</code> in config. <code>{variant}</code> is always <code>{wo_ercc|w_ercc}_{wo_batch|w_batch}</code> (e.g.&nbsp;<code>wo_ercc_wo_batch</code>, <code>w_ercc_w_batch</code>) — the same shared <code>diffex.use_ercc</code>/<code>diffex.use_batch</code> tri-state options that drive DEG/GSEA below also drive this step, so <code>both</code> produces every variant side by side here too.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/normalize.html</code></td>
+<td><strong>DiffEx-normalized count matrix report</strong>, across the whole sample set. HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.), per the <code>diffex</code> config block in <code>config.yaml</code>.</td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/ERCC_corrected_log2_counts.tsv</code></td>
+<td><strong>The ERCC-normalized matrix, log2 scale</strong> — all genes (host + virus + additives, including ERCC rows), with <em>only</em> the shared ERCC spike-in correction applied (RPKM → log2 → per-sample <code>(log2RPKM − intercept) / slope</code> from regressing that sample’s ERCC counts against the ERCC92 reference concentrations for the configured <code>diffex.ercc_mix</code>) and no method-specific model (voom/TMM/VST) on top. This is the precursor the <code>limma</code>/<code>edgeR</code>/<code>DESeq2</code> matrices below are each further derived from — use this one if you just want “the” ERCC-normalized matrix, analogous to <code>counts_matrix.rpkm.tsv</code>/<code>counts_matrix.tpm.tsv</code>. <strong>Only produced for <code>w_ercc_*</code> variants</strong> (<code>diffex.use_ercc: true</code>/<code>both</code>); requires DiffEx &gt;= 0.5.7 (dremellab/DiffEx#44).</td>
+</tr>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/ERCC_corrected_counts.tsv</code></td>
+<td>Linear-scale companion to the matrix above (<code>2^log2</code>, NAs preserved). <strong>Only produced for <code>w_ercc_*</code> variants</strong>; requires DiffEx &gt;= 0.5.7.</td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/limma_pseudo_rpkm_counts.tsv</code></td>
+<td><strong>Limma/voom-normalized pseudo-RPKM matrix</strong>, all genes. Built from the ERCC-corrected matrix above (for <code>w_ercc_*</code> variants) with limma’s own modeling applied on top — not the plain ERCC-corrected values themselves; see <code>ERCC_corrected_log2_counts.tsv</code> for that.</td>
+</tr>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts.tsv</code></td>
+<td>Log2 of the matrix above.</td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv</code></td>
+<td>Same as the log2 matrix above, with <code>limma::removeBatchEffect</code> applied. <strong>Only produced for <code>w_batch</code> variants</strong> (<code>diffex.use_batch: true</code>/<code>both</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/edgeR_TMM_normalized_logCPM_counts.tsv</code></td>
+<td><strong>edgeR TMM-normalized log-CPM matrix</strong>, all genes. For <code>w_ercc_*</code> variants, TMM normalization factors are computed with the ERCC-derived scaling applied first, same as the limma matrix above.</td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/DESeq2_vst_normalized_counts.tsv</code></td>
+<td><strong>DESeq2 variance-stabilizing-transformed (VST) matrix</strong>, all genes, ERCC-scaled for <code>w_ercc_*</code> variants the same way as the other three matrices.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deg-and-gsea-diffex-integration" class="level3">
+<h3 class="anchored" data-anchor-id="deg-and-gsea-diffex-integration">DEG and GSEA (DiffEx Integration)</h3>
+<p>Only generated if <code>diffex_deg_gsea: true</code> in config, and requires a <code>contrasts.tsv</code> file (tab-delimited, <code>group1</code>/<code>group2</code> columns) listing which <code>groupName</code> pairs from <code>samples.tsv</code> to compare. <code>{contrast}</code> is <code>{group1}_vs_{group2}</code>. <code>{variant}</code> is always <code>{wo_ercc|w_ercc}_{wo_batch|w_batch}</code> (e.g.&nbsp;<code>wo_ercc_wo_batch</code>, <code>w_ercc_w_batch</code>), so the directory name alone always shows whether ERCC/batch correction was applied — regardless of whether <code>use_ercc</code>/<code>use_batch</code> is set to <code>true</code>, <code>false</code>, or <code>both</code>. The tri-state <code>use_ercc</code>/<code>use_batch</code> config options (shared with the normalized-counts step above, via the <code>diffex</code> config block) run DEG once per selected state, so <code>both</code> produces every variant side by side rather than picking one.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 66%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>counts/DEG/{contrast}_{variant}/{method}_deg/{method}_results.tsv</code></td>
+<td><strong>Differential expression results</strong> for one contrast/variant, from one of <code>limma</code>, <code>DESeq2</code>, or <code>edgeR</code> (casing matches the <code>diffex deg</code> tool’s own output naming).</td>
+</tr>
+<tr class="even">
+<td><code>counts/DEG/{contrast}_{variant}/{method}_deg/{method}_gsea.rnk</code></td>
+<td><strong>Ranked gene list</strong> derived from the DEG results, used as input to the GSEA step below.</td>
+</tr>
+<tr class="odd">
+<td><code>counts/GSEA/{contrast}_{variant}/{method}/GSEA_results.xlsx</code></td>
+<td><strong>GSEA enrichment results</strong> for the corresponding <code>.rnk</code> file.</td>
+</tr>
+<tr class="even">
+<td><code>counts/GSEA/{contrast}_{variant}/{method}/gsea.html</code></td>
+<td><strong>Interactive GSEA report</strong> for the corresponding <code>.rnk</code> file.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="s3-transfer-sentinel" class="level3">
+<h3 class="anchored" data-anchor-id="s3-transfer-sentinel">S3 Transfer Sentinel</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.s3_transfer.done</code></td>
+<td><strong>Marker file</strong> (created only if <code>push_to_s3: true</code> AND <code>s3_sample_set_name</code> is non-empty in config). Indicates that all outputs have been successfully uploaded to the configured S3 bucket. Check <code>results/logs/</code> for detailed upload logs if transfer fails. See <a href="../docs/s3_configuration.html">S3 Configuration Guide</a> for setup, cost estimation, and troubleshooting.</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="output-naming-conventions" class="level2">
+<h2 class="anchored" data-anchor-id="output-naming-conventions">Output Naming Conventions</h2>
+<section id="sample-names" class="level3">
+<h3 class="anchored" data-anchor-id="sample-names">Sample Names</h3>
+<p>All per-sample files use the exact sample name from your <code>samples.tsv</code> manifest. Ensure sample names are:</p>
+<ul>
+<li><strong>Unique</strong> across the experiment</li>
+<li><strong>URL-safe</strong> (avoid spaces, special characters, or use underscores/hyphens)</li>
+<li><strong>Consistent case</strong> (e.g., all lowercase or CapitalCase)</li>
+</ul>
+</section>
+<section id="genomic-region-names" class="level3">
+<h3 class="anchored" data-anchor-id="genomic-region-names">Genomic Region Names</h3>
+<p>Files containing region-specific outputs use region identifiers:</p>
+<ul>
+<li><strong>Host:</strong> <code>hg38</code> or <code>mm39</code> (depending on your host genome)</li>
+<li><strong>Viruses:</strong> RefSeq accession IDs (e.g., <code>NC_009333.1</code> for KSHV, <code>NC_045512.2</code> for SARS-CoV-2)</li>
+<li><strong>Additives:</strong> <code>ERCC</code>, <code>BAC16Insert</code>, <code>4SU1</code> (if included)</li>
+</ul>
+<p>Example: <code>{sample}.NC_009333.1.bam</code> contains only reads mapped to KSHV.</p>
+<hr>
+</section>
+</section>
+<section id="how-to-use-these-outputs" class="level2">
+<h2 class="anchored" data-anchor-id="how-to-use-these-outputs">How to Use These Outputs</h2>
+<section id="for-differential-expression-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="for-differential-expression-analysis">For Differential Expression Analysis</h3>
+<ol type="1">
+<li><strong>Start with:</strong> <code>counts/counts_matrix.tsv</code> (raw counts)</li>
+<li><strong>Input to:</strong> DESeq2 (R/Bioconductor) or edgeR</li>
+<li><strong>Reference:</strong> <code>counts_matrix.rpkm.tsv</code> or <code>.tpm.tsv</code> for qualitative interpretation</li>
+</ol>
+</section>
+<section id="for-quality-assessment" class="level3">
+<h3 class="anchored" data-anchor-id="for-quality-assessment">For Quality Assessment</h3>
+<ol type="1">
+<li><strong>Quick overview:</strong> Open <code>multiqc_report.html</code> in a web browser</li>
+<li><strong>Sample-level detail:</strong> Check <code>results/{sample}/rseqc/{sample}.Aligned.sortedByCoord.out.summary.txt</code> for TIN scores</li>
+<li><strong>Alignment stats:</strong> Review <code>alignmentqc/alignment_summary.tsv</code> for mapping rates and trimming statistics</li>
+</ol>
+</section>
+<section id="for-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="for-visualization">For Visualization</h3>
+<ol type="1">
+<li><strong>Browser-based (UCSC, IGV):</strong> Use <code>results/{sample}/bigwigs/{sample}.*.bw</code> files</li>
+<li><strong>R/Bioconductor:</strong> Load BAM files with Rsamtools; use coverage functions with BigWig tracks</li>
+<li><strong>Custom analysis:</strong> BAM files (<code>results/{sample}/STAR/{sample}.Aligned.sortedByCoord.out.bam</code>) are standard SAM-format files compatible with any alignment analysis tool</li>
+</ol>
+</section>
+<section id="for-downstream-integration" class="level3">
+<h3 class="anchored" data-anchor-id="for-downstream-integration">For Downstream Integration</h3>
+<ol type="1">
+<li><strong>DiffEx pipeline:</strong> Supply <code>counts/counts_matrix.tsv</code> and <code>samples.tsv</code></li>
+<li><strong>SEQC-compatible:</strong> All outputs follow standard naming and location conventions</li>
+<li><strong>Custom scripts:</strong> Manifest (<code>samples.tsv</code>), counts (TSV), and configuration (<code>config.yaml</code>) are human-readable for parsing</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="frequently-asked-questions" class="level2">
+<h2 class="anchored" data-anchor-id="frequently-asked-questions">Frequently Asked Questions</h2>
+<p><strong>Q: Which count matrix should I use for differential expression?</strong> A: Use <code>counts_matrix.tsv</code> (raw counts). Pass this directly to DESeq2 or edgeR, which apply their own normalization internally. Do NOT use RPKM or TPM counts for statistical testing.</p>
+<p><strong>Q: What does TIN (Transcript Integrity Number) mean?</strong> A: TIN scores range 0–100, where higher = better RNA quality. Samples with mean TIN &gt; 80 have excellent RNA; 60–80 is acceptable; &lt; 60 suggests RNA degradation. Check <code>counts/aggregate_tin.tsv</code> for quick assessment.</p>
+<p><strong>Q: Why do some reads map to multiple regions (host + viruses)?</strong> A: Some sequences (e.g., highly conserved genes) may have homology across regions. STAR reports primary alignment; split BAM files (<code>{sample}.{region}.bam</code>) contain only reads with unique primary alignment to that region. Multi-mapped reads may appear in multiple region-specific files.</p>
+<p><strong>Q: Can I use BigWig files in IGV?</strong> A: Yes. Download all <code>.bw</code> files from <code>results/{sample}/bigwigs/</code> and load them into IGV alongside the corresponding BAM file for integrated visualization of coverage and reads.</p>
+<p><strong>Q: How do I know if strandedness was correctly inferred?</strong> A: Check <code>results/{sample}/rseqc/{sample}.strandedness.txt</code>. If one strand shows &gt; 80% bias, inference is confident. If percentages are ~50/50, the library is unstranded or sense/antisense assignments are ambiguous. Review the manifest if known strandedness differs from inferred values.</p>
+<hr>
+</section>
+<section id="troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
+<p><strong>Missing outputs:</strong></p>
+<ul>
+<li>Check logs under <code>logs/</code> for rule-specific errors. Search for the output name in the log tree: <code>find logs -name "*outputname*"</code></li>
+<li>Verify input files exist and are readable: <code>ls -la results/{sample}/STAR/</code></li>
+<li>Re-run a dry-run to identify missing dependencies: <code>harold -w &lt;workdir&gt; -m dryrun</code></li>
+</ul>
+<p><strong>Unexpected file sizes:</strong></p>
+<ul>
+<li>Large BAM files (&gt; 50 GB) are normal for high-coverage samples. Use <code>samtools stats</code> to verify integrity.</li>
+<li>Small or empty count matrices may indicate low mapping rates. Check <code>alignment_summary.tsv</code> for mapping statistics.</li>
+</ul>
+<p><strong>Quality concerns:</strong></p>
+<ul>
+<li>Low TIN scores → RNA degradation (consider re-extracting RNA)</li>
+<li>Low mapping rate → check Cutadapt report for contamination; verify reference selection</li>
+<li>Unexpected viral reads → cross-check with Kraken2 report; may indicate contamination or novel sequences</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/2\.0\.1\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

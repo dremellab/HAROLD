@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>changelog – HAROLD — RNA-seq Quantification &amp; Normalization</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-60383baa369db6667c77bdca9eedff41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-dark"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = true;
+    const darkModeDefault = authorPrefersDark;
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">HAROLD — RNA-seq Quantification &amp; Normalization</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="./docs/index.html" aria-current="page"> 
+<span class="menu-text">Docs</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version-2.0.1" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Version: 2.0.1</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version-2.0.1">    
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.0.1/docs/index.html">
+ <span class="dropdown-text">2.0.1 (current)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/dev/docs/index.html">
+ <span class="dropdown-text">dev</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.0.0/docs/index.html">
+ <span class="dropdown-text">2.0.0</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/1.2.1/docs/index.html">
+ <span class="dropdown-text">1.2.1</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/dremellab/HAROLD"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Getting Started</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🧬 HAROLD — RNA-seq Quantification Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/prereq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">⚙️ Prerequisites for Running HAROLD on Rivanna</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/usage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🧭 Using HAROLD on Rivanna</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Pipeline</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🔄 HAROLD Pipeline Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/inputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">📥 HAROLD Input Requirements</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/outputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">📊 HAROLD Output Files</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Cloud &amp; Storage</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/s3_configuration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">☁️ S3 Output Deposition</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Help</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./docs/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">❓ Help and Support</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#changelog" id="toc-changelog" class="nav-link active" data-scroll-target="#changelog">Changelog</a>
+  <ul class="collapse">
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.0.1]</a>
+  <ul class="collapse">
+  <li><a href="#added" id="toc-added" class="nav-link" data-scroll-target="#added">Added</a></li>
+  <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
+  <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
+  </ul></li>
+  <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1">[2.0.0]</a>
+  <ul class="collapse">
+  <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
+  <li><a href="#added-1" id="toc-added-1" class="nav-link" data-scroll-target="#added-1">Added</a></li>
+  <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
+  <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
+  </ul></li>
+  <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2">[1.2.1]</a>
+  <ul class="collapse">
+  <li><a href="#changed-2" id="toc-changed-2" class="nav-link" data-scroll-target="#changed-2">Changed</a></li>
+  </ul></li>
+  <li><a href="#section-3" id="toc-section-3" class="nav-link" data-scroll-target="#section-3">[1.2.0]</a>
+  <ul class="collapse">
+  <li><a href="#changed-3" id="toc-changed-3" class="nav-link" data-scroll-target="#changed-3">Changed</a></li>
+  </ul></li>
+  <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4">[1.1.0]</a>
+  <ul class="collapse">
+  <li><a href="#added-2" id="toc-added-2" class="nav-link" data-scroll-target="#added-2">Added</a></li>
+  <li><a href="#changed-4" id="toc-changed-4" class="nav-link" data-scroll-target="#changed-4">Changed</a></li>
+  <li><a href="#fixed-2" id="toc-fixed-2" class="nav-link" data-scroll-target="#fixed-2">Fixed</a></li>
+  </ul></li>
+  <li><a href="#section-5" id="toc-section-5" class="nav-link" data-scroll-target="#section-5">[1.0.0]</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+
+<section id="changelog" class="level1">
+<h1>Changelog</h1>
+<p>All notable changes to this project will be documented in this file.</p>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section">[2.0.1]</h2>
+<section id="added" class="level3">
+<h3 class="anchored" data-anchor-id="added">Added</h3>
+<ul>
+<li><strong><code>normalized_counts</code> matrix files now declared as tracked Snakemake outputs:</strong> <code>diffex normalize</code> was already writing <code>limma_pseudo_rpkm_counts.tsv</code>, <code>limma_log2normalized_pseudo_rpkm_counts.tsv</code>, <code>limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv</code> (w_batch only), <code>edgeR_TMM_normalized_logCPM_counts.tsv</code>, and <code>DESeq2_vst_normalized_counts.tsv</code> next to <code>normalize.html</code>, but only <code>normalize.html</code> was declared as a rule output — so the TSVs were untracked, undocumented, and easy to miss. The rule is now split into per-ercc/per-batch variants (Snakemake output paths can’t vary by wildcard value within one rule), and all matrix files are documented in <code>docs/outputs.md</code>.</li>
+<li><strong>ERCC-corrected precursor matrices exposed as tracked outputs (requires DiffEx &gt;= 0.5.7):</strong> New <code>ERCC_corrected_log2_counts.tsv</code>/<code>ERCC_corrected_counts.tsv</code> files in <code>counts/normalized_counts/{variant}/</code> for <code>w_ercc_*</code> variants — the ERCC spike-in correction alone, with no method-specific model on top, ahead of the limma/edgeR/DESeq2 matrices each further derived from it. Analogous to <code>counts_matrix.rpkm.tsv</code>/<code>counts_matrix.tpm.tsv</code> for anyone who wants “the” ERCC-normalized matrix without a downstream model applied (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>, <a href="https://github.com/dremellab/HAROLD/issues/62">dremellab/HAROLD#62</a>).</li>
+</ul>
+</section>
+<section id="changed" class="level3">
+<h3 class="anchored" data-anchor-id="changed">Changed</h3>
+<ul>
+<li><strong>Legacy config migration guidance:</strong> older run directories using the deprecated <code>infer_strandedness</code> flag or nested DiffEx option blocks should move to <code>use_infer_strandedness</code> and the shared top-level <code>diffex:</code> block before running on the current pipeline version.</li>
+<li><strong><code>diffex</code> container bumped <code>0.5.5</code> → <code>0.5.7</code>:</strong> required for the ERCC-corrected precursor matrices above (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>); verified against a live run.</li>
+<li><strong><code>harold</code>’s Slurm head job time allocation reduced <code>3-00:00:00</code> → <code>0-12:00:00</code>:</strong> matches the head job’s actual workload (it only submits/monitors the run, not the run itself).</li>
+</ul>
+</section>
+<section id="fixed" class="level3">
+<h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
+<ul>
+<li><strong><code>counts_matrix.tsv</code> export no longer writes a hidden pandas index as a duplicate leading column:</strong> gene labels are now exported as an explicit <code>gene</code> column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.</li>
+<li><strong>Per-job scratch/tempdir creation hardened across rules:</strong> <code>star_align_two_pass</code>, <code>sort_star</code>, <code>cutadapt</code>, <code>mark_duplicates</code>, <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rseqc_read_gc</code>, <code>rustqc_rna_region</code>, and <code>junctions_to_bigbed</code> now create their tempdir’s parent directory first, verify it’s writable, <code>rm -rf</code> any stale leftover from a prior attempt, and clean up via an <code>EXIT</code> trap — instead of a bare <code>mkdir -p</code> with no guarantee the target was clean or writable.</li>
+<li><strong>STAR no longer pre-creates its own <code>--outTmpDir</code>:</strong> STAR creates that directory itself and errors if it already exists; the rule’s preceding <code>rm -rf</code> already guaranteed the path was absent, so the <code>mkdir -p</code> right before it (added by the tempdir hardening above) was actively wrong, not just redundant.</li>
+<li><strong><code>harold</code>’s scratch temp dir moved from a shared path to workdir-local, and created at <code>init</code>:</strong> on <code>shen</code>, <code>TEMP_DIR</code> was <code>/scratch/$USER/harold_temp/</code> — not necessarily on the same filesystem as a given run’s workdir, and prone to being unwritable under singularity’s bind setup. It’s now <code>${WORKDIR}/tmp/</code>, created during <code>init</code> so it exists before any job needs it.</li>
+<li><strong><code>TEMP_DIR</code> actually resolves to <code>${WORKDIR}/tmp/</code> now, not <code>/tmp/</code>:</strong> the change above initially assigned <code>TEMP_DIR</code> in the top-level <code>PLATFORM == shen</code> setup block, which runs before <code>main()</code>’s argument parser has assigned <code>WORKDIR</code> at all — so the empty <code>$WORKDIR</code> silently produced the literal global path <code>/tmp/</code>, reintroducing the cross-run tempdir-collision problem the change was meant to fix, in a worse form than the shared path it replaced. Moved the assignment into <code>main()</code>, right after <code>WORKDIR</code> is resolved. Verified via a real <code>harold -m=init</code> run: <code>TEMP_DIR</code> and the generated <code>config.yaml</code>’s <code>tempdir</code> now both correctly resolve to <code>${WORKDIR}/tmp/</code> (<a href="https://github.com/dremellab/HAROLD/issues/64">dremellab/HAROLD#64</a>).</li>
+</ul>
+</section>
+</section>
+<section id="section-1" class="level2">
+<h2 class="anchored" data-anchor-id="section-1">[2.0.0]</h2>
+<section id="breaking-changes" class="level3">
+<h3 class="anchored" data-anchor-id="breaking-changes">⚠️ Breaking Changes</h3>
+<ul>
+<li><strong>Config key renamed:</strong> <code>infer_strandedness</code> → <code>use_infer_strandedness</code>. Update existing config files to use the new key name for clarity (true = use inferred values, false = use manifest values).</li>
+<li><strong>Shared <code>diffex</code> config block:</strong> <code>use_ercc</code>, <code>ercc_mix</code>, <code>use_batch</code>, <code>batch_column</code>, and <code>genes_selection</code> moved out of <code>diffex_normalized_counts</code> and <code>diffex_deg_gsea</code> into one shared <code>diffex:</code> block, so the aggregate normalized-counts step and the per-contrast DEG/GSEA step can no longer disagree on ERCC/batch handling. The now-unused <code>diffex_normalized_counts.host</code> key was also removed (host was already sourced from the top-level <code>host:</code> config). As a result, <code>diffex_normalized_counts</code> output moved from <code>counts/normalized_counts/normalize.html</code> to <code>counts/normalized_counts/{variant}/normalize.html</code>, mirroring the DEG/GSEA variant layout, since <code>diffex.use_ercc</code>/<code>use_batch: both</code> now expands the aggregate step per-variant too. Update existing <code>config.yaml</code> files to the new schema (see #51).</li>
+<li><strong>New <code>rustqc</code> container required; <code>rseqc_tin_downsample_reads</code> config key removed:</strong> existing <code>config.yaml</code> files need a <code>rustqc: "docker://seqinfomics/rustqc:0.2.1"</code> entry added to <code>containers:</code> (see the QC migration entries below). The now-unused <code>rseqc_tin_downsample_reads</code> key was removed — TIN no longer downsamples. Any cluster-profile <code>set-resources</code>/<code>set-threads</code> overrides keyed to <code>infer_strandedness</code>, <code>rseqc_read_distribution</code>, <code>downsample_bam_for_tin</code>, <code>rseqc_tin</code>, or <code>rseqc_junction_annotation</code> are now inert (those rules no longer exist) and can be deleted; the replacements are <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rustqc_rna_region</code>, and <code>mark_duplicates</code>.</li>
+</ul>
+</section>
+<section id="added-1" class="level3">
+<h3 class="anchored" data-anchor-id="added-1">Added</h3>
+<ul>
+<li>DEG and GSEA pipeline stage — New optional <code>diffex_deg_gsea</code> stage driven by a <code>contrasts.tsv</code> manifest (<code>harold --contrasts/-x</code>); runs DiffEx DEG (limma/DESeq2/edgeR) per contrast/variant/method followed by GSEA, with tri-state ERCC/batch variant expansion, a shared MSigDB cache warm-up, and <code>.rnk</code> sanitization for +/-Inf scores</li>
+<li>Pipeline run-state tracking — <code>harold</code> now writes <code>pipeline.{running,completed,failed,canceled}</code> markers and a <code>pipeline.status.json</code> sidecar to WORKDIR, updated on <code>runlocal</code>/<code>run</code> start, success, failure, and Slurm cancellation (SIGTERM/SIGINT trap)</li>
+<li>Live progress monitoring — Slurm head job now tails Snakemake’s step-completion output and writes a human-readable progress summary into <code>pipeline.running</code></li>
+<li>Structured CLI logging — <code>harold</code> output now uses leveled log helpers (<code>INFO</code>/<code>STEP</code>/<code>OK</code>/<code>WARN</code>/<code>ERROR</code>/<code>NEXT</code>) with next-step hints after <code>init</code>, <code>dryrun</code>, and job submission</li>
+<li>S3 deposit feature — Pipeline outputs can now be transferred to S3 buckets (GitHub #44)</li>
+<li>Alignment summary report — New QC report in the workflow</li>
+<li>FASTQ validation gating — Cutadapt can now be gated behind FASTQ validation</li>
+<li>Host-specific GTF support — Configuration now supports host-specific tRNA/chrR GTF files (removes repeats GTF wiring)</li>
+<li><strong>Migrated core QC tooling to <code>rustqc</code>:</strong> <code>infer_strandedness</code> (RSeQC <code>infer_experiment.py</code>), <code>rseqc_read_distribution</code>, and <code>rseqc_junction_annotation</code> are now <code>rustqc</code> 0.2.1 modules instead — output formats confirmed byte-identical to RSeQC’s own at the same legacy output paths, so downstream consumers (<code>aggregate_stranded_counts</code>, <code>junctions_to_bigbed</code>, <code>multiqc</code>) needed no changes. TIN also moved to <code>rustqc</code>, now at full read depth instead of RSeQC’s downsampled workaround (see Changed below) (<a href="https://github.com/dremellab/HAROLD/issues/56">dremellab/HAROLD#56</a>).</li>
+<li><strong>New duplicate-marking step + dupRadar/preseq/featureCounts QC outputs:</strong> new <code>mark_duplicates</code> rule (Picard) feeds <code>rustqc</code>’s dupRadar (duplication rate vs.&nbsp;expression) and preseq (library complexity) modules — net-new QC capability HAROLD didn’t have before, since no dup-marking step existed anywhere in the pipeline previously. featureCounts output (computed internally by dupRadar regardless of whether it’s requested) is also tracked as a reference QC artifact under <code>{sample}/featurecounts/</code>; HAROLD’s actual gene-level quantification is unchanged — still STAR <code>GeneCounts</code> via <code>aggregate_stranded_counts</code>.</li>
+<li>**<code>rustqc</code>‘s RNA-seq-mode Qualimap report:** new <code>{sample}/qualimap_rnaseq/</code> output (5’→3’ coverage bias, genomic origin classification, junction analysis) alongside the existing genomic (<code>bamqc</code>-mode) Qualimap report, which is untouched. <code>rustqc</code> only implements Qualimap’s <code>rnaseq</code> mode, not <code>bamqc</code>, so this is an addition, not a replacement — asked upstream for <code>bamqc</code> mode support: <a href="https://github.com/seqeralabs/RustQC/issues/128">seqeralabs/RustQC#128</a>.</li>
+<li><strong>Additive/spike-in mapped reads in <code>alignment_summary.tsv</code>:</strong> New <code>{additive}_mapped</code> column per configured additive (e.g.&nbsp;<code>ERCC_mapped</code>, <code>BAC16Insert_mapped</code>, <code>4SU1_mapped</code>), reporting primary BAM alignments to each additive/spike-in reference — mirrors the existing per-virus <code>{virus}_mapped</code> columns. Previously these reads were only visible folded into STAR’s overall <code>reads_mapped_to_assembly</code> figure (<a href="https://github.com/dremellab/HAROLD/issues/52">#52</a>).</li>
+<li><strong><code>4SU1</code> additive documented:</strong> <code>4SU1</code> (a synthetic spike-in control for 4-thiouridine metabolic-labeling RNA-seq, already usable via the generic additives mechanism) is now listed alongside <code>ERCC</code>/<code>BAC16Insert</code> in <code>harold --help</code>, <code>docs/prereq.md</code>, <code>docs/inputs.md</code>, <code>docs/usage.md</code>, <code>docs/outputs.md</code>, and <code>config/config.yaml</code> (<a href="https://github.com/dremellab/HAROLD/issues/53">#53</a>).</li>
+<li><strong>Guard against submitting/unlocking into an already-running workdir:</strong> <code>harold -m=run</code>/<code>runlocal</code>/<code>unlock</code> now refuse to proceed (and point at the file) if <code>${WORKDIR}/pipeline.running</code> already exists, since two runs racing on the same workdir/state (or unlocking a genuinely still-active run) can corrupt pipeline state. <code>dryrun</code> still runs normally against such a workdir (it’s read-only), but now warns prominently at the end if a run may already be in progress, and skips the <code>Submit run with: harold -m=run</code> hint in that case (<a href="https://github.com/dremellab/HAROLD/issues/54">#54</a>).</li>
+<li><strong><code>pipeline.failed</code> now says which job(s) failed:</strong> previously it only held the last progress snapshot. It (and the <code>pipeline.status.json</code> sidecar’s new <code>num_failed_rules</code>/<code>failed_rules</code> fields) now include, per failed job: rule name, sample/wildcards, internal Snakemake jobid, external SLURM jobid, SLURM failure state (OOM/timeout/etc.), and the real per-job log path — parsed from Snakemake’s own log, with jobs that ultimately succeeded on a later retry (<code>restart-times: 3</code>) correctly excluded (<a href="https://github.com/dremellab/HAROLD/issues/55">#55</a>).</li>
+<li><strong>Fail fast on a single-level batch column:</strong> when <code>diffex.use_batch</code> is <code>true</code>/<code>both</code>, HAROLD now validates at config-parse time (so <code>dryrun</code> catches it too) that <code>batch_column</code> has at least 2 distinct values — across all samples for <code>diffex_normalized_counts</code>, and among each contrast’s <code>group1</code>/<code>group2</code> samples specifically for <code>diffex_deg_gsea</code>. Previously a single-level batch factor only surfaced deep inside the <code>diffex</code> container, after the DAG had already spent compute on everything upstream, as an opaque limma <code>contrasts can be applied only to factors with 2 or more levels</code> error.</li>
+</ul>
+</section>
+<section id="changed-1" class="level3">
+<h3 class="anchored" data-anchor-id="changed-1">Changed</h3>
+<ul>
+<li>S3 namespace hierarchy — Updated <code>s3_transfer_harold.py</code> to include pipeline-name in S3 path hierarchy (<code>_HTS/HAROLD/sample_set/...</code>) for consistency with Chroma 2; added <code>s3_pipeline_name</code> config key (default: <code>HAROLD</code>)</li>
+<li>Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default</li>
+<li>Default reference path — Updated fasta_gtf reference path to <code>/project/dremel_lab/workflows/reference_data/fasta_gtf</code></li>
+<li>Manifest initialization — Strand values now normalized to lowercase during manifest parsing</li>
+<li>Documentation clarification — Improved strandedness documentation to clarify that HAROLD always infers strandedness and reports it; the config option controls only whether inferred or manifest values are used for count extraction</li>
+<li>S3 documentation accuracy — Corrected <code>s3_configuration.md</code>’s “Files Transferred to S3” table, which listed peak files, ataqv data, and tRNA/Tn5 outputs that HAROLD doesn’t produce; documented the previously-missing SJ, DEG/GSEA, and normalized-counts transfers instead</li>
+<li>SLURM resource tuning — Added initial <code>set-resources</code> overrides for <code>alignment_summary</code> and <code>warm_msigdb_cache</code> (previously fell back to generic defaults)</li>
+<li><strong>TIN now runs at full read depth via <code>rustqc</code>, not RSeQC’s downsampled <code>tin.py</code>:</strong> benchmarked on a real combined host+virus BAM (<code>N_Mock_4h</code>, 689M reads, full hg38 GTF) at ~45min total for the whole <code>rustqc rna</code> module suite (TIN’s own marginal cost, isolated via a <code>--skip-tin</code> diff, is ~12min of that) — vs.&nbsp;7.5–13 hours per sample for RSeQC’s <code>tin.py</code> on a 50M-read downsample in production, with repeated Slurm timeouts and resubmissions. The <code>downsample_bam_for_tin</code> rule this pipeline briefly had is gone entirely — no BAM downsampling happens before TIN anymore. TIN values will not match prior runs byte-for-byte — full depth vs.&nbsp;an ~8–12%-of-data downsample changes the input population by construction — so don’t expect exact agreement diffing historical TIN output against post-migration runs. (Supersedes this same cycle’s earlier “rseqc_tin runtime increased to 36 hours” change — <code>rseqc_tin</code> no longer exists.)</li>
+<li><strong>Final-state <code>pipeline.*</code> progress reporting:</strong> <code>pipeline.completed</code> now reports the final step tally (<code>N / N steps complete (100%)</code>, <code>Remaining: 0 steps</code>) instead of being an empty marker file, matching the live format <code>pipeline.running</code> already used. <code>pipeline.failed</code> now preserves the last known progress snapshot instead of being emptied, so a failed run shows how far it got before failing. <code>runlocal</code> (previously untracked) now gets the same live progress monitoring as SLURM <code>run</code> jobs, via a tee’d Snakemake log.</li>
+<li><strong><code>diffex</code> container bumped <code>0.5.2</code> → <code>0.5.5</code>:</strong> picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA <code>+Inf</code>/<code>-Inf</code> rank-clamp fix (v0.5.5, <a href="https://github.com/dremellab/DiffEx/pull/41">dremellab/DiffEx#41</a>) that HAROLD’s own <code>_sanitize_rnk.py</code> pre-processing step was working around. Switched to <code>docker://seqinfomics/diffex:0.5.5</code> (Docker Hub) rather than <code>ghcr.io/dremellab/diffex</code>, since no image newer than <code>0.5.2</code> has been published to GHCR (<a href="https://github.com/dremellab/DiffEx/issues/40">dremellab/DiffEx#40</a>).</li>
+</ul>
+</section>
+<section id="fixed-1" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-1">Fixed</h3>
+<ul>
+<li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success, and no longer depend on always being invoked as <code>... &amp;&amp; exit 0</code> to do so safely</li>
+<li>Stray user-site packages — <code>harold</code> wrapper and its Slurm job script now set <code>PYTHONNOUSERSITE=1</code> to isolate from <code>~/.local</code> pip <code>--user</code> packages</li>
+<li>Scratch temp dir crowding — Per-job scratch directories now nest under <code>/scratch/$USER/harold_temp/&lt;uuid&gt;</code> instead of <code>/scratch/$USER/&lt;uuid&gt;</code></li>
+<li>Zero-read BAM outputs (#43) — Fixed bam_to_bigwig handling when BAM contains no reads</li>
+<li>Qualimap Java heap scaling (#42) — Now properly scales from job memory allocation</li>
+<li>kraken2 verbose output (#41) — Suppressed excessive per-read classification output to reduce log verbosity</li>
+<li>Temporary file staging — STAR sort outputs and split_bam outputs now properly staged in tempdir before moving</li>
+<li>Validation hardening — Improved input validation and Rivanna submission defaults</li>
+<li>Fastq validator escaping — Fixed bash variable escaping in FASTQ validation rule</li>
+<li>Strandedness normalization — Manifest strandedness values now consistently lowercase</li>
+<li><code>pipeline.status.json</code> on Slurm runs — Fixed invalid JSON caused by an unescaped literal tab in <code>git_commit_tag</code></li>
+<li><code>unlock</code> silent failures — Now propagates the real exit code instead of always reporting success</li>
+<li>S3 transfer completeness — <code>s3_transfer_if_enabled</code> now depends on every pipeline output instead of a hand-picked subset, so it can no longer finish while other stages (DEG/GSEA, QC, etc.) are still running</li>
+<li>DEG/GSEA variant directory naming — Output directories now always include both the ERCC and batch tags (e.g.&nbsp;<code>wo_ercc_wo_batch</code>), not just when <code>use_ercc: both</code></li>
+<li>Generated Slurm script corruption — Fixed a sed-substitution escaping bug that could corrupt the generated head-job script when <code>WORKDIR</code>, <code>GIT_COMMIT_TAG</code>, or similar values contained <code>/</code>, <code>&amp;</code>, or <code>\</code></li>
+<li>Removed a dead <code>CONDA_ACTIVATE</code> placeholder in the generated Slurm head-job template that had silently been a no-op since introduction</li>
+<li><code>pipeline.*</code> state marker swap — Reordered marker creation/removal so there’s never a brief window with no marker file present</li>
+<li><strong>New <code>rustqc</code>/<code>mark_duplicates</code> rules now double their memory request on each retry:</strong> <code>rustqc_rna_combined_probe</code> was observed OOM-killed in production (<code>MaxRSS</code> ~42GB against a 40GB request) — these rules had no real-scale memory data to size <code>set-resources</code> from. <code>mark_duplicates</code>, <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, and <code>rustqc_rna_region</code> now double their configured base <code>mem_mb</code> on each Snakemake retry (attempt 1 = base, 2 = 2x, 3 = 4x, 4 = 8x, via <code>restart-times: 3</code>) instead of failing identically on every attempt, via a new shared <code>_get_mem_mb()</code> helper (mirrors the existing <code>_get_threads()</code>/<code>_get_runtime()</code> pattern) (<a href="https://github.com/dremellab/HAROLD/issues/56">dremellab/HAROLD#56</a>).</li>
+<li><strong><code>rseqc_geneBody_coverage</code> no longer blocks <code>rule all</code>/<code>multiqc</code>/S3 transfer:</strong> the rule reliably fails to complete for a majority of samples in practice (observed on a real 12-sample run: 8 samples never finished across a week of retries — TIMEOUT, CANCELLED, and FAILED attempts, 0-byte output). It was required by both <code>PIPELINE_TARGETS</code> and <code>multiqc</code>’s own input list, so those failures blocked the whole pipeline (<code>rule all</code> can never be satisfied) and the S3-transfer gate, which waits for everything else to finish first. It’s no longer a required terminal target — still runnable standalone on demand — and <code>rustqc</code>’s new rnaseq-mode Qualimap coverage profile (see Added above) is a working interim gene-body-coverage-style signal in <code>multiqc</code> in the meantime (<a href="https://github.com/dremellab/HAROLD/issues/56">dremellab/HAROLD#56</a>).</li>
+<li><strong><code>fastq_validate_sample</code> OOM on large FASTQ files:</strong> the rule had no memory override, so it used the pipeline-wide 40 GB default. <code>fastQValidator</code> runs unconditionally before <code>cutadapt</code> and blocks it on failure, so an OOM here (observed killed at ~40 GB validating a ~20-22 GB gzip R1/R2 pair) silently blocks the whole sample with no config workaround. Bumped to 120 GB (<code>config/rivanna/config.yaml</code>, matching the existing <code>cutadapt</code> allocation for the same files).</li>
+<li><strong><code>cutadapt</code> no longer waits for every sample’s FASTQ validation before trimming any sample:</strong> it previously depended on a <code>fastq_validate_all</code> aggregate marker requiring all samples’ <code>fastq_validate_sample</code> jobs to finish first, erasing per-sample parallelism from trimming onward and aborting the whole batch on one sample’s bad FASTQ. It now depends only on that same sample’s own <code>fastq_validate_sample</code> output; the now-unused <code>fastq_validate_all</code> rule was removed.</li>
+<li><strong><code>alignment_summary.tsv</code> no longer silently drops samples missing an expected input:</strong> previously, if any of a sample’s four inputs (cutadapt report, fastQValidator report, STAR log, sorted BAM) was missing, <code>_alignment_summary.py</code> skipped that sample entirely with no row and no warning — indistinguishable from the sample never having been part of the run. Every sample directory now gets a row, with <code>NA</code> in whichever columns can’t be computed from the missing file(s), plus a stderr warning (captured in <code>alignmentqc/alignment_summary.log</code>) naming exactly what was missing.</li>
+</ul>
+</section>
+</section>
+<section id="section-2" class="level2">
+<h2 class="anchored" data-anchor-id="section-2">[1.2.1]</h2>
+<section id="changed-2" class="level3">
+<h3 class="anchored" data-anchor-id="changed-2">Changed</h3>
+<ul>
+<li><code>harold --help</code> now prints the Singularity/Apptainer environment variables.</li>
+</ul>
+</section>
+</section>
+<section id="section-3" class="level2">
+<h2 class="anchored" data-anchor-id="section-3">[1.2.0]</h2>
+<section id="changed-3" class="level3">
+<h3 class="anchored" data-anchor-id="changed-3">Changed</h3>
+<ul>
+<li>The HAROLD wrapper now defaults <code>--sifdir</code> to <code>/project/dremel_lab/workflows/singularity_images</code>, prepares per-user caches under <code>/scratch/$USER/singularity</code>, honors standard <code>SINGULARITY_*</code> environment overrides, exports a dedicated scratch pull directory (<code>/scratch/$USER/singularity/images</code> when using the shared tree), and emits warnings when shared images are missing so users understand when a Docker pull to scratch will occur.</li>
+<li><code>harold --runmode=init</code> now prints the cache directory (<code>--singcache</code>), the image directory (<code>--sifdir</code>), and the effective pull directory so users can confirm exactly where SIFs will be stored.</li>
+<li>Updated <code>docs/prereq.md</code> to spell out how the wrapper reports and uses the cache/tmp/pull directories versus the shared image directory, and to set expectations around the warning messages shown while new <code>.sif</code> files are staged.</li>
+<li>Documented where the composite <code>ref.fa</code>, <code>.gtf</code>, STAR index, and related files are written inside each work directory, added guidance for interpreting Snakemake’s verbose dry-run output, and expanded the usage guide with practical instructions for monitoring Slurm jobs and drilling into per-rule log files under <code>logs/</code>.</li>
+</ul>
+</section>
+</section>
+<section id="section-4" class="level2">
+<h2 class="anchored" data-anchor-id="section-4">[1.1.0]</h2>
+<section id="added-2" class="level3">
+<h3 class="anchored" data-anchor-id="added-2">Added</h3>
+<ul>
+<li>Optional diffex-normalized counts workflow, including per-sample RSeQC transcript quantification and generation of gene/transcript RPKM/TPM matrices.</li>
+<li><code>config/rivanna/slurm-status.py</code> utility to surface job states and archive successful Slurm logs automatically.</li>
+<li>Quarto-based documentation site (<code>docs/</code>, <code>_quarto.yml</code>) that centralizes prerequisites, inputs/outputs, and run guidance for HAROLD.</li>
+</ul>
+</section>
+<section id="changed-4" class="level3">
+<h3 class="anchored" data-anchor-id="changed-4">Changed</h3>
+<ul>
+<li>Switched to the lab-hosted diffex and rseqc containers; exposed configuration knobs for diffex normalization (ERCC, batch, gene selection, host species).</li>
+<li>Improved Rivanna Apptainer usage by wiring scratch-based cache/tmp/image directories, exporting the runtime variables in both the wrapper and jobscript, introducing user-facing <code>--singcache</code> / <code>--sifdir</code> options, and setting <code>--account=dremel_lab</code> on Rivanna submissions.</li>
+<li>Updated the <code>harold</code> wrapper to submit the Snakemake head job through a generated <code>sbatch</code> script that carries the profile, module setup, and Apptainer prefix to the scheduler node.</li>
+<li>Tidied repository plumbing by aligning config/doc paths, extending <code>.gitignore</code>/<code>.codespell-ignore</code>, and tuning the Rivanna profile logging defaults.</li>
+<li><code>harold --version</code> now prints a clean version string (no platform banner) thanks to a dedicated <code>-V/--version</code> flag in the wrapper.</li>
+</ul>
+</section>
+<section id="fixed-2" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-2">Fixed</h3>
+<ul>
+<li><code>diffex normalize</code> host selection now infers <code>Hs</code> vs <code>Mm</code> from both the diffex block and the top-level <code>host</code> option (e.g., mm39 maps to <code>--host Mm</code>).</li>
+<li>Hardened <code>rseqc_junction_annotation</code> to always create its junction file and log outputs cleanly, preventing spurious Snakemake failures.</li>
+</ul>
+</section>
+</section>
+<section id="section-5" class="level2">
+<h2 class="anchored" data-anchor-id="section-5">[1.0.0]</h2>
+<ul>
+<li>Initial public release.</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/2\.0\.1\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
