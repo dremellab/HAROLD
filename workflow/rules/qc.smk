@@ -88,7 +88,12 @@ rule mark_duplicates:
     shell:
         r"""
         set -exo pipefail
-        mkdir -p {params.tmpdir}
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "mark_duplicates tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
+        mkdir -p "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
         outdir=$(dirname {output.bam})
         mkdir -p $outdir
         java_mem_mb=$(( {resources.mem_mb} * 80 / 100 ))
@@ -166,7 +171,12 @@ rule rustqc_rna_combined_probe:
     shell:
         r"""
         set -exo pipefail
-        mkdir -p {params.scratch}
+        scratch_parent=$(dirname "{params.scratch}")
+        mkdir -p "$scratch_parent"
+        test -w "$scratch_parent" || {{ echo "rustqc_rna_combined_probe scratch parent not writable: $scratch_parent" >&2; exit 1; }}
+        rm -rf "{params.scratch}"
+        mkdir -p "{params.scratch}"
+        trap 'rm -rf "{params.scratch}"' EXIT
         mkdir -p $(dirname {output.infer_experiment})
         stem={params.sample}.Aligned.sortedByCoord.out
         paired_flag=""
@@ -244,7 +254,12 @@ rule rustqc_rna_combined:
     shell:
         r"""
         set -exo pipefail
-        mkdir -p {params.scratch}
+        scratch_parent=$(dirname "{params.scratch}")
+        mkdir -p "$scratch_parent"
+        test -w "$scratch_parent" || {{ echo "rustqc_rna_combined scratch parent not writable: $scratch_parent" >&2; exit 1; }}
+        rm -rf "{params.scratch}"
+        mkdir -p "{params.scratch}"
+        trap 'rm -rf "{params.scratch}"' EXIT
         stem={params.sample}.Aligned.sortedByCoord.out
         paired_flag=""
         if [ "{params.peorse}" == "PE" ]; then
@@ -401,7 +416,12 @@ rule rseqc_read_gc:
         set -exo pipefail
         outdir=$(dirname {output.read_gc})
         mkdir -p $outdir
-        mkdir -p {params.tmpdir}
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "rseqc_read_gc tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
+        mkdir -p "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
         cd $outdir
         read_GC.py \
             -i {input.bam} \
@@ -448,7 +468,12 @@ rule rustqc_rna_region:
     shell:
         r"""
         set -exo pipefail
-        mkdir -p {params.scratch}
+        scratch_parent=$(dirname "{params.scratch}")
+        mkdir -p "$scratch_parent"
+        test -w "$scratch_parent" || {{ echo "rustqc_rna_region scratch parent not writable: $scratch_parent" >&2; exit 1; }}
+        rm -rf "{params.scratch}"
+        mkdir -p "{params.scratch}"
+        trap 'rm -rf "{params.scratch}"' EXIT
         outdir="$(dirname {output.junctions})"
         mkdir -p "${{outdir}}"
         stem={params.sample}.{params.regionname}
@@ -505,7 +530,12 @@ rule junctions_to_bigbed:
         fi
         outdir=$(dirname "{output.bb}")
         mkdir -p "$outdir"
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "junctions_to_bigbed tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
         mkdir -p "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
         cd $outdir
         samtools view -H {input.bam} \
           | awk '$1=="@SQ"{{split($2,a,":"); split($3,b,":"); print a[2]"\t"b[2]}}' \

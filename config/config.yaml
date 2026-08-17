@@ -54,6 +54,8 @@ chrr_gtf:
 include_trnas_gtf_in_ref: true # when true, append trnas_gtf[host] to GTFS before building ref.gtf
 
 # strand inference
+# Legacy configs used `infer_strandedness`; newer HAROLD expects
+# `use_infer_strandedness` and the `strandedness_column`/threshold keys below.
 use_infer_strandedness: true
 infer_strandedness_threshold: 0.8
 strandedness_column: "strandedness"
@@ -81,6 +83,8 @@ deeptools_binSize: 10
 # ERCC / batch-correction / gene-selection settings shared by both the aggregate
 # normalized-counts step and the per-contrast DEG/GSEA step below, so the two
 # always agree on how the counts matrix was normalized.
+# Older YAMLs with nested `diffex_normalized_counts.*` or `diffex_deg_gsea.*`
+# DiffEx settings should be migrated to this top-level `diffex:` block.
 diffex:
   use_ercc: false # false, true, or both ... "both" runs normalization with and without ERCC scaling
   ercc_mix: 1 # which ERCC mix was used ... 1 or 2
@@ -119,7 +123,7 @@ containers:
   cutadapt: "docker://nciccbr/charlie_cutadapt_fqfilter:v1.0.1"
   deeptools: "docker://stjudecloud/deeptools:1.0.1"
   dcc: "docker://nciccbr/charlie_dcc:v0.2.1"
-  diffex: "docker://seqinfomics/diffex:0.5.5"
+  diffex: "docker://seqinfomics/diffex:0.5.7"
   # diffex: "docker://ghcr.io/dremellab/diffex:0.5.2"
   fastqvalidator: "docker://seqinfomics/fastqvalidator:0.1.1a"
   fastqc: "docker://nciccbr/ccrgb_qctools:v4.0"

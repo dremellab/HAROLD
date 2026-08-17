@@ -465,12 +465,12 @@ Count matrices are the primary output for downstream analysis. All are **tab-sep
 #### Gene-Level Counts: `counts_matrix.tsv` (Raw Counts)
 
 **Format:** Tab-separated text file
-**Rows:** One row per gene/feature (rows are indexed with gene_id|gene_name format)
-**Columns:** Metadata columns + one column per sample
+**Rows:** One row per gene/feature
+**Columns:** `gene` column + metadata columns + one column per sample
 
 | Column Position | Column Name | Data Type | Description |
 |---|---|---|---|
-| 1 | `(index)` | String | **Gene identifier** in format `ENSG00000123456.11\|BRCA1` (gene_id\|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or "NA" if unavailable). |
+| 1 | `gene` | String | **Gene identifier** in format `ENSG00000123456.11\|BRCA1` (gene_id\|gene_name). Gene ID is RefSeq/Ensembl accession; gene_name is human-readable name (or "NA" if unavailable). |
 | 2 | `species` | String | **Genome origin**: `hg38`, `mm39`, or viral accession ID (e.g., `NC_009333.1`). Identifies which reference genome this gene belongs to. |
 | 3 | `gene_chr` | String | **Chromosome/contig** where gene is located (e.g., `chr1`, `NC_009333.1:1-137895`). |
 | 4 | `gene_start` | Integer | **0-based gene start coordinate** in the reference genome. |
@@ -666,6 +666,13 @@ Only generated if `diffex_normalized_counts: true` in config. `{variant}` is alw
 | File | Description |
 |------|---|
 | `counts/normalized_counts/{variant}/normalize.html` | **DiffEx-normalized count matrix report**, across the whole sample set. HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.), per the `diffex` config block in `config.yaml`. |
+| `counts/normalized_counts/{variant}/ERCC_corrected_log2_counts.tsv` | **The ERCC-normalized matrix, log2 scale** — all genes (host + virus + additives, including ERCC rows), with *only* the shared ERCC spike-in correction applied (RPKM → log2 → per-sample `(log2RPKM − intercept) / slope` from regressing that sample's ERCC counts against the ERCC92 reference concentrations for the configured `diffex.ercc_mix`) and no method-specific model (voom/TMM/VST) on top. This is the precursor the `limma`/`edgeR`/`DESeq2` matrices below are each further derived from — use this one if you just want "the" ERCC-normalized matrix, analogous to `counts_matrix.rpkm.tsv`/`counts_matrix.tpm.tsv`. **Only produced for `w_ercc_*` variants** (`diffex.use_ercc: true`/`both`); requires DiffEx >= 0.5.7 (dremellab/DiffEx#44). |
+| `counts/normalized_counts/{variant}/ERCC_corrected_counts.tsv` | Linear-scale companion to the matrix above (`2^log2`, NAs preserved). **Only produced for `w_ercc_*` variants**; requires DiffEx >= 0.5.7. |
+| `counts/normalized_counts/{variant}/limma_pseudo_rpkm_counts.tsv` | **Limma/voom-normalized pseudo-RPKM matrix**, all genes. Built from the ERCC-corrected matrix above (for `w_ercc_*` variants) with limma's own modeling applied on top — not the plain ERCC-corrected values themselves; see `ERCC_corrected_log2_counts.tsv` for that. |
+| `counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts.tsv` | Log2 of the matrix above. |
+| `counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv` | Same as the log2 matrix above, with `limma::removeBatchEffect` applied. **Only produced for `w_batch` variants** (`diffex.use_batch: true`/`both`). |
+| `counts/normalized_counts/{variant}/edgeR_TMM_normalized_logCPM_counts.tsv` | **edgeR TMM-normalized log-CPM matrix**, all genes. For `w_ercc_*` variants, TMM normalization factors are computed with the ERCC-derived scaling applied first, same as the limma matrix above. |
+| `counts/normalized_counts/{variant}/DESeq2_vst_normalized_counts.tsv` | **DESeq2 variance-stabilizing-transformed (VST) matrix**, all genes, ERCC-scaled for `w_ercc_*` variants the same way as the other three matrices. |
 
 ### DEG and GSEA (DiffEx Integration)
 

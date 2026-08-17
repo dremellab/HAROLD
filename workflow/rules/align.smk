@@ -29,6 +29,13 @@ rule star_align_two_pass:
         else
             reads="{input.R1}"
         fi
+
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "STAR tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
+
         STAR \
             --genomeDir {params.star_index} \
             --readFilesIn ${{reads}} \
@@ -85,7 +92,13 @@ rule sort_star:
     shell:
         r"""
         set -exo pipefail
-        mkdir -p {params.tmpdir}
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "sort_star tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
+        mkdir -p "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
+
         tmpbam={params.tmpdir}/{wildcards.sample}.Aligned.sortedByCoord.out.bam
 
         samtools sort -@ {threads} -o ${{tmpbam}} {input.bam}

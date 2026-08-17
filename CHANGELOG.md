@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1]
+
+### Added
+- **`normalized_counts` matrix files now declared as tracked Snakemake outputs:** `diffex normalize` was already writing `limma_pseudo_rpkm_counts.tsv`, `limma_log2normalized_pseudo_rpkm_counts.tsv`, `limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv` (w_batch only), `edgeR_TMM_normalized_logCPM_counts.tsv`, and `DESeq2_vst_normalized_counts.tsv` next to `normalize.html`, but only `normalize.html` was declared as a rule output — so the TSVs were untracked, undocumented, and easy to miss. The rule is now split into per-ercc/per-batch variants (Snakemake output paths can't vary by wildcard value within one rule), and all matrix files are documented in `docs/outputs.md`.
+- **ERCC-corrected precursor matrices exposed as tracked outputs (requires DiffEx >= 0.5.7):** New `ERCC_corrected_log2_counts.tsv`/`ERCC_corrected_counts.tsv` files in `counts/normalized_counts/{variant}/` for `w_ercc_*` variants — the ERCC spike-in correction alone, with no method-specific model on top, ahead of the limma/edgeR/DESeq2 matrices each further derived from it. Analogous to `counts_matrix.rpkm.tsv`/`counts_matrix.tpm.tsv` for anyone who wants "the" ERCC-normalized matrix without a downstream model applied ([dremellab/DiffEx#44](https://github.com/dremellab/DiffEx/issues/44), [dremellab/HAROLD#62](https://github.com/dremellab/HAROLD/issues/62)).
+
+### Changed
+- **Legacy config migration guidance:** older run directories using the deprecated `infer_strandedness` flag or nested DiffEx option blocks should move to `use_infer_strandedness` and the shared top-level `diffex:` block before running on the current pipeline version.
+- **`diffex` container bumped `0.5.5` → `0.5.7`:** required for the ERCC-corrected precursor matrices above ([dremellab/DiffEx#44](https://github.com/dremellab/DiffEx/issues/44)); verified against a live run.
+- **`harold`'s Slurm head job time allocation reduced `3-00:00:00` → `0-12:00:00`:** matches the head job's actual workload (it only submits/monitors the run, not the run itself).
+
+### Fixed
+- **`counts_matrix.tsv` export no longer writes a hidden pandas index as a duplicate leading column:** gene labels are now exported as an explicit `gene` column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.
+- **Per-job scratch/tempdir creation hardened across rules:** `star_align_two_pass`, `sort_star`, `cutadapt`, `mark_duplicates`, `rustqc_rna_combined_probe`, `rustqc_rna_combined`, `rseqc_read_gc`, `rustqc_rna_region`, and `junctions_to_bigbed` now create their tempdir's parent directory first, verify it's writable, `rm -rf` any stale leftover from a prior attempt, and clean up via an `EXIT` trap — instead of a bare `mkdir -p` with no guarantee the target was clean or writable.
+- **STAR no longer pre-creates its own `--outTmpDir`:** STAR creates that directory itself and errors if it already exists; the rule's preceding `rm -rf` already guaranteed the path was absent, so the `mkdir -p` right before it (added by the tempdir hardening above) was actively wrong, not just redundant.
+- **`harold`'s scratch temp dir moved from a shared path to workdir-local, and created at `init`:** on `shen`, `TEMP_DIR` was `/scratch/$USER/harold_temp/` — not necessarily on the same filesystem as a given run's workdir, and prone to being unwritable under singularity's bind setup. It's now `${WORKDIR}/tmp/`, created during `init` so it exists before any job needs it.
+- **`TEMP_DIR` actually resolves to `${WORKDIR}/tmp/` now, not `/tmp/`:** the change above initially assigned `TEMP_DIR` in the top-level `PLATFORM == shen` setup block, which runs before `main()`'s argument parser has assigned `WORKDIR` at all — so the empty `$WORKDIR` silently produced the literal global path `/tmp/`, reintroducing the cross-run tempdir-collision problem the change was meant to fix, in a worse form than the shared path it replaced. Moved the assignment into `main()`, right after `WORKDIR` is resolved. Verified via a real `harold -m=init` run: `TEMP_DIR` and the generated `config.yaml`'s `tempdir` now both correctly resolve to `${WORKDIR}/tmp/` ([dremellab/HAROLD#64](https://github.com/dremellab/HAROLD/issues/64)).
+
 ## [2.0.0]
 
 ### ⚠️ Breaking Changes

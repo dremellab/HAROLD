@@ -67,7 +67,12 @@ rule rseqc_fpkm:
         cd "$outdir"
 
         # Temporary directory and prefix
-        mkdir -p {params.tmpdir}
+        tmpdir_parent=$(dirname "{params.tmpdir}")
+        mkdir -p "$tmpdir_parent"
+        test -w "$tmpdir_parent" || {{ echo "rseqc_fpkm tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+        rm -rf "{params.tmpdir}"
+        mkdir -p "{params.tmpdir}"
+        trap 'rm -rf "{params.tmpdir}"' EXIT
         prefix="{params.tmpdir}/{params.sample}"
 
         # Get strand rule
@@ -113,14 +118,25 @@ rule aggregate_transcript_level_counts:
         shell(f"python {params.script1} --input {input.counts_files} --gtf {input.gtf} --fragcount_output {output.counts} --fpkm_output {output.counts_fpkm} --tpm_output {output.counts_tpm}")
 
 
-rule normalized_counts:
+# diffex normalize writes its normalized-count matrices (limma/edgeR/DESeq2, ERCC-scaled
+# when --use-ercc is set) as flat TSVs next to normalize.html. Which extra files show up is
+# independent per axis: the batch-corrected limma file only exists for w_batch variants, and
+# the ERCC_corrected_{log2_,}counts.tsv precursor files (DiffEx >= 0.5.7, dremellab/DiffEx#44)
+# only exist for w_ercc variants. Snakemake output paths can't be conditional on a wildcard's
+# value within one rule, so all four ercc x batch combinations are split into their own rule
+# with a matching wildcard_constraints, rather than one rule with a variable output list.
+rule normalized_counts_wo_ercc_wo_batch:
     input:
         counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
-        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html")
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
+        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
+        deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
     wildcard_constraints:
-        variant = "|".join(VARIANTS.keys()) if VARIANTS else "NOVARIANT",
+        variant = "|".join(v for v in VARIANTS if not VARIANTS[v][0] and not VARIANTS[v][1]) or "NOVARIANT",
     params:
         manifest_file = MANIFEST_FILE,
         user_ercc = lambda wc: VARIANTS[wc.variant][0],
@@ -160,4 +176,166 @@ rule normalized_counts:
             --genes-selection {params.genes_selection}
         ls -alrth $outdir
         """
-        
+
+rule normalized_counts_wo_ercc_w_batch:
+    input:
+        counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
+        gtf = join(REF_DIR, "ref.fixed.gtf")
+    output:
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
+        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv"),
+        edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
+        deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
+    wildcard_constraints:
+        variant = "|".join(v for v in VARIANTS if not VARIANTS[v][0] and VARIANTS[v][1]) or "NOVARIANT",
+    params:
+        manifest_file = MANIFEST_FILE,
+        user_ercc = lambda wc: VARIANTS[wc.variant][0],
+        user_batch = lambda wc: VARIANTS[wc.variant][1],
+        ercc_mix = str(config.get('diffex', {}).get('ercc_mix', '1')).lower(),
+        batch_column = str(config.get('diffex', {}).get('batch_column', 'batch')),
+        genes_selection = str(config.get('diffex', {}).get('genes_selection', 'both')).lower(),
+        host = DIFFEX_HOST,
+    container:
+        config['containers']['diffex']
+    threads: _get_threads("diffex_normalized_counts", profile_config)
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.html})
+        mkdir -p $outdir
+        if [ "{params.user_ercc}" = "True" ]; then
+            ercc_arg="--use-ercc --ercc-mix {params.ercc_mix}"
+        else
+            ercc_arg=""
+        fi
+        if [ "{params.user_batch}" = "True" ]; then
+            batch_arg="--use-batch --batch-column {params.batch_column}"
+        else
+            batch_arg=""
+        fi
+        cd /app/DiffEx
+        diffex normalize \
+            -c {input.counts} \
+            -s {params.manifest_file} \
+            $ercc_arg \
+            --sample-column sampleName \
+            --group-column groupName \
+            $batch_arg \
+            -o $outdir \
+            --host {params.host} \
+            --genes-selection {params.genes_selection}
+        ls -alrth $outdir
+        """
+
+rule normalized_counts_w_ercc_wo_batch:
+    input:
+        counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
+        gtf = join(REF_DIR, "ref.fixed.gtf")
+    output:
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
+        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
+        deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
+        ercc_corrected_log2 = join(RESULTSDIR,"counts","normalized_counts","{variant}","ERCC_corrected_log2_counts.tsv"),
+        ercc_corrected_linear = join(RESULTSDIR,"counts","normalized_counts","{variant}","ERCC_corrected_counts.tsv"),
+    wildcard_constraints:
+        variant = "|".join(v for v in VARIANTS if VARIANTS[v][0] and not VARIANTS[v][1]) or "NOVARIANT",
+    params:
+        manifest_file = MANIFEST_FILE,
+        user_ercc = lambda wc: VARIANTS[wc.variant][0],
+        user_batch = lambda wc: VARIANTS[wc.variant][1],
+        ercc_mix = str(config.get('diffex', {}).get('ercc_mix', '1')).lower(),
+        batch_column = str(config.get('diffex', {}).get('batch_column', 'batch')),
+        genes_selection = str(config.get('diffex', {}).get('genes_selection', 'both')).lower(),
+        host = DIFFEX_HOST,
+    container:
+        config['containers']['diffex']
+    threads: _get_threads("diffex_normalized_counts", profile_config)
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.html})
+        mkdir -p $outdir
+        if [ "{params.user_ercc}" = "True" ]; then
+            ercc_arg="--use-ercc --ercc-mix {params.ercc_mix}"
+        else
+            ercc_arg=""
+        fi
+        if [ "{params.user_batch}" = "True" ]; then
+            batch_arg="--use-batch --batch-column {params.batch_column}"
+        else
+            batch_arg=""
+        fi
+        cd /app/DiffEx
+        diffex normalize \
+            -c {input.counts} \
+            -s {params.manifest_file} \
+            $ercc_arg \
+            --sample-column sampleName \
+            --group-column groupName \
+            $batch_arg \
+            -o $outdir \
+            --host {params.host} \
+            --genes-selection {params.genes_selection}
+        ls -alrth $outdir
+        """
+
+rule normalized_counts_w_ercc_w_batch:
+    input:
+        counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
+        gtf = join(REF_DIR, "ref.fixed.gtf")
+    output:
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
+        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv"),
+        edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
+        deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
+        ercc_corrected_log2 = join(RESULTSDIR,"counts","normalized_counts","{variant}","ERCC_corrected_log2_counts.tsv"),
+        ercc_corrected_linear = join(RESULTSDIR,"counts","normalized_counts","{variant}","ERCC_corrected_counts.tsv"),
+    wildcard_constraints:
+        variant = "|".join(v for v in VARIANTS if VARIANTS[v][0] and VARIANTS[v][1]) or "NOVARIANT",
+    params:
+        manifest_file = MANIFEST_FILE,
+        user_ercc = lambda wc: VARIANTS[wc.variant][0],
+        user_batch = lambda wc: VARIANTS[wc.variant][1],
+        ercc_mix = str(config.get('diffex', {}).get('ercc_mix', '1')).lower(),
+        batch_column = str(config.get('diffex', {}).get('batch_column', 'batch')),
+        genes_selection = str(config.get('diffex', {}).get('genes_selection', 'both')).lower(),
+        host = DIFFEX_HOST,
+    container:
+        config['containers']['diffex']
+    threads: _get_threads("diffex_normalized_counts", profile_config)
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.html})
+        mkdir -p $outdir
+        if [ "{params.user_ercc}" = "True" ]; then
+            ercc_arg="--use-ercc --ercc-mix {params.ercc_mix}"
+        else
+            ercc_arg=""
+        fi
+        if [ "{params.user_batch}" = "True" ]; then
+            batch_arg="--use-batch --batch-column {params.batch_column}"
+        else
+            batch_arg=""
+        fi
+        cd /app/DiffEx
+        diffex normalize \
+            -c {input.counts} \
+            -s {params.manifest_file} \
+            $ercc_arg \
+            --sample-column sampleName \
+            --group-column groupName \
+            $batch_arg \
+            -o $outdir \
+            --host {params.host} \
+            --genes-selection {params.genes_selection}
+        ls -alrth $outdir
+        """
+
