@@ -118,14 +118,76 @@ rule aggregate_transcript_level_counts:
         shell(f"python {params.script1} --input {input.counts_files} --gtf {input.gtf} --fragcount_output {output.counts} --fpkm_output {output.counts_fpkm} --tpm_output {output.counts_tpm}")
 
 
-rule normalized_counts:
+# diffex normalize writes its normalized-count matrices (limma/edgeR/DESeq2, ERCC-scaled
+# when --use-ercc is set) as flat TSVs next to normalize.html, but only the batch-corrected
+# limma file shows up for w_batch variants. Snakemake output paths can't be conditional on a
+# wildcard's value within one rule, so the w_batch and wo_batch variants are split into two
+# rules with matching wildcard_constraints instead of one rule with a variable output list.
+rule normalized_counts_wo_batch:
     input:
         counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
-        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html")
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
+        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
+        deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
     wildcard_constraints:
-        variant = "|".join(VARIANTS.keys()) if VARIANTS else "NOVARIANT",
+        variant = "|".join(v for v in VARIANTS if not VARIANTS[v][1]) if VARIANTS else "NOVARIANT",
+    params:
+        manifest_file = MANIFEST_FILE,
+        user_ercc = lambda wc: VARIANTS[wc.variant][0],
+        user_batch = lambda wc: VARIANTS[wc.variant][1],
+        ercc_mix = str(config.get('diffex', {}).get('ercc_mix', '1')).lower(),
+        batch_column = str(config.get('diffex', {}).get('batch_column', 'batch')),
+        genes_selection = str(config.get('diffex', {}).get('genes_selection', 'both')).lower(),
+        host = DIFFEX_HOST,
+    container:
+        config['containers']['diffex']
+    threads: _get_threads("diffex_normalized_counts", profile_config)
+    shell:
+        r"""
+        set -exo pipefail
+        outdir=$(dirname {output.html})
+        mkdir -p $outdir
+        if [ "{params.user_ercc}" = "True" ]; then
+            ercc_arg="--use-ercc --ercc-mix {params.ercc_mix}"
+        else
+            ercc_arg=""
+        fi
+        if [ "{params.user_batch}" = "True" ]; then
+            batch_arg="--use-batch --batch-column {params.batch_column}"
+        else
+            batch_arg=""
+        fi
+        cd /app/DiffEx
+        diffex normalize \
+            -c {input.counts} \
+            -s {params.manifest_file} \
+            $ercc_arg \
+            --sample-column sampleName \
+            --group-column groupName \
+            $batch_arg \
+            -o $outdir \
+            --host {params.host} \
+            --genes-selection {params.genes_selection}
+        ls -alrth $outdir
+        """
+
+rule normalized_counts_w_batch:
+    input:
+        counts = join(RESULTSDIR,"counts","counts_matrix.tsv"),
+        gtf = join(REF_DIR, "ref.fixed.gtf")
+    output:
+        html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
+        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        limma_log2_rpkm_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv"),
+        edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
+        deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
+    wildcard_constraints:
+        variant = "|".join(v for v in VARIANTS if VARIANTS[v][1]) if VARIANTS else "NOVARIANT",
     params:
         manifest_file = MANIFEST_FILE,
         user_ercc = lambda wc: VARIANTS[wc.variant][0],
