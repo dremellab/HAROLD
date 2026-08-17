@@ -1977,6 +1977,26 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 <td><code>counts/normalized_counts/{variant}/normalize.html</code></td>
 <td><strong>DiffEx-normalized count matrix report</strong>, across the whole sample set. HTML report with normalized counts using DiffEx package (ERCC-based spike-in normalization, batch effect correction, etc.), per the <code>diffex</code> config block in <code>config.yaml</code>.</td>
 </tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/limma_pseudo_rpkm_counts.tsv</code></td>
+<td><strong>Limma/voom-normalized pseudo-RPKM matrix</strong>, all genes (host + virus + additives, including ERCC rows). For <code>w_ercc_*</code> variants, DiffEx derives the library-size scale factor from a regression of ERCC spike-in counts against the ERCC92 reference concentrations for the configured <code>diffex.ercc_mix</code>, instead of ordinary total-count scaling — this is the file to use as “the” ERCC-normalized matrix, analogous to <code>counts_matrix.rpkm.tsv</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts.tsv</code></td>
+<td>Log2 of the matrix above.</td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv</code></td>
+<td>Same as the log2 matrix above, with <code>limma::removeBatchEffect</code> applied. <strong>Only produced for <code>w_batch</code> variants</strong> (<code>diffex.use_batch: true</code>/<code>both</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/edgeR_TMM_normalized_logCPM_counts.tsv</code></td>
+<td><strong>edgeR TMM-normalized log-CPM matrix</strong>, all genes. For <code>w_ercc_*</code> variants, TMM normalization factors are computed with the ERCC-derived scaling applied first, same as the limma matrix above.</td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/DESeq2_vst_normalized_counts.tsv</code></td>
+<td><strong>DESeq2 variance-stabilizing-transformed (VST) matrix</strong>, all genes, ERCC-scaled for <code>w_ercc_*</code> variants the same way as the other three matrices.</td>
+</tr>
 </tbody>
 </table>
 </section>
