@@ -472,12 +472,14 @@ ul.task-list li input[type="checkbox"] {
 <section id="added" class="level3">
 <h3 class="anchored" data-anchor-id="added">Added</h3>
 <ul>
+<li><strong><code>normalized_counts</code> matrix files now declared as tracked Snakemake outputs:</strong> <code>diffex normalize</code> was already writing <code>limma_pseudo_rpkm_counts.tsv</code>, <code>limma_log2normalized_pseudo_rpkm_counts.tsv</code>, <code>limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv</code> (w_batch only), <code>edgeR_TMM_normalized_logCPM_counts.tsv</code>, and <code>DESeq2_vst_normalized_counts.tsv</code> next to <code>normalize.html</code>, but only <code>normalize.html</code> was declared as a rule output — so the TSVs were untracked, undocumented, and easy to miss. The rule is now split into per-ercc/per-batch variants (Snakemake output paths can’t vary by wildcard value within one rule), and all matrix files are documented in <code>docs/outputs.md</code>.</li>
 <li><strong>ERCC-corrected precursor matrices exposed as tracked outputs (requires DiffEx &gt;= 0.5.7):</strong> New <code>ERCC_corrected_log2_counts.tsv</code>/<code>ERCC_corrected_counts.tsv</code> files in <code>counts/normalized_counts/{variant}/</code> for <code>w_ercc_*</code> variants — the ERCC spike-in correction alone, with no method-specific model on top, ahead of the limma/edgeR/DESeq2 matrices each further derived from it. Analogous to <code>counts_matrix.rpkm.tsv</code>/<code>counts_matrix.tpm.tsv</code> for anyone who wants “the” ERCC-normalized matrix without a downstream model applied (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>, <a href="https://github.com/dremellab/HAROLD/issues/62">dremellab/HAROLD#62</a>).</li>
 </ul>
 </section>
 <section id="changed" class="level3">
 <h3 class="anchored" data-anchor-id="changed">Changed</h3>
 <ul>
+<li><strong>Legacy config migration guidance:</strong> older run directories using the deprecated <code>infer_strandedness</code> flag or nested DiffEx option blocks should move to <code>use_infer_strandedness</code> and the shared top-level <code>diffex:</code> block before running on the current pipeline version.</li>
 <li><strong><code>diffex</code> container bumped <code>0.5.5</code> → <code>0.5.7</code>:</strong> required for the ERCC-corrected precursor matrices above (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>); verified against a live run.</li>
 <li><strong><code>harold</code>’s Slurm head job time allocation reduced <code>3-00:00:00</code> → <code>0-12:00:00</code>:</strong> matches the head job’s actual workload (it only submits/monitors the run, not the run itself).</li>
 </ul>
@@ -485,7 +487,9 @@ ul.task-list li input[type="checkbox"] {
 <section id="fixed" class="level3">
 <h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
 <ul>
-<li><strong>STAR no longer pre-creates its own <code>--outTmpDir</code>:</strong> STAR creates that directory itself and errors if it already exists; the rule’s preceding <code>rm -rf</code> already guaranteed the path was absent, so the <code>mkdir -p</code> right before it was actively wrong, not just redundant.</li>
+<li><strong><code>counts_matrix.tsv</code> export no longer writes a hidden pandas index as a duplicate leading column:</strong> gene labels are now exported as an explicit <code>gene</code> column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.</li>
+<li><strong>Per-job scratch/tempdir creation hardened across rules:</strong> <code>star_align_two_pass</code>, <code>sort_star</code>, <code>cutadapt</code>, <code>mark_duplicates</code>, <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rseqc_read_gc</code>, <code>rustqc_rna_region</code>, and <code>junctions_to_bigbed</code> now create their tempdir’s parent directory first, verify it’s writable, <code>rm -rf</code> any stale leftover from a prior attempt, and clean up via an <code>EXIT</code> trap — instead of a bare <code>mkdir -p</code> with no guarantee the target was clean or writable.</li>
+<li><strong>STAR no longer pre-creates its own <code>--outTmpDir</code>:</strong> STAR creates that directory itself and errors if it already exists; the rule’s preceding <code>rm -rf</code> already guaranteed the path was absent, so the <code>mkdir -p</code> right before it (added by the tempdir hardening above) was actively wrong, not just redundant.</li>
 <li><strong><code>harold</code>’s scratch temp dir moved from a shared path to workdir-local, and created at <code>init</code>:</strong> on <code>shen</code>, <code>TEMP_DIR</code> was <code>/scratch/$USER/harold_temp/</code> — not necessarily on the same filesystem as a given run’s workdir, and prone to being unwritable under singularity’s bind setup. It’s now <code>${WORKDIR}/tmp/</code>, created during <code>init</code> so it exists before any job needs it.</li>
 </ul>
 </section>
@@ -524,7 +528,6 @@ ul.task-list li input[type="checkbox"] {
 <section id="changed-1" class="level3">
 <h3 class="anchored" data-anchor-id="changed-1">Changed</h3>
 <ul>
-<li><strong>Legacy config migration guidance:</strong> older run directories using the deprecated <code>infer_strandedness</code> flag or nested DiffEx option blocks should move to <code>use_infer_strandedness</code> and the shared top-level <code>diffex:</code> block before running on the current pipeline version.</li>
 <li>S3 namespace hierarchy — Updated <code>s3_transfer_harold.py</code> to include pipeline-name in S3 path hierarchy (<code>_HTS/HAROLD/sample_set/...</code>) for consistency with Chroma 2; added <code>s3_pipeline_name</code> config key (default: <code>HAROLD</code>)</li>
 <li>Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default</li>
 <li>Default reference path — Updated fasta_gtf reference path to <code>/project/dremel_lab/workflows/reference_data/fasta_gtf</code></li>
@@ -540,7 +543,6 @@ ul.task-list li input[type="checkbox"] {
 <section id="fixed-1" class="level3">
 <h3 class="anchored" data-anchor-id="fixed-1">Fixed</h3>
 <ul>
-<li><strong><code>counts_matrix.tsv</code> export no longer writes a hidden pandas index as a duplicate leading column:</strong> gene labels are now exported as an explicit <code>gene</code> column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.</li>
 <li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success, and no longer depend on always being invoked as <code>... &amp;&amp; exit 0</code> to do so safely</li>
 <li>Stray user-site packages — <code>harold</code> wrapper and its Slurm job script now set <code>PYTHONNOUSERSITE=1</code> to isolate from <code>~/.local</code> pip <code>--user</code> packages</li>
 <li>Scratch temp dir crowding — Per-job scratch directories now nest under <code>/scratch/$USER/harold_temp/&lt;uuid&gt;</code> instead of <code>/scratch/$USER/&lt;uuid&gt;</code></li>
