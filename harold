@@ -417,10 +417,6 @@ if [ "$PLATFORM" == "shen" ]; then
   # eval $PATH_PREPEND
   # MODULE_LOAD="module load apptainer && module load snakemake"
   MODULE_LOAD="module load apptainer"
-  # Prefer a workdir-local temp area rather than a shared /scratch/<user>/harold_temp
-  # path so per-job temp directories are created on the same filesystem as the run
-  # and remain writable under singularity's bind setup.
-  TEMP_DIR="${WORKDIR}/tmp/"
   REFS_DIR="/project/dremel_lab/workflows/reference_data/fasta_gtf"
   KRAKEN2_DB="/standard/dremel_lab/workflows/reference_data/kraken2/kraken2_db"
   hint="This is set in pipelines mamba environment. If you are running into this error reach out to cud2td@virginia.edu."
@@ -1450,6 +1446,15 @@ function main(){
   WORKDIR=$(readlink -f $WORKDIR)
   log_info "Working Dir: $WORKDIR"
   CONFIGFILE="${WORKDIR}/config.yaml"
+
+  if [ "$PLATFORM" == "shen" ]; then
+    # Prefer a workdir-local temp area rather than a shared /scratch/<user>/harold_temp
+    # path so per-job temp directories are created on the same filesystem as the run
+    # and remain writable under singularity's bind setup. Must be set here (after
+    # WORKDIR is resolved above), not in the top-level PLATFORM setup block -- that
+    # block runs before main()'s argument parser has assigned WORKDIR at all.
+    TEMP_DIR="${WORKDIR}/tmp/"
+  fi
 
   SCRATCH_ROOT="${SCRATCH:-/scratch/$USER}"
   SCRATCH_FALLBACK="${WORKDIR}/.harold_runtime"
