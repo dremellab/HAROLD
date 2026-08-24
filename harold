@@ -354,6 +354,139 @@ extract_failed_rules_digest() {
       "${last_sample[$jid]}" "${last_log[$jid]}"
   done
 }
+
+extract_running_jobs_digest() {
+# Best-effort scrape of Snakemake's own log for job-start ("rule <name>:")
+# blocks that are still in flight -- i.e. started but with no matching
+# "Finished jobid: <id>" line and not already reported by
+# extract_failed_rules_digest. NOT authoritative (same caveats as that
+# function); a parse miss here must never block the rest of the progress
+# snapshot.
+#
+# Deliberately does NOT wait for a blank line to mark the end of a job's
+# block (unlike extract_failed_rules_digest's short error blocks): a verbose
+# "rule <name>:" block is followed by a long shell command dump that can
+# itself contain blank-*looking* (whitespace-only) lines -- `[[ -z "$line"
+# ]]` wouldn't match those (unlike Python's `.strip() == ""`), silently
+# dropping the job. So instead just track jobid/wildcards until the next
+# block header ("rule <name>:" or "Error in rule <name>:") appears.
+  local logfile="$1"
+  [[ -f "$logfile" ]] || return 0
+
+  local error_rule_re='^Error in rule (.+):$'
+  local rule_re='^rule ([^ ]+):$'
+  local jobid_re='^    jobid: ([0-9]+)$'
+  local wildcards_re='^    wildcards: (.*)$'
+
+  local -A started_rule=() started_wildcards=()
+  local -A finished_jobids=() failed_jobids=()
+
+  local fjid
+  while IFS= read -r fjid; do
+    [[ -n "$fjid" ]] && finished_jobids["$fjid"]=1
+  done < <(grep -oP '(?<=Finished jobid: )[0-9]+' "$logfile" 2>/dev/null || true)
+
+  local fline
+  while IFS= read -r fline; do
+    [[ -n "$fline" ]] && failed_jobids["$fline"]=1
+  done < <(extract_failed_rules_digest "$logfile" 2>/dev/null | grep -oP '(?<=jobid=)[0-9]+' || true)
+
+  local current_rule="" current_jobid=""
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ $error_rule_re ]]; then
+      # Handled separately by extract_failed_rules_digest; stop attributing
+      # jobid/wildcards lines inside it to whatever rule was open before.
+      current_rule=""; current_jobid=""
+      continue
+    fi
+    if [[ "$line" =~ $rule_re ]]; then
+      current_rule="${BASH_REMATCH[1]}"
+      current_jobid=""
+      continue
+    fi
+    [[ -z "$current_rule" ]] && continue
+    if [[ "$line" =~ $jobid_re ]]; then
+      current_jobid="${BASH_REMATCH[1]}"
+      started_rule["$current_jobid"]="$current_rule"
+      started_wildcards["$current_jobid"]=""
+      continue
+    fi
+    if [[ -n "$current_jobid" && "$line" =~ $wildcards_re ]]; then
+      started_wildcards["$current_jobid"]="${BASH_REMATCH[1]}"
+      current_jobid=""  # done with this block's fields we care about
+    fi
+  done < "$logfile"
+
+  local jid label
+  for jid in "${!started_rule[@]}"; do
+    [[ -n "${finished_jobids[$jid]:-}" ]] && continue
+    [[ -n "${failed_jobids[$jid]:-}" ]] && continue
+    label="${started_wildcards[$jid]}"
+    [[ -z "$label" ]] && label="jobid=$jid"
+    printf '  - %s (%s)\n' "${started_rule[$jid]}" "$label"
+  done
+}
+
+build_progress_marker_content() {
+# Compose the full pipeline.running snapshot: overall progress (from
+# Snakemake's own "N of M steps (P%) done" line, or the "total" line from
+# its Job stats table if no job has completed yet), which job(s) are
+# currently running, a live failed-job count, elapsed time, and a
+# last-updated timestamp. Unlike a bare progress-percentage line, this has
+# something to say even while every remaining job is failing outright --
+# e.g. a resume run where nothing has *finished* yet -- which is exactly
+# the case that used to leave pipeline.running empty for the whole run.
+  local logfile="$1"
+  local started_epoch="${2:-}"
+  [[ -f "$logfile" ]] || return 0
+
+  local raw done_n total_n pct remaining
+  raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "$logfile" 2>/dev/null | tail -1 || true)
+  if [[ -n "$raw" ]]; then
+    done_n=$(printf '%s' "$raw" | grep -oP '^[0-9]+' || true)
+    total_n=$(printf '%s' "$raw" | grep -oP '(?<=of )[0-9]+' || true)
+    pct=$(printf '%s' "$raw" | grep -oP '[0-9]+(?=%)' || true)
+  else
+    done_n=0
+    total_n=$(grep -oP '^total\s+\K[0-9]+' "$logfile" 2>/dev/null | tail -1 || true)
+    pct=0
+  fi
+  [[ -z "$total_n" ]] && total_n="?"
+  if [[ "$total_n" == "?" ]]; then
+    remaining="?"
+  else
+    remaining=$(( total_n - done_n )); (( remaining < 0 )) && remaining=0
+  fi
+
+  {
+    printf 'Progress : %s / %s steps complete (%s%%)\n' "$done_n" "$total_n" "$pct"
+    printf 'Remaining: %s steps\n' "$remaining"
+
+    local running running_n
+    running=$(extract_running_jobs_digest "$logfile" 2>/dev/null || true)
+    if [[ -n "$running" ]]; then
+      running_n=$(printf '%s\n' "$running" | grep -c '.')
+      printf 'Running  : %s job(s)\n' "$running_n"
+      printf '%s\n' "$running"
+    fi
+
+    local failed failed_n
+    failed=$(extract_failed_rules_digest "$logfile" 2>/dev/null || true)
+    if [[ -n "$failed" ]]; then
+      failed_n=$(printf '%s\n' "$failed" | grep -c '.')
+      printf 'Failed   : %s job(s) so far (see pipeline.failed once the run ends)\n' "$failed_n"
+    fi
+
+    if [[ -n "$started_epoch" ]]; then
+      local now_epoch elapsed_s
+      now_epoch=$(date +%s)
+      elapsed_s=$(( now_epoch - started_epoch ))
+      printf 'Elapsed  : %s\n' "$(printf '%d:%02d:%02d' $((elapsed_s/3600)) $((elapsed_s%3600/60)) $((elapsed_s%60)))"
+    fi
+
+    printf 'Updated  : %s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
+  }
+}
 LIB_EOF
 }
 
@@ -875,24 +1008,19 @@ function runlocal() {
   # _progress_monitor (see the sbatch template built in run_head_job()).
   runlocal_log="${WORKDIR}/runlocal.$(date +%y%m%d%H%M%S).log"
   marker="${WORKDIR}/pipeline.running"
+  STARTED_EPOCH=$(date +%s)
+  # Source the shared digest parser now (rather than only in the failure
+  # branch below) so the live monitor loop below can use
+  # build_progress_marker_content/extract_running_jobs_digest too -- see
+  # write_failure_helpers_lib for what they provide and why.
+  if [[ -f "${WORKDIR}/.harold_failure_helpers.sh" ]]; then
+    source "${WORKDIR}/.harold_failure_helpers.sh"
+  fi
   _runlocal_progress_monitor() {
-    local raw done_n total_n pct remaining updated
     while true; do
       [[ -f "$marker" ]] || break
-      if [[ -f "$runlocal_log" ]]; then
-        raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "$runlocal_log" 2>/dev/null | tail -1 || true)
-        if [[ -n "$raw" ]]; then
-          done_n=$(printf '%s' "$raw" | grep -oP '^\d+' || true)
-          total_n=$(printf '%s' "$raw" | grep -oP '(?<=of )\d+' || true)
-          pct=$(printf '%s' "$raw" | grep -oP '\d+(?=%)' || true)
-          if [[ -n "$done_n" && -n "$total_n" && -n "$pct" ]]; then
-            remaining=$(( total_n - done_n ))
-            (( remaining < 0 )) && remaining=0
-            updated=$(date '+%Y-%m-%d %H:%M:%S')
-            printf 'Progress : %s / %s steps complete (%s%%)\nRemaining: %s steps\nUpdated  : %s\n' \
-              "$done_n" "$total_n" "$pct" "$remaining" "$updated" > "$marker"
-          fi
-        fi
+      if declare -F build_progress_marker_content > /dev/null; then
+        build_progress_marker_content "$runlocal_log" "$STARTED_EPOCH" > "$marker" 2>/dev/null || true
       fi
       sleep 60
     done
@@ -1087,15 +1215,18 @@ echo "------------------------------------------------------------------"
 
 # ── Progress monitor ─────────────────────────────────────────────────
 # Background loop: waits for this job's own stdout (slurm-<jobid>.out, which
-# is where Snakemake's own "N of M steps (P%) done" lines land), then
-# periodically writes a human-readable progress summary into
-# pipeline.running so `cat pipeline.running` shows live progress.
+# is where Snakemake's own log lines land), then periodically writes a
+# human-readable progress summary -- overall %, currently-running job(s),
+# live failed-job count, elapsed time -- into pipeline.running so
+# `cat pipeline.running` shows live progress even before any job has
+# finished or while every remaining job is failing outright (build_progress_
+# marker_content is sourced from .harold_failure_helpers.sh above).
+_STARTED_EPOCH=$(date +%s)
 _progress_monitor() {
   local logfile="__WORKDIR__/slurm-${SLURM_JOB_ID}.out"
   local marker="__WORKDIR__/pipeline.running"
   local waited=0
   local max_wait=300
-  local raw done_n total_n pct remaining updated
 
   while [[ ! -f "$logfile" && "$waited" -lt "$max_wait" ]]; do
     [[ -f "$marker" ]] || return 0
@@ -1105,20 +1236,8 @@ _progress_monitor() {
 
   while true; do
     [[ -f "$marker" ]] || break
-    if [[ -f "$logfile" ]]; then
-      raw=$(grep -oP '[0-9]+ of [0-9]+ steps \([0-9]+%\) done' "$logfile" 2>/dev/null | tail -1 || true)
-      if [[ -n "$raw" ]]; then
-        done_n=$(printf '%s' "$raw" | grep -oP '^\d+' || true)
-        total_n=$(printf '%s' "$raw" | grep -oP '(?<=of )\d+' || true)
-        pct=$(printf '%s' "$raw" | grep -oP '\d+(?=%)' || true)
-        if [[ -n "$done_n" && -n "$total_n" && -n "$pct" ]]; then
-          remaining=$(( total_n - done_n ))
-          (( remaining < 0 )) && remaining=0
-          updated=$(date '+%Y-%m-%d %H:%M:%S')
-          printf 'Progress : %s / %s steps complete (%s%%)\nRemaining: %s steps\nUpdated  : %s\n' \
-            "$done_n" "$total_n" "$pct" "$remaining" "$updated" > "$marker"
-        fi
-      fi
+    if [[ -f "$logfile" ]] && declare -F build_progress_marker_content > /dev/null; then
+      build_progress_marker_content "$logfile" "$_STARTED_EPOCH" > "$marker" 2>/dev/null || true
     fi
     sleep 60
   done
