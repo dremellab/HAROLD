@@ -37,6 +37,8 @@ website:
         menu:
           - text: "dev (current)"
             href: https://dremellab.github.io/HAROLD/dev/docs/index.html
+          - text: "2.0.1"
+            href: https://dremellab.github.io/HAROLD/2.0.1/docs/index.html
           - text: "2.0.0"
             href: https://dremellab.github.io/HAROLD/2.0.0/docs/index.html
           - text: "1.2.1"
