@@ -429,16 +429,20 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#changelog" id="toc-changelog" class="nav-link active" data-scroll-target="#changelog">Changelog</a>
   <ul class="collapse">
-  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.0.1]</a>
+  <li><a href="#unreleased" id="toc-unreleased" class="nav-link" data-scroll-target="#unreleased">[Unreleased]</a>
   <ul class="collapse">
   <li><a href="#added" id="toc-added" class="nav-link" data-scroll-target="#added">Added</a></li>
+  </ul></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.0.1]</a>
+  <ul class="collapse">
+  <li><a href="#added-1" id="toc-added-1" class="nav-link" data-scroll-target="#added-1">Added</a></li>
   <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
   <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
   </ul></li>
   <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1">[2.0.0]</a>
   <ul class="collapse">
   <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
-  <li><a href="#added-1" id="toc-added-1" class="nav-link" data-scroll-target="#added-1">Added</a></li>
+  <li><a href="#added-2" id="toc-added-2" class="nav-link" data-scroll-target="#added-2">Added</a></li>
   <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
   <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
   </ul></li>
@@ -452,7 +456,7 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4">[1.1.0]</a>
   <ul class="collapse">
-  <li><a href="#added-2" id="toc-added-2" class="nav-link" data-scroll-target="#added-2">Added</a></li>
+  <li><a href="#added-3" id="toc-added-3" class="nav-link" data-scroll-target="#added-3">Added</a></li>
   <li><a href="#changed-4" id="toc-changed-4" class="nav-link" data-scroll-target="#changed-4">Changed</a></li>
   <li><a href="#fixed-2" id="toc-fixed-2" class="nav-link" data-scroll-target="#fixed-2">Fixed</a></li>
   </ul></li>
@@ -471,10 +475,19 @@ ul.task-list li input[type="checkbox"] {
 <section id="changelog" class="level1">
 <h1>Changelog</h1>
 <p>All notable changes to this project will be documented in this file.</p>
-<section id="section" class="level2">
-<h2 class="anchored" data-anchor-id="section">[2.0.1]</h2>
+<section id="unreleased" class="level2">
+<h2 class="anchored" data-anchor-id="unreleased">[Unreleased]</h2>
 <section id="added" class="level3">
 <h3 class="anchored" data-anchor-id="added">Added</h3>
+<ul>
+<li><strong><code>pipeline.running</code> now shows live currently-running job(s) and a live failed-job count, not just a completion percentage:</strong> the periodic marker refresh (both <code>runlocal</code>’s monitor and the SLURM head job’s <code>_progress_monitor</code>) previously only had something to write when Snakemake logged an “N of M steps (P%) done” line, which only appears on job <em>completion</em> – a run whose only remaining jobs were failing left <code>pipeline.running</code> empty for the entire run, indistinguishable from a run that hadn’t started. New <code>extract_running_jobs_digest()</code> (scrapes in-flight <code>rule &lt;name&gt;:</code> blocks, excluding ones already finished or failed) and <code>build_progress_marker_content()</code> – both added to the shared <code>.harold_failure_helpers.sh</code> library alongside the existing <code>extract_failed_rules_digest()</code> – combine overall progress (falling back to the DAG’s initial <code>total</code> job count before any job has finished), the currently-running rule(s)/wildcards, a live failed-job count, and elapsed time. Mirrored in chroma2’s equivalent <code>chroma2</code> wrapper enhancement (same output format, ported to Python there).</li>
+</ul>
+</section>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section">[2.0.1]</h2>
+<section id="added-1" class="level3">
+<h3 class="anchored" data-anchor-id="added-1">Added</h3>
 <ul>
 <li><strong><code>normalized_counts</code> matrix files now declared as tracked Snakemake outputs:</strong> <code>diffex normalize</code> was already writing <code>limma_pseudo_rpkm_counts.tsv</code>, <code>limma_log2normalized_pseudo_rpkm_counts.tsv</code>, <code>limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv</code> (w_batch only), <code>edgeR_TMM_normalized_logCPM_counts.tsv</code>, and <code>DESeq2_vst_normalized_counts.tsv</code> next to <code>normalize.html</code>, but only <code>normalize.html</code> was declared as a rule output — so the TSVs were untracked, undocumented, and easy to miss. The rule is now split into per-ercc/per-batch variants (Snakemake output paths can’t vary by wildcard value within one rule), and all matrix files are documented in <code>docs/outputs.md</code>.</li>
 <li><strong>ERCC-corrected precursor matrices exposed as tracked outputs (requires DiffEx &gt;= 0.5.7):</strong> New <code>ERCC_corrected_log2_counts.tsv</code>/<code>ERCC_corrected_counts.tsv</code> files in <code>counts/normalized_counts/{variant}/</code> for <code>w_ercc_*</code> variants — the ERCC spike-in correction alone, with no method-specific model on top, ahead of the limma/edgeR/DESeq2 matrices each further derived from it. Analogous to <code>counts_matrix.rpkm.tsv</code>/<code>counts_matrix.tpm.tsv</code> for anyone who wants “the” ERCC-normalized matrix without a downstream model applied (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>, <a href="https://github.com/dremellab/HAROLD/issues/62">dremellab/HAROLD#62</a>).</li>
@@ -509,8 +522,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>New <code>rustqc</code> container required; <code>rseqc_tin_downsample_reads</code> config key removed:</strong> existing <code>config.yaml</code> files need a <code>rustqc: "docker://seqinfomics/rustqc:0.2.1"</code> entry added to <code>containers:</code> (see the QC migration entries below). The now-unused <code>rseqc_tin_downsample_reads</code> key was removed — TIN no longer downsamples. Any cluster-profile <code>set-resources</code>/<code>set-threads</code> overrides keyed to <code>infer_strandedness</code>, <code>rseqc_read_distribution</code>, <code>downsample_bam_for_tin</code>, <code>rseqc_tin</code>, or <code>rseqc_junction_annotation</code> are now inert (those rules no longer exist) and can be deleted; the replacements are <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rustqc_rna_region</code>, and <code>mark_duplicates</code>.</li>
 </ul>
 </section>
-<section id="added-1" class="level3">
-<h3 class="anchored" data-anchor-id="added-1">Added</h3>
+<section id="added-2" class="level3">
+<h3 class="anchored" data-anchor-id="added-2">Added</h3>
 <ul>
 <li>DEG and GSEA pipeline stage — New optional <code>diffex_deg_gsea</code> stage driven by a <code>contrasts.tsv</code> manifest (<code>harold --contrasts/-x</code>); runs DiffEx DEG (limma/DESeq2/edgeR) per contrast/variant/method followed by GSEA, with tri-state ERCC/batch variant expansion, a shared MSigDB cache warm-up, and <code>.rnk</code> sanitization for +/-Inf scores</li>
 <li>Pipeline run-state tracking — <code>harold</code> now writes <code>pipeline.{running,completed,failed,canceled}</code> markers and a <code>pipeline.status.json</code> sidecar to WORKDIR, updated on <code>runlocal</code>/<code>run</code> start, success, failure, and Slurm cancellation (SIGTERM/SIGINT trap)</li>
@@ -596,8 +609,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="section-4" class="level2">
 <h2 class="anchored" data-anchor-id="section-4">[1.1.0]</h2>
-<section id="added-2" class="level3">
-<h3 class="anchored" data-anchor-id="added-2">Added</h3>
+<section id="added-3" class="level3">
+<h3 class="anchored" data-anchor-id="added-3">Added</h3>
 <ul>
 <li>Optional diffex-normalized counts workflow, including per-sample RSeQC transcript quantification and generation of gene/transcript RPKM/TPM matrices.</li>
 <li><code>config/rivanna/slurm-status.py</code> utility to surface job states and archive successful Slurm logs automatically.</li>
