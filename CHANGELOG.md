@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [2.1.0]
+
 ### Added
 - **`pipeline.running` now shows live currently-running job(s) and a live failed-job count, not just a completion percentage:** the periodic marker refresh (both `runlocal`'s monitor and the SLURM head job's `_progress_monitor`) previously only had something to write when Snakemake logged an "N of M steps (P%) done" line, which only appears on job *completion* -- a run whose only remaining jobs were failing left `pipeline.running` empty for the entire run, indistinguishable from a run that hadn't started. New `extract_running_jobs_digest()` (scrapes in-flight `rule <name>:` blocks, excluding ones already finished or failed) and `build_progress_marker_content()` -- both added to the shared `.harold_failure_helpers.sh` library alongside the existing `extract_failed_rules_digest()` -- combine overall progress (falling back to the DAG's initial `total` job count before any job has finished), the currently-running rule(s)/wildcards, a live failed-job count, and elapsed time. Mirrored in chroma2's equivalent `chroma2` wrapper enhancement (same output format, ported to Python there).
 
