@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>inputs – HAROLD — RNA-seq Quantification &amp; Normalization</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-f83c246346592b24d02aa84ae3974412.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-60383baa369db6667c77bdca9eedff41.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-dark"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = true;
+    const darkModeDefault = authorPrefersDark;
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../index.html">
+    <span class="navbar-title">HAROLD — RNA-seq Quantification &amp; Normalization</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link active" href="../docs/index.html" aria-current="page"> 
+<span class="menu-text">Docs</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-version-2.1.0" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Version: 2.1.0</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-version-2.1.0">    
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.1.0/docs/index.html">
+ <span class="dropdown-text">2.1.0 (current)</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/dev/docs/index.html">
+ <span class="dropdown-text">dev</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.0.1/docs/index.html">
+ <span class="dropdown-text">2.0.1</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/2.0.0/docs/index.html">
+ <span class="dropdown-text">2.0.0</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="https://dremellab.github.io/HAROLD/1.2.1/docs/index.html">
+ <span class="dropdown-text">1.2.1</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/dremellab/HAROLD"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/inputs.html">📥 HAROLD Input Requirements</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Getting Started</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🧬 HAROLD — RNA-seq Quantification Pipeline</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/prereq.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">⚙️ Prerequisites for Running HAROLD on Rivanna</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/usage.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🧭 Using HAROLD on Rivanna</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Pipeline</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/pipeline.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">🔄 HAROLD Pipeline Architecture</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/inputs.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">📥 HAROLD Input Requirements</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/outputs.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">📊 HAROLD Output Files</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Cloud &amp; Storage</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/s3_configuration.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">☁️ S3 Output Deposition</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Help</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../docs/help.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">❓ Help and Support</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#harold-input-requirements" id="toc-harold-input-requirements" class="nav-link active" data-scroll-target="#harold-input-requirements">📥 HAROLD Input Requirements</a>
+  <ul class="collapse">
+  <li><a href="#breaking-changes-v1.3.0" id="toc-breaking-changes-v1.3.0" class="nav-link" data-scroll-target="#breaking-changes-v1.3.0">⚠️ Breaking Changes (v1.3.0+)</a>
+  <ul class="collapse">
+  <li><a href="#config-key-renamed-infer_strandedness-use_infer_strandedness" id="toc-config-key-renamed-infer_strandedness-use_infer_strandedness" class="nav-link" data-scroll-target="#config-key-renamed-infer_strandedness-use_infer_strandedness">Config Key Renamed: <code>infer_strandedness</code> → <code>use_infer_strandedness</code></a></li>
+  </ul></li>
+  <li><a href="#sample-manifest-required-for-initialization" id="toc-sample-manifest-required-for-initialization" class="nav-link" data-scroll-target="#sample-manifest-required-for-initialization">1. Sample Manifest (Required for Initialization)</a>
+  <ul class="collapse">
+  <li><a href="#example-sample-manifest" id="toc-example-sample-manifest" class="nav-link" data-scroll-target="#example-sample-manifest">Example Sample Manifest</a></li>
+  <li><a href="#supported-library-types" id="toc-supported-library-types" class="nav-link" data-scroll-target="#supported-library-types">Supported Library Types</a></li>
+  <li><a href="#validation-rules" id="toc-validation-rules" class="nav-link" data-scroll-target="#validation-rules">Validation Rules</a></li>
+  </ul></li>
+  <li><a href="#working-directory" id="toc-working-directory" class="nav-link" data-scroll-target="#working-directory">2. Working Directory (<code>--workdir</code>)</a></li>
+  <li><a href="#reference-configuration" id="toc-reference-configuration" class="nav-link" data-scroll-target="#reference-configuration">3. Reference Configuration (Host, Additives, and Viruses)</a>
+  <ul class="collapse">
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters">Parameters</a></li>
+  <li><a href="#reference-data-paths" id="toc-reference-data-paths" class="nav-link" data-scroll-target="#reference-data-paths">Reference Data Paths</a></li>
+  <li><a href="#host-specific-gtf-files-trna-and-repeats" id="toc-host-specific-gtf-files-trna-and-repeats" class="nav-link" data-scroll-target="#host-specific-gtf-files-trna-and-repeats">Host-Specific GTF Files (tRNA and Repeats)</a></li>
+  <li><a href="#validation-rules-1" id="toc-validation-rules-1" class="nav-link" data-scroll-target="#validation-rules-1">Validation Rules</a></li>
+  </ul></li>
+  <li><a href="#input-validation-and-quality-gating" id="toc-input-validation-and-quality-gating" class="nav-link" data-scroll-target="#input-validation-and-quality-gating">4. Input Validation and Quality Gating</a>
+  <ul class="collapse">
+  <li><a href="#fastq-validation-gating" id="toc-fastq-validation-gating" class="nav-link" data-scroll-target="#fastq-validation-gating">FASTQ Validation Gating</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#required-inputs" id="toc-required-inputs" class="nav-link" data-scroll-target="#required-inputs">Required Inputs</a></li>
+  <li><a href="#optional-but-recommended-inputs" id="toc-optional-but-recommended-inputs" class="nav-link" data-scroll-target="#optional-but-recommended-inputs">Optional but Recommended Inputs</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../docs/pipeline.html">Pipeline</a></li><li class="breadcrumb-item"><a href="../docs/inputs.html">📥 HAROLD Input Requirements</a></li></ol></nav></header>
+
+
+
+
+
+<section id="harold-input-requirements" class="level1">
+<h1>📥 HAROLD Input Requirements</h1>
+<p>HAROLD accepts a small set of clearly defined inputs that ensure each run is reproducible, validated, and compatible with downstream analyses. This page describes all required and optional inputs and how HAROLD validates them before running the pipeline.</p>
+<hr>
+<section id="breaking-changes-v1.3.0" class="level2">
+<h2 class="anchored" data-anchor-id="breaking-changes-v1.3.0">⚠️ Breaking Changes (v1.3.0+)</h2>
+<section id="config-key-renamed-infer_strandedness-use_infer_strandedness" class="level3">
+<h3 class="anchored" data-anchor-id="config-key-renamed-infer_strandedness-use_infer_strandedness">Config Key Renamed: <code>infer_strandedness</code> → <code>use_infer_strandedness</code></h3>
+<p><strong>If upgrading from v1.2.x:</strong> Update your <code>config.yaml</code> file.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Old Key</th>
+<th>New Key</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>infer_strandedness</code></td>
+<td><code>use_infer_strandedness</code></td>
+<td>Controls whether to use inferred strandedness (<code>true</code>, default) or manifest values (<code>false</code>) for count extraction. Inference itself is via <code>rustqc</code>’s <code>infer_experiment</code> module (was RSeQC’s <code>infer_experiment.py</code> before the QC-tooling migration — same output format, so this doesn’t change anything below).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Important:</strong> HAROLD <strong>always infers and reports</strong> strandedness regardless of this setting. The config key only controls which strand assignment is <strong>used for quantification</strong>:</p>
+<ul>
+<li><strong><code>use_infer_strandedness: true</code></strong> (default) — Manifest <code>strandedness</code> column ignored; inference is authoritative.</li>
+<li><strong><code>use_infer_strandedness: false</code></strong> — Manifest <code>strandedness</code> column required and used; overrides inference.</li>
+</ul>
+<p><strong>Migration:</strong> If you have existing <code>config.yaml</code> files with <code>infer_strandedness</code>, rename the key. The behavior remains the same; this is purely a naming clarification.</p>
+<hr>
+</section>
+</section>
+<section id="sample-manifest-required-for-initialization" class="level2">
+<h2 class="anchored" data-anchor-id="sample-manifest-required-for-initialization">1. Sample Manifest (Required for Initialization)</h2>
+<p>The <strong>sample manifest</strong> (also called <code>samples.tsv</code> or <code>manifest.tsv</code>) is required only during the <strong>initialization</strong> phase (<code>runmode=init</code>). It defines the list of samples and their corresponding FASTQ file paths. The manifest must be a <strong>tab-separated file</strong> with the following columns:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 91%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Column Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>sampleName</code></td>
+<td><strong>Required.</strong> Unique identifier for each sample. No duplicates allowed.</td>
+</tr>
+<tr class="even">
+<td><code>groupName</code></td>
+<td><strong>Required.</strong> Biological or experimental group label (e.g., <code>treated</code>, <code>control</code>, <code>infected</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>batch</code></td>
+<td><strong>Optional.</strong> Sequencing batch identifier for batch-effect correction. If used, <strong>all samples must have a batch value</strong> (no mixing of filled and empty values).</td>
+</tr>
+<tr class="even">
+<td><code>path_to_R1_fastq</code></td>
+<td><strong>Required.</strong> Path to Read 1 FASTQ file (absolute or relative; must exist and be readable).</td>
+</tr>
+<tr class="odd">
+<td><code>path_to_R2_fastq</code></td>
+<td><strong>Required (PE) / Optional (SE).</strong> Path to Read 2 FASTQ file. Leave empty for single-end libraries.</td>
+</tr>
+<tr class="even">
+<td><code>strandedness</code></td>
+<td><strong>Required if <code>use_infer_strandedness=false</code>.</strong> Library strandedness (<code>forward</code>, <code>reverse</code>, or <code>unstranded</code>). HAROLD always infers strandedness (via <code>rustqc</code>’s <code>infer_experiment</code> module) and reports it in output. The <code>use_infer_strandedness</code> config (default: true) controls whether the inferred values or manifest values are used for count extraction. When true, manifest values are ignored; when false, manifest values are required and used for extraction.</td>
+</tr>
+</tbody>
+</table>
+<section id="example-sample-manifest" class="level3">
+<h3 class="anchored" data-anchor-id="example-sample-manifest">Example Sample Manifest</h3>
+<pre class="text"><code>sampleName  groupName   batch   path_to_R1_fastq    path_to_R2_fastq    strandedness
+S1  Control B1  /data/fastq/S1_R1.fastq.gz  /data/fastq/S1_R2.fastq.gz  forward
+S2  Treatment   B1  /data/fastq/S2_R1.fastq.gz  /data/fastq/S2_R2.fastq.gz  reverse
+S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
+</section>
+<section id="supported-library-types" class="level3">
+<h3 class="anchored" data-anchor-id="supported-library-types">Supported Library Types</h3>
+<p>HAROLD supports both <strong>paired-end (PE)</strong> and <strong>single-end (SE)</strong> sequencing data. FASTQ files must be <strong>gzip-compressed</strong> (<code>.fastq.gz</code>) and accessible from the file system at runtime. Both absolute and relative paths are supported; relative paths are resolved from the working directory.</p>
+</section>
+<section id="validation-rules" class="level3">
+<h3 class="anchored" data-anchor-id="validation-rules">Validation Rules</h3>
+<p>Before execution, HAROLD validates the manifest automatically to prevent misconfiguration:</p>
+<ul>
+<li><strong>sampleName:</strong> Must be unique across all samples.</li>
+<li><strong>groupName:</strong> Must be non-empty for all samples.</li>
+<li><strong>Batch consistency:</strong> If any sample has a batch value, <strong>all samples must have one</strong> (no mixing of filled and empty batch cells).</li>
+<li><strong>FASTQ files:</strong> R1 file must exist and be readable for all samples. R2 file must be readable for PE samples (can be empty for SE).</li>
+<li><strong>Strandedness values:</strong> Required and validated (must be <code>forward</code>, <code>reverse</code>, or <code>unstranded</code>, case-insensitive) only when <code>use_infer_strandedness=false</code>. Values are normalized to lowercase internally (Forward → forward, REVERSE → reverse, etc.). HAROLD always infers strandedness regardless of this setting.</li>
+</ul>
+<p>If validation fails, HAROLD reports the specific error and stops before initialization.</p>
+<section id="strandedness-inference-vs.-manifest-values" class="level4">
+<h4 class="anchored" data-anchor-id="strandedness-inference-vs.-manifest-values">Strandedness Inference vs.&nbsp;Manifest Values</h4>
+<p>HAROLD employs a <strong>two-step strandedness strategy</strong>:</p>
+<ol type="1">
+<li><p><strong>Inference (always happens):</strong> <code>rustqc</code>’s <code>infer_experiment</code> module (RSeQC <code>infer_experiment.py</code>-format-identical output) analyzes read pair orientation and reports a stranded result (forward, reverse, or unstranded based on confidence threshold). This inference is output in <code>results/{sample}/rseqc/{sample}.strandedness.txt</code> and aggregated in <code>results/counts/sample_strandedness.tsv</code>. When <code>use_infer_strandedness: true</code>, this inference step runs as its own dedicated pass (<code>rustqc_rna_combined_probe</code>) before the rest of <code>rustqc</code>’s modules run, since those need the strand result as an input — see <a href="../docs/pipeline.html">Pipeline Architecture</a> for details.</p></li>
+<li><p><strong>Selection (config-driven):</strong> The <code>use_infer_strandedness</code> config key selects which strandedness is <strong>used for count extraction</strong>:</p>
+<ul>
+<li><strong>true (default):</strong> Use inferred strandedness; manifest column ignored.</li>
+<li><strong>false:</strong> Use manifest column; inferred strandedness reported but not used for counts.</li>
+</ul></li>
+</ol>
+<p><strong>Recommendation:</strong> Leave <code>use_infer_strandedness: true</code> unless you have a strong reason to override (e.g., known library prep protocol contradicts inference). Inferred values are more robust than manual annotation.</p>
+<p><strong>Renaming the manifest column:</strong> If your manifest names the strandedness column something other than <code>strandedness</code>, point HAROLD at it with:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">strandedness_column</span><span class="kw">:</span><span class="at"> </span><span class="st">"strandedness"</span><span class="co">  # default; change to match your manifest's column name</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This only matters when <code>use_infer_strandedness: false</code> (that’s the only time the manifest column is read at all).</p>
+<hr>
+</section>
+</section>
+</section>
+<section id="working-directory" class="level2">
+<h2 class="anchored" data-anchor-id="working-directory">2. Working Directory (<code>--workdir</code>)</h2>
+<p>The <strong>working directory</strong> is the central location where all output, logs, and configuration files are created. It must be specified for every HAROLD command and must be writable by the user.</p>
+<p>During the <strong>initialization</strong> step (<code>runmode=init</code>), HAROLD creates the specified directory (if it does not already exist) and populates it with:</p>
+<ul>
+<li>A pipeline-specific configuration file (<code>config.yaml</code>).</li>
+<li>Template Snakemake rule files and subdirectories.</li>
+<li>A copy of the sample manifest for record keeping.</li>
+<li>Other required files for execution.</li>
+</ul>
+<p>Once initialized, all subsequent commands (<code>dryrun</code>, <code>run</code>, etc.) must reference the same working directory.</p>
+<hr>
+</section>
+<section id="reference-configuration" class="level2">
+<h2 class="anchored" data-anchor-id="reference-configuration">3. Reference Configuration (Host, Additives, and Viruses)</h2>
+<p>The reference combination defines the biological context for alignment and quantification. These inputs are required <strong>only for initialization (<code>runmode=init</code>)</strong> and must correspond to one of HAROLD’s <strong>supported reference components</strong>.</p>
+<section id="parameters" class="level3">
+<h3 class="anchored" data-anchor-id="parameters">Parameters</h3>
+<ul>
+<li><p><code>--host</code>: Specifies the host genome to be used. Supported values are:</p>
+<ul>
+<li><code>hg38</code> for <em>Homo sapiens</em></li>
+<li><code>mm39</code> for <em>Mus musculus</em></li>
+</ul></li>
+<li><p><code>--additives</code>: Defines optional spike-in sequences or synthetic controls. Supported values are:</p>
+<ul>
+<li><code>ERCC</code> for External RNA Control Consortium controls.</li>
+<li><code>BAC16Insert</code> for BAC16-derived KSHV genomic insert sequences.</li>
+<li><code>4SU1</code> for the 4-thiouridine (4sU) metabolic-labeling spike-in control.</li>
+<li>Multiple additives can be supplied as a comma-separated list (e.g., <code>ERCC,BAC16Insert</code>).</li>
+</ul></li>
+<li><p><code>--viruses</code>: Lists one or more viral genomes by their accession IDs. These must match one of the supported viral references in HAROLD’s library. Multiple accessions can be provided as a comma-separated list.</p></li>
+</ul>
+</section>
+<section id="reference-data-paths" class="level3">
+<h3 class="anchored" data-anchor-id="reference-data-paths">Reference Data Paths</h3>
+<p>HAROLD sources reference sequences and annotations from a centralized repository. Default paths are:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Default Location</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Host/viral FASTA &amp; GTF</strong></td>
+<td><code>/project/dremel_lab/workflows/reference_data/fasta_gtf/</code></td>
+</tr>
+<tr class="even">
+<td><strong>Singularity container images</strong></td>
+<td><code>/project/dremel_lab/workflows/singularity_images/</code></td>
+</tr>
+</tbody>
+</table>
+<p>To use custom reference paths, edit the <code>config.yaml</code> key:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">fastas_gtfs_dir</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/custom/references"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Available reference files in the default location include FASTA and GTF for:</p>
+<ul>
+<li>Host genomes: <code>hg38</code>, <code>mm39</code> (with comprehensive gene annotations)</li>
+<li>Viral references: All supported accessions (KSHV, SARS-CoV-2, HSV-1, etc.)</li>
+<li>Additives: ERCC control sequences, BAC16Insert, 4SU1</li>
+</ul>
+<hr>
+</section>
+<section id="host-specific-gtf-files-trna-and-repeats" class="level3">
+<h3 class="anchored" data-anchor-id="host-specific-gtf-files-trna-and-repeats">Host-Specific GTF Files (tRNA and Repeats)</h3>
+<p>By default, HAROLD includes <strong>host genome gene annotations</strong> (protein-coding, lncRNA, etc.) from NCBI. You can optionally augment the reference with <strong>specialized annotation files</strong>:</p>
+<section id="trnas_gtf-trna-gene-annotations" class="level4">
+<h4 class="anchored" data-anchor-id="trnas_gtf-trna-gene-annotations"><code>trnas_gtf</code> — tRNA Gene Annotations</h4>
+<p><strong>Purpose:</strong> Include transfer RNA (tRNA) genes in quantification with explicit coordinates.</p>
+<p><strong>Configuration:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">trnas_gtf</span><span class="kw">:</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/hg38.tRNAs.hg38chroms.gtf"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/mm39.tRNAs.mm39chroms.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>When to use:</strong></p>
+<ul>
+<li>If your experiment has tRNA-focused analysis (e.g., tRNA quantification, tRNA fragment analysis)</li>
+<li>tRNA GTF is separate because genomic tRNA databases (tRNAscan-SE, GtRNAdb) differ from NCBI standard annotations</li>
+<li>Leave empty or commented if tRNA quantification not needed</li>
+</ul>
+<p><strong>Expected format:</strong> GTF file with <code>gene_type = tRNA</code> entries, chromosome IDs matching host genome (chr1–chrY, not scaffolds).</p>
+<hr>
+</section>
+<section id="chrr_gtf-repeats-and-ribosomal-rna-annotations" class="level4">
+<h4 class="anchored" data-anchor-id="chrr_gtf-repeats-and-ribosomal-rna-annotations"><code>chrr_gtf</code> — Repeats and Ribosomal RNA Annotations</h4>
+<p><strong>Purpose:</strong> Include genomic repeats and ribosomal RNA (rRNA) regions in the reference annotation.</p>
+<p><strong>Configuration:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chrr_gtf</span><span class="kw">:</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/hg38.repeats.gtf"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/mm39.repeats.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>When to use:</strong></p>
+<ul>
+<li>If you want to explicitly quantify rRNA contamination or repeat-associated reads</li>
+<li>Repeats GTF is now <strong>included in the default <code>ref.gtf</code> by default</strong> (no longer requires chrR flag)</li>
+<li>Useful for multi-genome pipelines where repeat masking is important (e.g., viral integration site analysis)</li>
+</ul>
+<p><strong>Expected format:</strong> GTF file with repeat annotations (RepBase, rmsk annotations), chromosome IDs matching host genome. Can include rRNA genes, satellite DNA, SINEs, LINEs, etc.</p>
+<p><strong>Note:</strong> Set to empty string or omit if repeat quantification not needed; reference will be built without repeat annotations.</p>
+<hr>
+</section>
+</section>
+<section id="validation-rules-1" class="level3">
+<h3 class="anchored" data-anchor-id="validation-rules-1">Validation Rules</h3>
+<p>During initialization, HAROLD validates that:</p>
+<ul>
+<li>The selected host, additives, and viruses are recognized and supported.</li>
+<li>All required genome bundles are available for indexing.</li>
+<li>(If provided) Custom GTF files exist and are readable.</li>
+</ul>
+<p>If unsupported or misspelled identifiers are supplied, HAROLD will display an error message listing the allowed options.</p>
+<hr>
+</section>
+</section>
+<section id="input-validation-and-quality-gating" class="level2">
+<h2 class="anchored" data-anchor-id="input-validation-and-quality-gating">4. Input Validation and Quality Gating</h2>
+<p>HAROLD always validates input FASTQ files before alignment to detect contamination or formatting issues. This is not configurable — there is no config key to disable it.</p>
+<section id="fastq-validation-gating" class="level3">
+<h3 class="anchored" data-anchor-id="fastq-validation-gating">FASTQ Validation Gating</h3>
+<p><strong>Behavior:</strong> For every sample, <code>fastQValidator</code> runs on R1 (and R2, if paired-end) before Cutadapt. This always happens; there is nothing to turn on. Crucially, it is <strong>blocking</strong>: Cutadapt has a hard dependency on validation succeeding for that sample, so if validation fails, Cutadapt (and everything downstream) does not run for that sample until the underlying FASTQ issue is fixed.</p>
+<ol type="1">
+<li>FastQValidator analyzes each input FASTQ file (R1 and R2) for format compliance</li>
+<li>Reports total sequences, line count, and any formatting errors</li>
+<li><strong>Cutadapt only proceeds if validation passes</strong> — a failed validation (missing <code>FASTQ_SUCCESS</code> in the validator’s report, or a <code>gzip</code>/validator error) fails the rule and blocks that sample’s Cutadapt job</li>
+</ol>
+<p><strong>Validation checks include:</strong></p>
+<ul>
+<li>Correct FASTQ format (4-line records with @, sequence, +, qualities)</li>
+<li>Sequence length consistency</li>
+<li>Quality score range validity (Phred 0–93)</li>
+<li>Invalid characters in sequence or quality strings</li>
+</ul>
+<p><strong>Output:</strong> Validation report in <code>results/{sample}/fastq_validation/{sample}.fastq_validator.txt</code>, always produced.</p>
+<p><strong>If validation fails:</strong> Check that report for the specific FastQValidator error, then check <code>logs/rule_fastq_validate_sample/{sample}/</code> for the full job log. Common causes: truncated/corrupted download, mismatched R1/R2 pairing, or a non-gzip file with a <code>.fastq.gz</code> name.</p>
+<p><strong>Red flags from validation output:</strong></p>
+<ul>
+<li>Mismatched R1/R2 sequence counts (indicates paired-end mismatch or corruption)</li>
+<li>Non-standard quality scores (e.g., raw ASCII instead of Phred+33)</li>
+<li>High % low-quality bases (&gt; 50% Q &lt; 20) suggests failed sequencing run</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<section id="required-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="required-inputs">Required Inputs</h3>
+<ol type="1">
+<li><strong>Sample manifest</strong> (TSV) — sample names, group labels, FASTQ file paths</li>
+<li><strong>Working directory</strong> — output and configuration location (created if doesn’t exist)</li>
+<li><strong>Reference selection</strong> — host (hg38 or mm39) + viral accessions (comma-separated)</li>
+</ol>
+<p>FASTQ format validation (FastQValidator) always runs on every sample and blocks Cutadapt on failure — see <a href="#input-validation-and-quality-gating">above</a>. There’s no input needed for it and no config key to disable it.</p>
+</section>
+<section id="optional-but-recommended-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="optional-but-recommended-inputs">Optional but Recommended Inputs</h3>
+<ol start="4" type="1">
+<li><strong>Strandedness specification</strong> (in manifest or config) — only needed if <code>use_infer_strandedness: false</code></li>
+<li><strong>Custom GTF files</strong> (in config) — tRNA and repeat annotations if desired</li>
+<li><strong>Contrasts manifest</strong> (<code>contrasts.tsv</code>, <code>group1</code>/<code>group2</code> columns) — only needed if <code>diffex_deg_gsea: true</code>, to run DEG (limma/DESeq2/edgeR) and GSEA per contrast; see <a href="../docs/outputs.html#deg-and-gsea-diffex-integration">Outputs: DEG and GSEA</a></li>
+</ol>
+<p>Together, these inputs ensure that HAROLD can dynamically build the appropriate reference index, validate experimental metadata, and execute reproducible, high-quality RNA-seq analyses across host and viral genomes. Most users need only the three required inputs; optional inputs add specialized functionality for specific experimental designs (tRNA analysis, repeat quantification, quality gating).</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/dremellab\.github\.io\/HAROLD\/2\.1\.0\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
