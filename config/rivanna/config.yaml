@@ -59,6 +59,29 @@ default-resources:
   slurm_partition: standard-rivanna
   slurm_ntasks: 1
 
+# --- Per-attempt BASE values for rules with attempt-scaling `resources:` lambdas ---
+# (workflow/rules/qc.smk, quantify.smk multiply these by Snakemake's `attempt` so
+# retries get progressively more mem_mb/runtime instead of failing identically every
+# time). These must NOT also appear under `set-resources:` below -- Snakemake's own
+# --set-resources/profile mechanism takes precedence over a rule's `resources:` block,
+# so a flat value there would silently pin every retry to the same number and defeat
+# the escalation. See workflow/rules/init.smk: _get_mem_mb / _get_runtime.
+retry-base-resources:
+  mark_duplicates:
+    mem_mb: 122880 # attempt 1/2/3/4 -> 120/240/480/960 GB
+
+  rustqc_rna_combined_probe:
+    mem_mb: 122880 # attempt 1/2/3/4 -> 120/240/480/960 GB
+
+  rustqc_rna_combined:
+    mem_mb: 122880 # attempt 1/2/3/4 -> 120/240/480/960 GB
+
+  rustqc_rna_region:
+    mem_mb: 40960 # attempt 1/2/3/4 -> 40/80/160/320 GB
+
+  rseqc_fpkm:
+    runtime: 720 # attempt 1/2/3/4 -> 12/24/36/48 hours (linear, not doubling)
+
 # --- Per-rule overrides ---
 
 set-threads:
@@ -117,37 +140,26 @@ set-resources:
   rseqc_geneBody_coverage:
     runtime: 2880
 
-  rseqc_fpkm:
-    runtime: 720 # 12 hours -- per-attempt BASE runtime (minutes), not a flat cap -- the
-                 # rule's own `resources:` block (workflow/rules/quantify.smk) multiplies
-                 # this by Snakemake's `attempt` (1..4, since restart-times: 3 above), so
-                 # retries get progressively more walltime instead of timing out
-                 # identically 4x. Observed: FPKM_count.py over a full hg38 annotation
-                 # (~230k+ transcripts) didn't finish within the global 4h default.
+  # rseqc_fpkm: runtime is attempt-scaled -- base value lives in retry-base-resources above.
 
   mark_duplicates:
-    mem_mb: 122880 # 120 GB -- Picard MarkDuplicates on a ~20GB/600M-read combined bam has no
-                   # prior timing/memory data in this pipeline; sized generously (matching the
-                   # tier used for other heavy full-genome rules like cutadapt/star_align_two_pass)
-                   # pending a real benchmark run.
-    runtime: 480 # 8 hours -- generous pending real benchmark data (see above).
+    # mem_mb is attempt-scaled -- base value lives in retry-base-resources above.
+    runtime: 480 # 8 hours -- generous pending real benchmark data.
 
   rustqc_rna_combined_probe:
-    mem_mb: 122880
+    # mem_mb is attempt-scaled -- base value lives in retry-base-resources above.
     runtime: 120 # 2 hours -- real headroom above the confirmed ~45min single full-pass baseline
                  # (2026-07-28 full-scale TIN benchmark, N_Mock_4h, 689M reads); this rule only
                  # ever runs when USE_INFER_STRANDEDNESS is true (see qc.smk), and is a full
                  # rustqc rna pass in its own right (dupRadar/featureCounts can't be excluded).
 
   rustqc_rna_combined:
-    mem_mb: 122880
+    # mem_mb is attempt-scaled -- base value lives in retry-base-resources above.
     runtime: 120 # 2 hours -- same basis as rustqc_rna_combined_probe above; this is the final,
                  # correctly-stranded pass whose outputs are the ones actually declared/consumed.
 
   rustqc_rna_region:
-    mem_mb: 40960 # 40 GB -- per-region split bams are much smaller than the combined bam, but
-                  # the full hg38 GTF parse cost is bam-size-independent (~5min minimum observed
-                  # even on small viral-contig bams in validation testing).
+    # mem_mb is attempt-scaled -- base value lives in retry-base-resources above.
     runtime: 120 # 2 hours
 
   kraken2:

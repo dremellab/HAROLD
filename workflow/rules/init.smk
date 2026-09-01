@@ -104,13 +104,18 @@ def _get_runtime(rule_name, profile_config):
     Falls back to default if not defined. Meant to be multiplied by Snakemake's
     `attempt` in a rule's `resources:` block so retries (restart-times) get more
     walltime instead of failing identically on every attempt.
+
+    Reads from `retry-base-resources:`, NOT `set-resources:` -- Snakemake's own
+    --set-resources/profile mechanism takes precedence over a rule's `resources:`
+    block, so a base value placed under `set-resources:` would be re-applied
+    unchanged on every attempt and silently defeat this scaling.
     """
     if (
-        "set-resources" in profile_config
-        and rule_name in profile_config["set-resources"]
-        and "runtime" in profile_config["set-resources"][rule_name]
+        "retry-base-resources" in profile_config
+        and rule_name in profile_config["retry-base-resources"]
+        and "runtime" in profile_config["retry-base-resources"][rule_name]
     ):
-        return profile_config["set-resources"][rule_name]["runtime"]
+        return profile_config["retry-base-resources"][rule_name]["runtime"]
     return profile_config["default-resources"]["runtime"]
 
 def _get_mem_mb(rule_name, profile_config):
@@ -119,13 +124,18 @@ def _get_mem_mb(rule_name, profile_config):
     Falls back to default if not defined. Meant to be doubled per Snakemake `attempt`
     in a rule's `resources:` block, for jobs with no prior real-scale memory data that
     risk being OOM-killed on the first try (attempt 1 = base, 2 = 2x, 3 = 4x, 4 = 8x).
+
+    Reads from `retry-base-resources:`, NOT `set-resources:` -- Snakemake's own
+    --set-resources/profile mechanism takes precedence over a rule's `resources:`
+    block, so a base value placed under `set-resources:` would be re-applied
+    unchanged on every attempt and silently defeat this scaling.
     """
     if (
-        "set-resources" in profile_config
-        and rule_name in profile_config["set-resources"]
-        and "mem_mb" in profile_config["set-resources"][rule_name]
+        "retry-base-resources" in profile_config
+        and rule_name in profile_config["retry-base-resources"]
+        and "mem_mb" in profile_config["retry-base-resources"][rule_name]
     ):
-        return profile_config["set-resources"][rule_name]["mem_mb"]
+        return profile_config["retry-base-resources"][rule_name]["mem_mb"]
     return profile_config["default-resources"]["mem_mb"]
 
 ## Load cluster.json
