@@ -1995,15 +1995,23 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 </tr>
 <tr class="even">
 <td><code>counts/normalized_counts/{variant}/limma_pseudo_rpkm_counts.tsv</code></td>
-<td><strong>Limma/voom-normalized pseudo-RPKM matrix</strong>, all genes. Built from the ERCC-corrected matrix above (for <code>w_ercc_*</code> variants) with limma’s own modeling applied on top — not the plain ERCC-corrected values themselves; see <code>ERCC_corrected_log2_counts.tsv</code> for that.</td>
+<td><strong>Limma/voom-normalized pseudo-RPKM matrix</strong>, all genes. Built from the ERCC-corrected matrix above with limma’s own modeling applied on top — not the plain ERCC-corrected values themselves; see <code>ERCC_corrected_log2_counts.tsv</code> for that. <strong>Only produced for <code>w_ercc_*</code> variants.</strong></td>
 </tr>
 <tr class="odd">
 <td><code>counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts.tsv</code></td>
-<td>Log2 of the matrix above.</td>
+<td>Log2 of the matrix above. <strong>Only produced for <code>w_ercc_*</code> variants.</strong></td>
 </tr>
 <tr class="even">
 <td><code>counts/normalized_counts/{variant}/limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv</code></td>
-<td>Same as the log2 matrix above, with <code>limma::removeBatchEffect</code> applied. <strong>Only produced for <code>w_batch</code> variants</strong> (<code>diffex.use_batch: true</code>/<code>both</code>).</td>
+<td>Same as the log2 matrix above, with <code>limma::removeBatchEffect</code> applied. <strong>Only produced for <code>w_ercc_w_batch</code></strong> (<code>diffex.use_ercc: true</code>/<code>both</code> AND <code>diffex.use_batch: true</code>/<code>both</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>counts/normalized_counts/{variant}/limma_voom_normalized_counts.tsv</code></td>
+<td><strong>Limma/voom-normalized matrix</strong>, all genes — the <code>wo_ercc_*</code> counterpart to the pseudo-RPKM matrix above, written when no ERCC spike-in correction is applied. <strong>Only produced for <code>wo_ercc_*</code> variants.</strong></td>
+</tr>
+<tr class="even">
+<td><code>counts/normalized_counts/{variant}/limma_voom_normalized_counts_batch_corrected.tsv</code></td>
+<td>Same as the matrix above, with <code>limma::removeBatchEffect</code> applied. <strong>Only produced for <code>wo_ercc_w_batch</code>.</strong></td>
 </tr>
 <tr class="odd">
 <td><code>counts/normalized_counts/{variant}/edgeR_TMM_normalized_logCPM_counts.tsv</code></td>
@@ -2015,6 +2023,9 @@ sample_B    unstranded  unstranded  0.52</code></pre>
 </tr>
 </tbody>
 </table>
+<blockquote class="blockquote">
+<p><strong>Note:</strong> <code>diffex normalize</code> also writes <code>edgeR_TMM_normalized_logCPM_counts_batch_corrected.tsv</code> and <code>DESeq2_vst_normalized_counts_batch_corrected.tsv</code> for <code>w_batch</code> variants, but these are not currently declared as tracked Snakemake outputs (<a href="https://github.com/dremellab/HAROLD/issues/68">dremellab/HAROLD#68</a>) — they may be present in the output directory but aren’t guaranteed or validated by the pipeline.</p>
+</blockquote>
 </section>
 <section id="deg-and-gsea-diffex-integration" class="level3">
 <h3 class="anchored" data-anchor-id="deg-and-gsea-diffex-integration">DEG and GSEA (DiffEx Integration)</h3>
