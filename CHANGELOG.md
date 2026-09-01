@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Per-attempt retry resource scaling (`mem_mb`/`runtime`) was silently clobbered by Snakemake's own `--set-resources`/profile mechanism:** `mark_duplicates`, `rustqc_rna_combined_probe`, `rustqc_rna_combined`, `rustqc_rna_region` (`mem_mb`, meant to double per retry attempt) and `rseqc_fpkm` (`runtime`, meant to scale linearly) had their base values duplicated into `config/rivanna/config.yaml`'s `set-resources:` block, which Snakemake re-applies as a flat override on every job submission — pinning every retry attempt to the same value and defeating the escalation entirely, so a job that OOM-killed on attempt 1 OOM-killed identically on every subsequent attempt instead of getting more memory. Base values moved to a new `retry-base-resources:` block that only the rules' own scaling lambdas read, so Snakemake's profile mechanism no longer sees them ([dremellab/HAROLD#67](https://github.com/dremellab/HAROLD/issues/67)).
+- **`normalized_counts_wo_ercc_wo_batch`/`normalized_counts_wo_ercc_w_batch` declared the wrong `diffex normalize` output filenames:** both rules expected `limma_pseudo_rpkm_counts.tsv`/`limma_log2normalized_pseudo_rpkm_counts.tsv`, but `diffex normalize` (0.5.7) only writes those filenames when `--use-ercc` is passed — since these rules never pass it, the real output is `limma_voom_normalized_counts.tsv` (+ a `_batch_corrected` variant for the `w_batch` rule), which went untracked and caused a `MissingOutputException` after the full `--latency-wait`, deleting the rule's other real outputs in the process. Rules now declare the filenames diffex actually produces on the non-ERCC branch; `normalized_counts_w_ercc_*` rules were already correct. See [dremellab/DiffEx#47](https://github.com/dremellab/DiffEx/issues/47) for a related upstream documentation ask ([dremellab/HAROLD#68](https://github.com/dremellab/HAROLD/issues/68)).
+
 ## [2.1.0]
 
 ### Added
