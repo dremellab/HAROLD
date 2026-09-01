@@ -131,8 +131,7 @@ rule normalized_counts_wo_ercc_wo_batch:
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
         html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
-        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
-        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        limma_voom = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts.tsv"),
         edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
         deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
     wildcard_constraints:
@@ -183,9 +182,8 @@ rule normalized_counts_wo_ercc_w_batch:
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
         html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
-        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
-        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
-        limma_log2_rpkm_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv"),
+        limma_voom = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts.tsv"),
+        limma_voom_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts_batch_corrected.tsv"),
         edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
         deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
     wildcard_constraints:
