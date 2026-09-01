@@ -433,7 +433,10 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#changelog" id="toc-changelog" class="nav-link active" data-scroll-target="#changelog">Changelog</a>
   <ul class="collapse">
-  <li><a href="#unreleased" id="toc-unreleased" class="nav-link" data-scroll-target="#unreleased">[Unreleased]</a></li>
+  <li><a href="#unreleased" id="toc-unreleased" class="nav-link" data-scroll-target="#unreleased">[Unreleased]</a>
+  <ul class="collapse">
+  <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
+  </ul></li>
   <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.1.0]</a>
   <ul class="collapse">
   <li><a href="#added" id="toc-added" class="nav-link" data-scroll-target="#added">Added</a></li>
@@ -442,14 +445,14 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#added-1" id="toc-added-1" class="nav-link" data-scroll-target="#added-1">Added</a></li>
   <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
-  <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
+  <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
   </ul></li>
   <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2">[2.0.0]</a>
   <ul class="collapse">
   <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
   <li><a href="#added-2" id="toc-added-2" class="nav-link" data-scroll-target="#added-2">Added</a></li>
   <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
-  <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
+  <li><a href="#fixed-2" id="toc-fixed-2" class="nav-link" data-scroll-target="#fixed-2">Fixed</a></li>
   </ul></li>
   <li><a href="#section-3" id="toc-section-3" class="nav-link" data-scroll-target="#section-3">[1.2.1]</a>
   <ul class="collapse">
@@ -463,7 +466,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#added-3" id="toc-added-3" class="nav-link" data-scroll-target="#added-3">Added</a></li>
   <li><a href="#changed-4" id="toc-changed-4" class="nav-link" data-scroll-target="#changed-4">Changed</a></li>
-  <li><a href="#fixed-2" id="toc-fixed-2" class="nav-link" data-scroll-target="#fixed-2">Fixed</a></li>
+  <li><a href="#fixed-3" id="toc-fixed-3" class="nav-link" data-scroll-target="#fixed-3">Fixed</a></li>
   </ul></li>
   <li><a href="#section-6" id="toc-section-6" class="nav-link" data-scroll-target="#section-6">[1.0.0]</a></li>
   </ul></li>
@@ -482,6 +485,13 @@ ul.task-list li input[type="checkbox"] {
 <p>All notable changes to this project will be documented in this file.</p>
 <section id="unreleased" class="level2">
 <h2 class="anchored" data-anchor-id="unreleased">[Unreleased]</h2>
+<section id="fixed" class="level3">
+<h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
+<ul>
+<li><strong>Per-attempt retry resource scaling (<code>mem_mb</code>/<code>runtime</code>) was silently clobbered by Snakemake’s own <code>--set-resources</code>/profile mechanism:</strong> <code>mark_duplicates</code>, <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rustqc_rna_region</code> (<code>mem_mb</code>, meant to double per retry attempt) and <code>rseqc_fpkm</code> (<code>runtime</code>, meant to scale linearly) had their base values duplicated into <code>config/rivanna/config.yaml</code>‘s <code>set-resources:</code> block, which Snakemake re-applies as a flat override on every job submission — pinning every retry attempt to the same value and defeating the escalation entirely, so a job that OOM-killed on attempt 1 OOM-killed identically on every subsequent attempt instead of getting more memory. Base values moved to a new <code>retry-base-resources:</code> block that only the rules’ own scaling lambdas read, so Snakemake’s profile mechanism no longer sees them (<a href="https://github.com/dremellab/HAROLD/issues/67">dremellab/HAROLD#67</a>).</li>
+<li><strong><code>normalized_counts_wo_ercc_wo_batch</code>/<code>normalized_counts_wo_ercc_w_batch</code> declared the wrong <code>diffex normalize</code> output filenames:</strong> both rules expected <code>limma_pseudo_rpkm_counts.tsv</code>/<code>limma_log2normalized_pseudo_rpkm_counts.tsv</code>, but <code>diffex normalize</code> (0.5.7) only writes those filenames when <code>--use-ercc</code> is passed — since these rules never pass it, the real output is <code>limma_voom_normalized_counts.tsv</code> (+ a <code>_batch_corrected</code> variant for the <code>w_batch</code> rule), which went untracked and caused a <code>MissingOutputException</code> after the full <code>--latency-wait</code>, deleting the rule’s other real outputs in the process. Rules now declare the filenames diffex actually produces on the non-ERCC branch; <code>normalized_counts_w_ercc_*</code> rules were already correct. See <a href="https://github.com/dremellab/DiffEx/issues/47">dremellab/DiffEx#47</a> for a related upstream documentation ask (<a href="https://github.com/dremellab/HAROLD/issues/68">dremellab/HAROLD#68</a>).</li>
+</ul>
+</section>
 </section>
 <section id="section" class="level2">
 <h2 class="anchored" data-anchor-id="section">[2.1.0]</h2>
@@ -509,8 +519,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong><code>harold</code>’s Slurm head job time allocation reduced <code>3-00:00:00</code> → <code>0-12:00:00</code>:</strong> matches the head job’s actual workload (it only submits/monitors the run, not the run itself).</li>
 </ul>
 </section>
-<section id="fixed" class="level3">
-<h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
+<section id="fixed-1" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-1">Fixed</h3>
 <ul>
 <li><strong><code>counts_matrix.tsv</code> export no longer writes a hidden pandas index as a duplicate leading column:</strong> gene labels are now exported as an explicit <code>gene</code> column before the metadata/sample-count fields, preventing the duplicated/offset look seen when the row index was left in place.</li>
 <li><strong>Per-job scratch/tempdir creation hardened across rules:</strong> <code>star_align_two_pass</code>, <code>sort_star</code>, <code>cutadapt</code>, <code>mark_duplicates</code>, <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rseqc_read_gc</code>, <code>rustqc_rna_region</code>, and <code>junctions_to_bigbed</code> now create their tempdir’s parent directory first, verify it’s writable, <code>rm -rf</code> any stale leftover from a prior attempt, and clean up via an <code>EXIT</code> trap — instead of a bare <code>mkdir -p</code> with no guarantee the target was clean or writable.</li>
@@ -566,8 +576,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong><code>diffex</code> container bumped <code>0.5.2</code> → <code>0.5.5</code>:</strong> picks up the DEG UpSetR crash fix (v0.5.3) and the GSEA <code>+Inf</code>/<code>-Inf</code> rank-clamp fix (v0.5.5, <a href="https://github.com/dremellab/DiffEx/pull/41">dremellab/DiffEx#41</a>) that HAROLD’s own <code>_sanitize_rnk.py</code> pre-processing step was working around. Switched to <code>docker://seqinfomics/diffex:0.5.5</code> (Docker Hub) rather than <code>ghcr.io/dremellab/diffex</code>, since no image newer than <code>0.5.2</code> has been published to GHCR (<a href="https://github.com/dremellab/DiffEx/issues/40">dremellab/DiffEx#40</a>).</li>
 </ul>
 </section>
-<section id="fixed-1" class="level3">
-<h3 class="anchored" data-anchor-id="fixed-1">Fixed</h3>
+<section id="fixed-2" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-2">Fixed</h3>
 <ul>
 <li><code>dryrun</code>/<code>touch</code> exit codes — Now propagate Snakemake’s real exit code instead of always reporting success, and no longer depend on always being invoked as <code>... &amp;&amp; exit 0</code> to do so safely</li>
 <li>Stray user-site packages — <code>harold</code> wrapper and its Slurm job script now set <code>PYTHONNOUSERSITE=1</code> to isolate from <code>~/.local</code> pip <code>--user</code> packages</li>
@@ -635,8 +645,8 @@ ul.task-list li input[type="checkbox"] {
 <li><code>harold --version</code> now prints a clean version string (no platform banner) thanks to a dedicated <code>-V/--version</code> flag in the wrapper.</li>
 </ul>
 </section>
-<section id="fixed-2" class="level3">
-<h3 class="anchored" data-anchor-id="fixed-2">Fixed</h3>
+<section id="fixed-3" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-3">Fixed</h3>
 <ul>
 <li><code>diffex normalize</code> host selection now infers <code>Hs</code> vs <code>Mm</code> from both the diffex block and the top-level <code>host</code> option (e.g., mm39 maps to <code>--host Mm</code>).</li>
 <li>Hardened <code>rseqc_junction_annotation</code> to always create its junction file and log outputs cleanly, preventing spurious Snakemake failures.</li>
