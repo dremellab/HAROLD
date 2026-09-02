@@ -538,7 +538,7 @@ SIF_DIR_OVERRIDE=""
 
 if [ "$PLATFORM" == "shen" ]; then
   CLUSTER_PROFILE="rivanna"
-  PARTITION="standard-rivanna"
+  PARTITION="standard"
   EXTRA_SINGULARITY_BINDS=""
   # PY311_BIN=$(conda run -n py311 python -c "import sys; print(sys.executable.rsplit('/',1)[0])")
   PY311_BIN="/sfs/gpfs/tardis/project/dremel_lab/miniforge3/envs/pipelines/bin"
