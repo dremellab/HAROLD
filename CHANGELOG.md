@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **`rseqc_fpkm` was given the opposite strand rule for stranded samples:** `_get_strand.py` returned RSeQC's forward-stranded rule (`1++,1--,2+-,2-+` / `++,--`) for samples labelled `reverse` in `sample_strandedness.tsv` and the reverse-stranded rule (`1+-,1-+,2++,2--` / `+-,-+`) for samples labelled `forward`, so `FPKM_count.py` counted antisense reads. For stranded libraries, `{sample}.rseqc_fpkm_tpm.tsv` and `counts_matrix.transcript_level{,.rpkm,.tpm}.tsv` were near zero for most transcripts; rerun `rseqc_fpkm` and `aggregate_transcript_level_counts` to regenerate them. Unstranded samples and `counts_matrix.tsv` (STAR `ReadsPerGene`) were not affected ([dremellab/HAROLD#69](https://github.com/dremellab/HAROLD/issues/69)).
+
 ## [2.1.0]
 
 ### Added
