@@ -33,10 +33,13 @@ def main():
     # Determine strand rule
     if used_strand == "unstranded":
         rule = "none"
+    # RSeQC notation: read number, strand the read maps to, strand of the gene.
+    # "1++,1--,2+-,2-+" = read 1 on the gene's strand (forward-stranded);
+    # "1+-,1-+,2++,2--" = read 1 on the opposite strand (reverse-stranded, e.g. dUTP).
     elif used_strand == "reverse":
-        rule = "1++,1--,2+-,2-+" if args.peorse == "PE" else "++,--"
-    elif used_strand == "forward":
         rule = "1+-,1-+,2++,2--" if args.peorse == "PE" else "+-,-+"
+    elif used_strand == "forward":
+        rule = "1++,1--,2+-,2-+" if args.peorse == "PE" else "++,--"
     else:
         sys.exit(f"❌ Unknown used_strand '{used_strand}' for sample '{args.sample}'.")
 
