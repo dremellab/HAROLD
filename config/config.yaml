@@ -52,6 +52,7 @@ chrr_gtf:
   hg38: "REFS_DIR/hg38.chrR.gtf"
   mm39: "REFS_DIR/mm39.chrR.gtf"
 include_trnas_gtf_in_ref: true # when true, append trnas_gtf[host] to GTFS before building ref.gtf
+include_chrr_gtf_in_ref: false # when true, append chrr_gtf[host]; leave false for hg38/mm39, whose GTFs already annotate chrR
 
 # strand inference
 # Legacy configs used `infer_strandedness`; newer HAROLD expects

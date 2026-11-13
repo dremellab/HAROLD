@@ -244,6 +244,10 @@ else:
 TRNAS_GTF_MAP = config.get("trnas_gtf", {})
 CHRR_GTF_MAP = config.get("chrr_gtf", {})
 INCLUDE_TRNAS_GTF_IN_REF = _is_true(config.get("include_trnas_gtf_in_ref", True))
+# The hg38/mm39 host GTFs already annotate chrR, so appending chrr_gtf[host] on top of them
+# annotates every rDNA feature twice (dremellab/HAROLD#72). Off unless explicitly requested,
+# e.g. for a host whose GTF has no chrR rows.
+INCLUDE_CHRR_GTF_IN_REF = _is_true(config.get("include_chrr_gtf_in_ref", False))
 if HOST != "":
     trnas_gtf_name = TRNAS_GTF_MAP.get(HOST, HOST + ".tRNAs." + HOST + "chroms.gtf")
     TRNAS_GTF = trnas_gtf_name if os.path.isabs(trnas_gtf_name) else join(FASTAS_GTFS_DIR, trnas_gtf_name)
@@ -270,7 +274,7 @@ if ADDITIVES != "":
 else:
     REGIONS_ADDITIVES = []
 GTFS = [join(FASTAS_GTFS_DIR, f + ".gtf") for f in HOST_ADDITIVES_VIRUSES]
-if CHRR_GTF != "":
+if INCLUDE_CHRR_GTF_IN_REF and CHRR_GTF != "":
     GTFS.append(CHRR_GTF)
 if INCLUDE_TRNAS_GTF_IN_REF and TRNAS_GTF != "":
     GTFS.append(TRNAS_GTF)
