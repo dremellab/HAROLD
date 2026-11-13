@@ -81,7 +81,7 @@ rule mark_duplicates:
         config['containers']['picard'],
     threads: _get_threads("mark_duplicates", profile_config)
     resources:
-        # No real memory data for this rule yet (see set-resources comment in
+        # No real memory data for this rule yet (see retry-base-resources comment in
         # config/rivanna/config.yaml) -- double the base mem_mb on each retry so a
         # too-low first guess doesn't OOM identically on every attempt.
         mem_mb=lambda wildcards, attempt: _get_mem_mb("mark_duplicates", profile_config) * (2 ** (attempt - 1)),

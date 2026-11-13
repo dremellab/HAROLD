@@ -6,6 +6,10 @@ import re
 from collections import defaultdict
 import argparse
 
+# key "quoted value"; or key unquoted_value; -- quoted values may contain spaces and ';'
+# (same parser as _fix_gtf.py, which writes ref.fixed.gtf)
+ATTR_RE = re.compile(r'([^\s";]+)\s+(?:"([^"]*)"|([^\s";]+))')
+
 
 def infer_strandedness(file_path, fraction_threshold=0.8):
     """
@@ -69,11 +73,10 @@ def parse_gtf_lookup(gtf_file):
                 frame,
                 attr_str,
             ) = parts
-            attributes = {}
-            for attr in attr_str.strip().split(";"):
-                if attr.strip():
-                    key, val = attr.strip().split(" ", 1)
-                    attributes[key] = val.strip('"')
+            attributes = {
+                m.group(1): m.group(2) if m.group(2) is not None else m.group(3)
+                for m in ATTR_RE.finditer(attr_str)
+            }
             gene_id = attributes.get("gene_id")
             transcript_id = attributes.get("transcript_id")
             gene_name = attributes.get("gene_name", "NA")

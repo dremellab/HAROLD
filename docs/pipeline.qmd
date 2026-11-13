@@ -201,6 +201,12 @@ As of the `rustqc` 0.2.1 migration, most of what used to be separate RSeQC tool 
 - Aggregate per-sample `rseqc_fpkm_tpm.tsv` files
 - Output: `counts/counts_matrix.transcript_level.tsv`
 
+#### **5c-2. CDS-Level Counts (optional, `featurecounts_cds.run: true`)**
+
+- Build `ref/ref.cds.gtf` (exons of additive/viral genes without CDS rows copied as CDS)
+- featureCounts per sample over CDS features (`-t CDS -g gene_id`), strand set per sample, paired-end counted as fragments
+- Output: `counts/cds_counts_matrix.tsv` (same layout as RIBOLD's CDS matrix, for translation-efficiency calculations)
+
 #### **5d. Normalization (RPKM, TPM)**
 
 - Calculate RPKM: (count / gene_length_kb) / (total_mapped_millions)
@@ -312,6 +318,7 @@ Aligned BAM (STAR, 2-pass)
 [Quantification]
    ├─ Gene-level counts (STAR ReadsPerGene)
    ├─ Transcript-level counts (RSeQC FPKM_count)
+   ├─ CDS-level counts (featureCounts; optional, for TE with RIBOLD)
    ├─ Normalization (RPKM, TPM)
    ├─ Alignment summary (per-sample mapping stats)
    └─ TIN aggregate (RNA quality summary)

@@ -59,7 +59,8 @@ include: "rules/init.smk"
 # only starts once everything else has actually finished, instead of racing
 # ahead on a hand-picked subset of "key" outputs). Kept as a plain list (not a
 # function) since it's built from names -- SAMPLES, RESULTSDIR, CONTRASTS,
-# VARIANTS, METHODS, DIFFEX_DEG_GSEA, DIFFEX_NORMALIZED_COUNTS, HOST_VIRUSES --
+# VARIANTS, METHODS, DIFFEX_DEG_GSEA, DIFFEX_NORMALIZED_COUNTS, FEATURECOUNTS_CDS,
+# HOST_VIRUSES --
 # that are already fixed by the time init.smk finishes.
 PIPELINE_TARGETS = [
         # create ref index
@@ -95,22 +96,40 @@ PIPELINE_TARGETS = [
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.rpkm.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.tpm.tsv"),
 
-        # diffex normalized counts (limma/edgeR/DESeq2 matrices, ERCC-scaled for w_ercc_*
-        # variants; the batch-corrected limma file only exists for w_batch_* variants; the
+        # CDS-level counts with featureCounts (for translation efficiency with RIBOLD)
+        *(expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.cds.featureCounts.tsv")                  ,sample=SAMPLES)
+               if FEATURECOUNTS_CDS == "true" else []),
+        *([join(RESULTSDIR,"counts","cds_counts_matrix.tsv"),
+           join(RESULTSDIR,"counts","cds_counts_matrix.featureCounts_summary.tsv")]
+               if FEATURECOUNTS_CDS == "true" else []),
+
+        # diffex normalized counts (limma/edgeR/DESeq2 matrices). The limma output is named
+        # differently per ERCC axis: w_ercc_* variants produce limma_pseudo_rpkm_counts /
+        # limma_log2normalized_pseudo_rpkm_counts, wo_ercc_* variants produce
+        # limma_voom_normalized_counts instead (see quantify.smk). The batch-corrected limma
+        # file (same naming split) only exists for w_batch_* variants. The
         # ERCC_corrected_{log2_,}counts.tsv precursor files, DiffEx >= 0.5.7
         # (dremellab/DiffEx#44), only exist for w_ercc_* variants)
         *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"), variant=list(VARIANTS.keys()))
                if DIFFEX_NORMALIZED_COUNTS == "true" else []),
-        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"), variant=list(VARIANTS.keys()))
+        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
+               variant=[v for v in VARIANTS if VARIANTS[v][0]])
                if DIFFEX_NORMALIZED_COUNTS == "true" else []),
-        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"), variant=list(VARIANTS.keys()))
+        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+               variant=[v for v in VARIANTS if VARIANTS[v][0]])
+               if DIFFEX_NORMALIZED_COUNTS == "true" else []),
+        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts.tsv"),
+               variant=[v for v in VARIANTS if not VARIANTS[v][0]])
                if DIFFEX_NORMALIZED_COUNTS == "true" else []),
         *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"), variant=list(VARIANTS.keys()))
                if DIFFEX_NORMALIZED_COUNTS == "true" else []),
         *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"), variant=list(VARIANTS.keys()))
                if DIFFEX_NORMALIZED_COUNTS == "true" else []),
         *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv"),
-               variant=[v for v in VARIANTS if VARIANTS[v][1]])
+               variant=[v for v in VARIANTS if VARIANTS[v][0] and VARIANTS[v][1]])
+               if DIFFEX_NORMALIZED_COUNTS == "true" else []),
+        *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts_batch_corrected.tsv"),
+               variant=[v for v in VARIANTS if not VARIANTS[v][0] and VARIANTS[v][1]])
                if DIFFEX_NORMALIZED_COUNTS == "true" else []),
         *(expand(join(RESULTSDIR,"counts","normalized_counts","{variant}","ERCC_corrected_log2_counts.tsv"),
                variant=[v for v in VARIANTS if VARIANTS[v][0]])

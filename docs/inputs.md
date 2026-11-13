@@ -163,26 +163,26 @@ trnas_gtf:
 
 ---
 
-#### `chrr_gtf` — Repeats and Ribosomal RNA Annotations
+#### `chrr_gtf` / `include_chrr_gtf_in_ref` — rDNA (chrR) Annotation
 
-**Purpose:** Include genomic repeats and ribosomal RNA (rRNA) regions in the reference annotation.
+**Purpose:** Optional extra annotation of the 45S rDNA unit on `chrR` (18S, 5.8S, 28S, ITS1/2, ETS, IGS and promoter features), appended to `ref.gtf` only when `include_chrr_gtf_in_ref: true`.
 
 **Configuration:**
 ```yaml
 chrr_gtf:
-  hg38: "/path/to/hg38.repeats.gtf"
-  mm39: "/path/to/mm39.repeats.gtf"
+  hg38: "/project/dremel_lab/workflows/reference_data/fasta_gtf/hg38.chrR.gtf"
+  mm39: "/project/dremel_lab/workflows/reference_data/fasta_gtf/mm39.chrR.gtf"
+include_chrr_gtf_in_ref: false
 ```
 
 **When to use:**
 
-- If you want to explicitly quantify rRNA contamination or repeat-associated reads
-- Repeats GTF is now **included in the default `ref.gtf` by default** (no longer requires chrR flag)
-- Useful for multi-genome pipelines where repeat masking is important (e.g., viral integration site analysis)
+- Leave `include_chrr_gtf_in_ref: false` (the default) for `hg38` and `mm39`: their host GTFs already annotate `chrR`, so appending the chrR GTF would annotate every rDNA feature twice under two `gene_id`s (e.g. `18S` and `chrR_18S`), making chrR reads ambiguous in gene-level counts.
+- Set it to `true` only for a host whose FASTA has `chrR` but whose GTF has no `chrR` rows.
 
-**Expected format:** GTF file with repeat annotations (RepBase, rmsk annotations), chromosome IDs matching host genome. Can include rRNA genes, satellite DNA, SINEs, LINEs, etc.
+**Expected format:** GTF with `gene`/`transcript`/`exon` rows on `chrR`; coordinates must not exceed the `chrR` length in the host FASTA.
 
-**Note:** Set to empty string or omit if repeat quantification not needed; reference will be built without repeat annotations.
+**Note:** `ref/ref.gtf` is only built when it is missing, so changing this option in an existing work directory has no effect until `ref/` is removed.
 
 ---
 

@@ -54,7 +54,7 @@ rule rseqc_fpkm:
         # on small references or isn't enough on large ones. `attempt` is
         # bumped by Snakemake on every restart (restart-times: 3, set in
         # the profile config), so this scales the per-rule base runtime
-        # (set-resources.rseqc_fpkm.runtime in the profile, e.g.
+        # (retry-base-resources.rseqc_fpkm.runtime in the profile, e.g.
         # config/rivanna/config.yaml) up on each retry instead of failing
         # identically on every attempt.
         runtime=lambda wildcards, attempt: _get_runtime("rseqc_fpkm", profile_config) * attempt,
@@ -131,8 +131,7 @@ rule normalized_counts_wo_ercc_wo_batch:
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
         html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
-        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
-        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
+        limma_voom = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts.tsv"),
         edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
         deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
     wildcard_constraints:
@@ -183,9 +182,8 @@ rule normalized_counts_wo_ercc_w_batch:
         gtf = join(REF_DIR, "ref.fixed.gtf")
     output:
         html = join(RESULTSDIR,"counts","normalized_counts","{variant}","normalize.html"),
-        limma_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_pseudo_rpkm_counts.tsv"),
-        limma_log2_rpkm = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts.tsv"),
-        limma_log2_rpkm_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_log2normalized_pseudo_rpkm_counts_batch_corrected.tsv"),
+        limma_voom = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts.tsv"),
+        limma_voom_batch_corrected = join(RESULTSDIR,"counts","normalized_counts","{variant}","limma_voom_normalized_counts_batch_corrected.tsv"),
         edger_tmm_logcpm = join(RESULTSDIR,"counts","normalized_counts","{variant}","edgeR_TMM_normalized_logCPM_counts.tsv"),
         deseq2_vst = join(RESULTSDIR,"counts","normalized_counts","{variant}","DESeq2_vst_normalized_counts.tsv"),
     wildcard_constraints:
@@ -339,3 +337,116 @@ rule normalized_counts_w_ercc_w_batch:
         ls -alrth $outdir
         """
 
+
+
+# CDS-level counts with featureCounts, for translation-efficiency (TE) calculations against
+# RIBOLD's Ribo-seq CDS counts (ribold_cds_counts.tsv). Settings mirror RIBOLD's `counting:`
+# block (-t CDS -g gene_id, multi-mapped reads not counted), and the matrix has the same
+# gene_id + one-column-per-sample layout, so the two can be joined on gene_id. This is separate
+# from, and does not replace, the STAR ReadsPerGene matrix (counts_matrix.tsv) used for DEG.
+# Defined only when enabled so configs without `containers.featurecounts` still parse.
+if FEATURECOUNTS_CDS == "true":
+
+    # Additive/viral GTFs have exon rows but no CDS rows; copy each exon as a CDS row (same
+    # convention as RIBOLD) so those genes are present in the CDS matrix too. Kept as its own
+    # GTF so nothing else that reads ref.fixed.gtf (STAR, rustqc, qualimap) sees the extra rows.
+    localrules: build_cds_gtf
+    rule build_cds_gtf:
+        input:
+            gtf = join(REF_DIR, "ref.fixed.gtf"),
+        output:
+            gtf = join(REF_DIR, "ref.cds.gtf"),
+        params:
+            regions = REF_REGIONS,
+            host = HOST,
+            script = join(SCRIPTS_DIR, "_build_cds_gtf.py"),
+        shell:
+            r"""
+            set -exo pipefail
+            python {params.script} --ingtf {input.gtf} --regions {params.regions} --host "{params.host}" --outgtf {output.gtf}
+            """
+
+    rule featurecounts_cds:
+        input:
+            bam = join(RESULTSDIR, "{sample}", "STAR", "{sample}.Aligned.sortedByCoord.out.bam"),
+            strand = join(RESULTSDIR, "counts", "sample_strandedness.tsv"),
+            gtf = join(REF_DIR, "ref.cds.gtf"),
+        output:
+            counts = join(RESULTSDIR, "{sample}", "counts", "{sample}.cds.featureCounts.tsv"),
+            # not named *.summary on purpose: MultiQC runs over all of results/ and would
+            # otherwise load this next to rustqc's featureCounts summary under the same
+            # sample name
+            summary = join(RESULTSDIR, "{sample}", "counts", "{sample}.cds.featureCounts.summary.tsv"),
+        params:
+            sample = "{sample}",
+            tmpdir = lambda wildcards: join(TEMPDIR, "featurecounts_cds", wildcards.sample, str(uuid.uuid4())),
+            peorse = get_peorse,
+            feature_type = config.get("featurecounts_cds", {}).get("feature_type", "CDS"),
+            attribute_type = config.get("featurecounts_cds", {}).get("attribute_type", "gene_id"),
+            extra_args = config.get("featurecounts_cds", {}).get("extra_args", ""),
+        container:
+            config['containers']['featurecounts']
+        threads: _get_threads("featurecounts_cds", profile_config)
+        shell:
+            r"""
+            set -exo pipefail
+
+            mkdir -p $(dirname {output.counts})
+
+            # Temporary directory (featureCounts re-sorts paired-end BAMs by name in --tmpDir)
+            tmpdir_parent=$(dirname "{params.tmpdir}")
+            mkdir -p "$tmpdir_parent"
+            test -w "$tmpdir_parent" || {{ echo "featurecounts_cds tempdir parent not writable: $tmpdir_parent" >&2; exit 1; }}
+            rm -rf "{params.tmpdir}"
+            mkdir -p "{params.tmpdir}"
+            trap 'rm -rf "{params.tmpdir}"' EXIT
+
+            # used_strand (3rd column of sample_strandedness.tsv) -> featureCounts -s; same
+            # per-sample call that picks the STAR ReadsPerGene column for counts_matrix.tsv
+            used_strand=$(awk -F'\t' -v s="{params.sample}" 'NR>1 && $1==s {{print $3}}' {input.strand})
+            case "$used_strand" in
+                unstranded) strand=0 ;;
+                forward)    strand=1 ;;
+                reverse)    strand=2 ;;
+                *) echo "Unknown used_strand '$used_strand' for sample {params.sample} in {input.strand}" >&2; exit 1 ;;
+            esac
+
+            # paired-end: count fragments, not reads
+            if [[ "{params.peorse}" == "PE" ]]; then
+                pestr="-p --countReadPairs"
+            else
+                pestr=""
+            fi
+
+            featureCounts \
+                -T {threads} \
+                -t {params.feature_type} \
+                -g {params.attribute_type} \
+                -s $strand \
+                $pestr \
+                {params.extra_args} \
+                --tmpDir "{params.tmpdir}" \
+                -a {input.gtf} \
+                -o "{params.tmpdir}/{params.sample}.txt" \
+                {input.bam}
+
+            cp "{params.tmpdir}/{params.sample}.txt" {output.counts}
+            cp "{params.tmpdir}/{params.sample}.txt.summary" {output.summary}
+            """
+
+    localrules: aggregate_cds_counts
+    rule aggregate_cds_counts:
+        input:
+            counts_files = expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.cds.featureCounts.tsv"), sample=SAMPLES),
+            summary_files = expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.cds.featureCounts.summary.tsv"), sample=SAMPLES),
+        output:
+            counts = join(RESULTSDIR, "counts", "cds_counts_matrix.tsv"),
+            summary = join(RESULTSDIR, "counts", "cds_counts_matrix.featureCounts_summary.tsv"),
+        params:
+            samples = ",".join(SAMPLES),
+            script = join(SCRIPTS_DIR, "_aggregate_cds_counts.py"),
+        run:
+            os.makedirs(os.path.dirname(output.counts), exist_ok=True)
+            counts_list = ",".join(input.counts_files)
+            summary_list = ",".join(input.summary_files)
+            shell(f"python {params.script} --samples {params.samples} --counts {counts_list} --summaries {summary_list} --output_counts {output.counts} --output_summary {output.summary}")

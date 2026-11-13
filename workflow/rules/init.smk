@@ -104,13 +104,18 @@ def _get_runtime(rule_name, profile_config):
     Falls back to default if not defined. Meant to be multiplied by Snakemake's
     `attempt` in a rule's `resources:` block so retries (restart-times) get more
     walltime instead of failing identically on every attempt.
+
+    Reads from `retry-base-resources:`, NOT `set-resources:` -- Snakemake's own
+    --set-resources/profile mechanism takes precedence over a rule's `resources:`
+    block, so a base value placed under `set-resources:` would be re-applied
+    unchanged on every attempt and silently defeat this scaling.
     """
     if (
-        "set-resources" in profile_config
-        and rule_name in profile_config["set-resources"]
-        and "runtime" in profile_config["set-resources"][rule_name]
+        "retry-base-resources" in profile_config
+        and rule_name in profile_config["retry-base-resources"]
+        and "runtime" in profile_config["retry-base-resources"][rule_name]
     ):
-        return profile_config["set-resources"][rule_name]["runtime"]
+        return profile_config["retry-base-resources"][rule_name]["runtime"]
     return profile_config["default-resources"]["runtime"]
 
 def _get_mem_mb(rule_name, profile_config):
@@ -119,13 +124,18 @@ def _get_mem_mb(rule_name, profile_config):
     Falls back to default if not defined. Meant to be doubled per Snakemake `attempt`
     in a rule's `resources:` block, for jobs with no prior real-scale memory data that
     risk being OOM-killed on the first try (attempt 1 = base, 2 = 2x, 3 = 4x, 4 = 8x).
+
+    Reads from `retry-base-resources:`, NOT `set-resources:` -- Snakemake's own
+    --set-resources/profile mechanism takes precedence over a rule's `resources:`
+    block, so a base value placed under `set-resources:` would be re-applied
+    unchanged on every attempt and silently defeat this scaling.
     """
     if (
-        "set-resources" in profile_config
-        and rule_name in profile_config["set-resources"]
-        and "mem_mb" in profile_config["set-resources"][rule_name]
+        "retry-base-resources" in profile_config
+        and rule_name in profile_config["retry-base-resources"]
+        and "mem_mb" in profile_config["retry-base-resources"][rule_name]
     ):
-        return profile_config["set-resources"][rule_name]["mem_mb"]
+        return profile_config["retry-base-resources"][rule_name]["mem_mb"]
     return profile_config["default-resources"]["mem_mb"]
 
 ## Load cluster.json
@@ -234,6 +244,10 @@ else:
 TRNAS_GTF_MAP = config.get("trnas_gtf", {})
 CHRR_GTF_MAP = config.get("chrr_gtf", {})
 INCLUDE_TRNAS_GTF_IN_REF = _is_true(config.get("include_trnas_gtf_in_ref", True))
+# The hg38/mm39 host GTFs already annotate chrR, so appending chrr_gtf[host] on top of them
+# annotates every rDNA feature twice (dremellab/HAROLD#72). Off unless explicitly requested,
+# e.g. for a host whose GTF has no chrR rows.
+INCLUDE_CHRR_GTF_IN_REF = _is_true(config.get("include_chrr_gtf_in_ref", False))
 if HOST != "":
     trnas_gtf_name = TRNAS_GTF_MAP.get(HOST, HOST + ".tRNAs." + HOST + "chroms.gtf")
     TRNAS_GTF = trnas_gtf_name if os.path.isabs(trnas_gtf_name) else join(FASTAS_GTFS_DIR, trnas_gtf_name)
@@ -260,7 +274,7 @@ if ADDITIVES != "":
 else:
     REGIONS_ADDITIVES = []
 GTFS = [join(FASTAS_GTFS_DIR, f + ".gtf") for f in HOST_ADDITIVES_VIRUSES]
-if CHRR_GTF != "":
+if INCLUDE_CHRR_GTF_IN_REF and CHRR_GTF != "":
     GTFS.append(CHRR_GTF)
 if INCLUDE_TRNAS_GTF_IN_REF and TRNAS_GTF != "":
     GTFS.append(TRNAS_GTF)
@@ -466,6 +480,11 @@ if not os.path.exists(RESULTSDIR):
     os.mkdir(RESULTSDIR)
 
 DIFFEX_NORMALIZED_COUNTS = str(config.get('diffex_normalized_counts', {}).get('run', 'false')).lower()
+
+# CDS-level counting with featureCounts (RNA-seq side of translation-efficiency calculations
+# with RIBOLD). Defaults to off when the block is missing, so run directories whose config.yaml
+# predates it (and so has no `containers.featurecounts` entry either) keep working unchanged.
+FEATURECOUNTS_CDS = str(config.get('featurecounts_cds', {}).get('run', 'false')).lower()
 
 def _normalize_species_label(value):
     """Return DiffEx host label (Hs/Mm) from assorted config inputs."""

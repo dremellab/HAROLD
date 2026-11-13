@@ -1,7 +1,7 @@
 {
   "__default__": {
     "mem": "40g",
-    "partition": "standard-rivanna",
+    "partition": "standard",
     "ntasks": "1",
     "threads": "2",
     "time": "4:00:00",
