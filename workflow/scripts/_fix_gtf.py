@@ -41,34 +41,40 @@ constructed from the input GTF file. The script performs the following steps:
 The script is designed to standardize GTF files by ensuring that all entries have a `gene_name` attribute, which is
 often required for downstream bioinformatics analyses.
 """
+import re
+import sys
+
 debug = 0
+
+# key "quoted value"; or key unquoted_value; -- quoted values may contain spaces and ';'
+ATTR_RE = re.compile(r'([^\s";]+)\s+(?:"([^"]*)"|([^\s";]+))')
+
+# IDs that downstream steps (genePred, STAR/rustqc/featureCounts outputs, count matrices)
+# treat as single whitespace-free tokens
+ID_KEYS = ("gene_id", "transcript_id")
 
 
 def get_attributes(attstr):
     att = dict()
-    attlist = attstr.strip().split(";")
-    if debug == 1:
-        print(attstr)
-    if debug == 1:
-        print(attlist)
-    for item in attlist:
-        x = item.strip()
-        if debug == 1:
-            print(x)
-        x = x.replace('"', "")
-        if debug == 1:
-            print(x)
-        x = x.split()
-        if debug == 1:
-            print(x)
-        if len(x) != 2:
-            continue
-        key = x.pop(0)
-        key = key.replace(":", "")
-        value = " ".join(x)
+    for m in ATTR_RE.finditer(attstr):
+        key = m.group(1).replace(":", "")
+        value = m.group(2) if m.group(2) is not None else m.group(3)
         value = value.replace(":", "_")
         att[key] = value
+        if debug == 1:
+            print(key, value, file=sys.stderr)
     return att
+
+
+def check_ids(line, attributes):
+    for key in ID_KEYS:
+        value = attributes.get(key)
+        if value is not None and re.search(r"\s", value):
+            sys.exit(
+                f'ERROR: {key} "{value}" contains whitespace, which downstream steps cannot '
+                f"handle. Replace the spaces (e.g. with '_') in the input GTF.\n"
+                f"Offending line: {chr(9).join(line)}"
+            )
 
 
 def get_attstr(att):
@@ -101,6 +107,7 @@ with open(args.ingtf, "r") as ingtf:
             print(line)
             exit("ERROR ... line does not have 9 items!")
         attributes = get_attributes(line[8])
+        check_ids(line, attributes)
         if debug == 1:
             print(line)
         if debug == 1:

@@ -1,3 +1,4 @@
+import re
 import sys
 
 """
@@ -5,42 +6,55 @@ This script is designed to map transcript IDs to their corresponding gene IDs us
 GTF (Gene Transfer Format) file. It reads a GTF file to build a mapping of
 transcript_id → gene_id, then takes a second input file (e.g., a table with transcript IDs)
 and prepends the corresponding gene ID to each row.
+
+Output goes to stdout (redirected to the output file by the rule), so every error message
+goes to stderr -- otherwise it ends up in the output file, which Snakemake deletes on
+failure, and the rule log only shows a bare non-zero exit status.
 """
+
+# key "quoted value"; or key unquoted_value; -- quoted values may contain spaces and ';'
+ATTR_RE = re.compile(r'([^\s";]+)\s+(?:"([^"]*)"|([^\s";]+))')
+
+
+def die(msg):
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
 
 
 def get_id(s, whatid):
-    parts = s.split()
-    if whatid not in parts:
-        print(f"{s} does not have {whatid}")
-        sys.exit(1)
-        return None  # or return "" or raise Exception
-
-    for i, j in enumerate(parts):
-        if j == whatid:
-            r = parts[i + 1]
-            r = r.replace('"', "").replace(";", "")
-            return r
+    for m in ATTR_RE.finditer(s):
+        if m.group(1) == whatid:
+            return m.group(2) if m.group(2) is not None else m.group(3)
+    die(f"GTF transcript line does not have {whatid}: {s}")
 
 
-gtffile = sys.argv[1]
-transcript2gene = dict()
-for i in open(gtffile).readlines():
-    if i.startswith("#"):
-        continue
-    i = i.strip().split("\t")
-    if i[2] != "transcript":
-        continue
-    gid = get_id(i[8], "gene_id")
-    tid = get_id(i[8], "transcript_id")
-    # 	print("%s\t%s"%(tid,gid))
-    transcript2gene[tid] = gid
+def main(argv):
+    if len(argv) != 2:
+        die("usage: _add_geneid_to_genepred.py <gtf> <genepred>")
+    gtffile, genepredfile = argv
 
-for i in open(sys.argv[2]).readlines():
-    j = i.strip().split("\t")
-    x = []
-    tid = j.pop(0)
-    gid = transcript2gene[tid]
-    x.append(gid)
-    x.append(tid)
-    x.extend(j)
-    print("\t".join(x))
+    transcript2gene = dict()
+    with open(gtffile) as f:
+        for i in f:
+            if i.startswith("#"):
+                continue
+            i = i.strip().split("\t")
+            if len(i) < 9 or i[2] != "transcript":
+                continue
+            gid = get_id(i[8], "gene_id")
+            tid = get_id(i[8], "transcript_id")
+            transcript2gene[tid] = gid
+
+    with open(genepredfile) as f:
+        for i in f:
+            j = i.strip().split("\t")
+            tid = j.pop(0)
+            if tid not in transcript2gene:
+                die(
+                    f"transcript {tid!r} in {genepredfile} has no transcript line in {gtffile}"
+                )
+            print("\t".join([transcript2gene[tid], tid] + j))
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
