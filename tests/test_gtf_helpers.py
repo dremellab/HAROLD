@@ -73,3 +73,28 @@ def test_add_geneid_unknown_transcript_goes_to_stderr(tmp_path):
     res = _run(ADD_GENEID, [str(gtf), str(gp)], tmp_path)
     assert res.returncode == 1
     assert "'t2'" in res.stderr and res.stdout == ""
+
+
+def test_aggregate_counts_gtf_parser_handles_semicolons_in_values(tmp_path):
+    # ref.fixed.gtf keeps quoted values such as cds_check "aa_subs;start_codon_changed(ATG>ACG)";
+    # the strandedness aggregator must parse them instead of failing on the split-off piece
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "agg", SCRIPTS / "_aggregate_counts_by_strandedness.py"
+    )
+    agg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(agg)
+    gtf = tmp_path / "ref.fixed.gtf"
+    gtf.write_text(
+        _gtf_line("gene", 'gene_id "g1"; gene_name "G1 x"; gene_type "protein_coding";')
+        + _gtf_line(
+            "transcript",
+            'gene_id "g1"; transcript_id "t1"; gene_name "G1 x"; '
+            'cds_check "aa_subs;start_codon_changed(ATG>ACG)";',
+        )
+        + _gtf_line("exon", 'gene_id "g1"; transcript_id "t1"; gene_name "G1 x";')
+    )
+    lookup = agg.parse_gtf_lookup(str(gtf))
+    assert lookup["g1"]["gene_name"] == "G1 x"
+    assert lookup["g1"]["gene_type"] == "protein_coding"
