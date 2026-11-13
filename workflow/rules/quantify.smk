@@ -54,7 +54,7 @@ rule rseqc_fpkm:
         # on small references or isn't enough on large ones. `attempt` is
         # bumped by Snakemake on every restart (restart-times: 3, set in
         # the profile config), so this scales the per-rule base runtime
-        # (set-resources.rseqc_fpkm.runtime in the profile, e.g.
+        # (retry-base-resources.rseqc_fpkm.runtime in the profile, e.g.
         # config/rivanna/config.yaml) up on each retry instead of failing
         # identically on every attempt.
         runtime=lambda wildcards, attempt: _get_runtime("rseqc_fpkm", profile_config) * attempt,
