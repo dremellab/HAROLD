@@ -712,21 +712,21 @@ S3  Control B2  /data/fastq/S3_R1.fastq.gz      unstranded</code></pre>
 <p><strong>Expected format:</strong> GTF file with <code>gene_type = tRNA</code> entries, chromosome IDs matching host genome (chr1–chrY, not scaffolds).</p>
 <hr>
 </section>
-<section id="chrr_gtf-repeats-and-ribosomal-rna-annotations" class="level4">
-<h4 class="anchored" data-anchor-id="chrr_gtf-repeats-and-ribosomal-rna-annotations"><code>chrr_gtf</code> — Repeats and Ribosomal RNA Annotations</h4>
-<p><strong>Purpose:</strong> Include genomic repeats and ribosomal RNA (rRNA) regions in the reference annotation.</p>
+<section id="chrr_gtf-include_chrr_gtf_in_ref-rdna-chrr-annotation" class="level4">
+<h4 class="anchored" data-anchor-id="chrr_gtf-include_chrr_gtf_in_ref-rdna-chrr-annotation"><code>chrr_gtf</code> / <code>include_chrr_gtf_in_ref</code> — rDNA (chrR) Annotation</h4>
+<p><strong>Purpose:</strong> Optional extra annotation of the 45S rDNA unit on <code>chrR</code> (18S, 5.8S, 28S, ITS1/2, ETS, IGS and promoter features), appended to <code>ref.gtf</code> only when <code>include_chrr_gtf_in_ref: true</code>.</p>
 <p><strong>Configuration:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">chrr_gtf</span><span class="kw">:</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/hg38.repeats.gtf"</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/path/to/mm39.repeats.gtf"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hg38</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/hg38.chrR.gtf"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">mm39</span><span class="kw">:</span><span class="at"> </span><span class="st">"/project/dremel_lab/workflows/reference_data/fasta_gtf/mm39.chrR.gtf"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">include_chrr_gtf_in_ref</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>When to use:</strong></p>
 <ul>
-<li>If you want to explicitly quantify rRNA contamination or repeat-associated reads</li>
-<li>Repeats GTF is now <strong>included in the default <code>ref.gtf</code> by default</strong> (no longer requires chrR flag)</li>
-<li>Useful for multi-genome pipelines where repeat masking is important (e.g., viral integration site analysis)</li>
+<li>Leave <code>include_chrr_gtf_in_ref: false</code> (the default) for <code>hg38</code> and <code>mm39</code>: their host GTFs already annotate <code>chrR</code>, so appending the chrR GTF would annotate every rDNA feature twice under two <code>gene_id</code>s (e.g.&nbsp;<code>18S</code> and <code>chrR_18S</code>), making chrR reads ambiguous in gene-level counts.</li>
+<li>Set it to <code>true</code> only for a host whose FASTA has <code>chrR</code> but whose GTF has no <code>chrR</code> rows.</li>
 </ul>
-<p><strong>Expected format:</strong> GTF file with repeat annotations (RepBase, rmsk annotations), chromosome IDs matching host genome. Can include rRNA genes, satellite DNA, SINEs, LINEs, etc.</p>
-<p><strong>Note:</strong> Set to empty string or omit if repeat quantification not needed; reference will be built without repeat annotations.</p>
+<p><strong>Expected format:</strong> GTF with <code>gene</code>/<code>transcript</code>/<code>exon</code> rows on <code>chrR</code>; coordinates must not exceed the <code>chrR</code> length in the host FASTA.</p>
+<p><strong>Note:</strong> <code>ref/ref.gtf</code> is only built when it is missing, so changing this option in an existing work directory has no effect until <code>ref/</code> is removed.</p>
 <hr>
 </section>
 </section>

@@ -433,6 +433,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#unreleased" id="toc-unreleased" class="nav-link" data-scroll-target="#unreleased">[Unreleased]</a>
   <ul class="collapse">
   <li><a href="#added" id="toc-added" class="nav-link" data-scroll-target="#added">Added</a></li>
+  <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
   <li><a href="#fixed" id="toc-fixed" class="nav-link" data-scroll-target="#fixed">Fixed</a></li>
   </ul></li>
   <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section">[2.1.0]</a>
@@ -442,28 +443,28 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1">[2.0.1]</a>
   <ul class="collapse">
   <li><a href="#added-2" id="toc-added-2" class="nav-link" data-scroll-target="#added-2">Added</a></li>
-  <li><a href="#changed" id="toc-changed" class="nav-link" data-scroll-target="#changed">Changed</a></li>
+  <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
   <li><a href="#fixed-1" id="toc-fixed-1" class="nav-link" data-scroll-target="#fixed-1">Fixed</a></li>
   </ul></li>
   <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2">[2.0.0]</a>
   <ul class="collapse">
   <li><a href="#breaking-changes" id="toc-breaking-changes" class="nav-link" data-scroll-target="#breaking-changes">⚠️ Breaking Changes</a></li>
   <li><a href="#added-3" id="toc-added-3" class="nav-link" data-scroll-target="#added-3">Added</a></li>
-  <li><a href="#changed-1" id="toc-changed-1" class="nav-link" data-scroll-target="#changed-1">Changed</a></li>
+  <li><a href="#changed-2" id="toc-changed-2" class="nav-link" data-scroll-target="#changed-2">Changed</a></li>
   <li><a href="#fixed-2" id="toc-fixed-2" class="nav-link" data-scroll-target="#fixed-2">Fixed</a></li>
   </ul></li>
   <li><a href="#section-3" id="toc-section-3" class="nav-link" data-scroll-target="#section-3">[1.2.1]</a>
   <ul class="collapse">
-  <li><a href="#changed-2" id="toc-changed-2" class="nav-link" data-scroll-target="#changed-2">Changed</a></li>
+  <li><a href="#changed-3" id="toc-changed-3" class="nav-link" data-scroll-target="#changed-3">Changed</a></li>
   </ul></li>
   <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4">[1.2.0]</a>
   <ul class="collapse">
-  <li><a href="#changed-3" id="toc-changed-3" class="nav-link" data-scroll-target="#changed-3">Changed</a></li>
+  <li><a href="#changed-4" id="toc-changed-4" class="nav-link" data-scroll-target="#changed-4">Changed</a></li>
   </ul></li>
   <li><a href="#section-5" id="toc-section-5" class="nav-link" data-scroll-target="#section-5">[1.1.0]</a>
   <ul class="collapse">
   <li><a href="#added-4" id="toc-added-4" class="nav-link" data-scroll-target="#added-4">Added</a></li>
-  <li><a href="#changed-4" id="toc-changed-4" class="nav-link" data-scroll-target="#changed-4">Changed</a></li>
+  <li><a href="#changed-5" id="toc-changed-5" class="nav-link" data-scroll-target="#changed-5">Changed</a></li>
   <li><a href="#fixed-3" id="toc-fixed-3" class="nav-link" data-scroll-target="#fixed-3">Fixed</a></li>
   </ul></li>
   <li><a href="#section-6" id="toc-section-6" class="nav-link" data-scroll-target="#section-6">[1.0.0]</a></li>
@@ -489,10 +490,18 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>CDS-level count matrix from featureCounts, for translation-efficiency (TE) calculations with RIBOLD:</strong> new <code>featurecounts_cds</code> rule (per sample, <code>docker://seqinfomics/featurecounts:2.0.6</code>, the image RIBOLD already uses) counts reads over CDS features (<code>-t CDS -g gene_id</code>), with <code>-s</code> set per sample from <code>sample_strandedness.tsv</code> and paired-end samples counted as fragments; <code>aggregate_cds_counts</code> merges them into <code>counts/cds_counts_matrix.tsv</code> (+ <code>cds_counts_matrix.featureCounts_summary.tsv</code>). The matrix has the same <code>gene_id</code> + one-column-per-sample layout and the same counting settings as RIBOLD’s <code>ribold_cds_counts.tsv</code>, so RNA-seq and Ribo-seq CDS counts join on <code>gene_id</code>. A new <code>build_cds_gtf</code> rule writes <code>ref/ref.cds.gtf</code>, copying each exon of additive/viral genes whose GTF has no CDS rows as a CDS row (RIBOLD’s convention) so those genes are counted too; <code>ref.fixed.gtf</code> itself is untouched. Controlled by a new <code>featurecounts_cds:</code> config block (<code>run</code>, <code>feature_type</code>, <code>attribute_type</code>, <code>extra_args</code>) and a new <code>containers.featurecounts</code> entry. The STAR <code>ReadsPerGene</code> matrix (<code>counts_matrix.tsv</code>) is unchanged and still feeds normalization/DEG. Existing work directories whose <code>config.yaml</code> has no <code>featurecounts_cds:</code> block skip the step; to enable it there, add the block and the <code>featurecounts</code> container line from <code>config/config.yaml</code>.</li>
 </ul>
 </section>
+<section id="changed" class="level3">
+<h3 class="anchored" data-anchor-id="changed">Changed</h3>
+<ul>
+<li><strong>SLURM partition <code>standard-rivanna</code> → <code>standard</code>:</strong> updated in <code>harold</code>, <code>config/rivanna/config.yaml</code> (<code>default-resources.slurm_partition</code>) and <code>config/slurm-rivanna/cluster.json</code>. Existing work directories whose profile still says <code>standard-rivanna</code> must be updated.</li>
+<li><strong>SLURM head job time limit raised from <code>0-12:00:00</code> to <code>2-00:00:00</code></strong>, so long runs are not cut off when the head job times out.</li>
+</ul>
+</section>
 <section id="fixed" class="level3">
 <h3 class="anchored" data-anchor-id="fixed">Fixed</h3>
 <ul>
-<li><strong><code>create_index</code> failed with a bare “exit status 1” when a GTF attribute value contained spaces:</strong> <code>_fix_gtf.py</code> silently dropped any attribute whose quoted value contained a space (and cut values at a <code>;</code> inside quotes), so a <code>transcript_id</code> like <code>"UL17.4 sORF 2"</code> vanished from <code>ref.fixed.gtf</code>; <code>_add_geneid_to_genepred.py</code> then exited 1 but printed the reason to stdout, i.e.&nbsp;into the output file Snakemake deletes on failure, leaving nothing in the rule log. <code>_fix_gtf.py</code> now parses quoted values properly (free-text attributes such as <code>note</code>/<code>product</code> are kept intact) and stops with a clear stderr error naming the line if a <code>gene_id</code>/<code>transcript_id</code> contains whitespace; <code>_add_geneid_to_genepred.py</code> uses the same parser and writes all errors to stderr. Output for the hg38/mm39 host GTFs is unchanged.</li>
+<li><strong>chrR rDNA features were annotated twice in <code>ref.gtf</code>:</strong> <code>init.smk</code> always appended <code>chrr_gtf[host]</code> (falling back to <code>&lt;host&gt;.chrR.gtf</code> when the key was missing), although the hg38/mm39 host GTFs already annotate chrR. Every rDNA feature appeared twice under two <code>gene_id</code>s (e.g.&nbsp;<code>18S</code> and <code>chrR_18S</code>), making chrR reads ambiguous in gene-level counts, and <code>hg38.chrR.gtf</code>’s IGS exon ends one base past chrR, which caused the STAR warning in <a href="https://github.com/dremellab/HAROLD/issues/60">dremellab/HAROLD#60</a>. The chrR GTF is now appended only when the new <code>include_chrr_gtf_in_ref</code> option is <code>true</code> (default <code>false</code>); <code>docs/inputs.md</code> now describes <code>chrr_gtf</code> correctly. Existing work directories keep their old <code>ref/ref.gtf</code> until <code>ref/</code> is removed (<a href="https://github.com/dremellab/HAROLD/issues/72">dremellab/HAROLD#72</a>).</li>
+<li><strong><code>create_index</code> failed with a bare “exit status 1” when a GTF attribute value contained spaces:</strong> <code>_fix_gtf.py</code> silently dropped any attribute whose quoted value contained a space (and cut values at a <code>;</code> inside quotes), so a <code>transcript_id</code> like <code>"UL17.4 sORF 2"</code> vanished from <code>ref.fixed.gtf</code>; <code>_add_geneid_to_genepred.py</code> then exited 1 but printed the reason to stdout, i.e.&nbsp;into the output file Snakemake deletes on failure, leaving nothing in the rule log. <code>_fix_gtf.py</code> now parses quoted values properly (free-text attributes such as <code>note</code>/<code>product</code> are kept intact) and stops with a clear stderr error naming the line if a <code>gene_id</code>/<code>transcript_id</code> contains whitespace; <code>_add_geneid_to_genepred.py</code> uses the same parser and writes all errors to stderr. <code>_aggregate_counts_by_strandedness.py</code>, which reads <code>ref.fixed.gtf</code> for <code>counts_matrix.tsv</code>, uses it too, so a quoted value containing <code>;</code> (e.g.&nbsp;<code>cds_check "aa_subs;start_codon_changed(ATG&gt;ACG)"</code> in <code>KT899744delRR.BK012101.gtf</code>) no longer stops <code>aggregate_stranded_counts</code> with <code>ValueError: not enough values to unpack</code>. Output for the hg38/mm39 host GTFs is unchanged.</li>
 <li><strong>Per-attempt retry resource scaling (<code>mem_mb</code>/<code>runtime</code>) was silently clobbered by Snakemake’s own <code>--set-resources</code>/profile mechanism:</strong> <code>mark_duplicates</code>, <code>rustqc_rna_combined_probe</code>, <code>rustqc_rna_combined</code>, <code>rustqc_rna_region</code> (<code>mem_mb</code>, meant to double per retry attempt) and <code>rseqc_fpkm</code> (<code>runtime</code>, meant to scale linearly) had their base values duplicated into <code>config/rivanna/config.yaml</code>‘s <code>set-resources:</code> block, which Snakemake re-applies as a flat override on every job submission — pinning every retry attempt to the same value and defeating the escalation entirely, so a job that OOM-killed on attempt 1 OOM-killed identically on every subsequent attempt instead of getting more memory. Base values moved to a new <code>retry-base-resources:</code> block that only the rules’ own scaling lambdas read, so Snakemake’s profile mechanism no longer sees them (<a href="https://github.com/dremellab/HAROLD/issues/67">dremellab/HAROLD#67</a>).</li>
 <li><strong><code>normalized_counts_wo_ercc_wo_batch</code>/<code>normalized_counts_wo_ercc_w_batch</code> declared the wrong <code>diffex normalize</code> output filenames:</strong> both rules expected <code>limma_pseudo_rpkm_counts.tsv</code>/<code>limma_log2normalized_pseudo_rpkm_counts.tsv</code>, but <code>diffex normalize</code> (0.5.7) only writes those filenames when <code>--use-ercc</code> is passed — since these rules never pass it, the real output is <code>limma_voom_normalized_counts.tsv</code> (+ a <code>_batch_corrected</code> variant for the <code>w_batch</code> rule), which went untracked and caused a <code>MissingOutputException</code> after the full <code>--latency-wait</code>, deleting the rule’s other real outputs in the process. Rules now declare the filenames diffex actually produces on the non-ERCC branch; <code>normalized_counts_w_ercc_*</code> rules were already correct. <code>docs/outputs.md</code> updated to match, and now notes that <code>edgeR_TMM_normalized_logCPM_counts_batch_corrected.tsv</code>/<code>DESeq2_vst_normalized_counts_batch_corrected.tsv</code> are written by diffex for <code>w_batch</code> variants but are not yet declared as tracked outputs. See <a href="https://github.com/dremellab/DiffEx/issues/47">dremellab/DiffEx#47</a> for a related upstream documentation ask (<a href="https://github.com/dremellab/HAROLD/issues/68">dremellab/HAROLD#68</a>).</li>
 <li><strong><code>rseqc_fpkm</code> was given the opposite strand rule for stranded samples:</strong> <code>_get_strand.py</code> returned RSeQC’s forward-stranded rule (<code>1++,1--,2+-,2-+</code> / <code>++,--</code>) for samples labelled <code>reverse</code> in <code>sample_strandedness.tsv</code> and the reverse-stranded rule (<code>1+-,1-+,2++,2--</code> / <code>+-,-+</code>) for samples labelled <code>forward</code>, so <code>FPKM_count.py</code> counted antisense reads. For stranded libraries, <code>{sample}.rseqc_fpkm_tpm.tsv</code> and <code>counts_matrix.transcript_level{,.rpkm,.tpm}.tsv</code> were near zero for most transcripts; rerun <code>rseqc_fpkm</code> and <code>aggregate_transcript_level_counts</code> to regenerate them. Unstranded samples and <code>counts_matrix.tsv</code> (STAR <code>ReadsPerGene</code>) were not affected (<a href="https://github.com/dremellab/HAROLD/issues/69">dremellab/HAROLD#69</a>).</li>
@@ -517,8 +526,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>ERCC-corrected precursor matrices exposed as tracked outputs (requires DiffEx &gt;= 0.5.7):</strong> New <code>ERCC_corrected_log2_counts.tsv</code>/<code>ERCC_corrected_counts.tsv</code> files in <code>counts/normalized_counts/{variant}/</code> for <code>w_ercc_*</code> variants — the ERCC spike-in correction alone, with no method-specific model on top, ahead of the limma/edgeR/DESeq2 matrices each further derived from it. Analogous to <code>counts_matrix.rpkm.tsv</code>/<code>counts_matrix.tpm.tsv</code> for anyone who wants “the” ERCC-normalized matrix without a downstream model applied (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>, <a href="https://github.com/dremellab/HAROLD/issues/62">dremellab/HAROLD#62</a>).</li>
 </ul>
 </section>
-<section id="changed" class="level3">
-<h3 class="anchored" data-anchor-id="changed">Changed</h3>
+<section id="changed-1" class="level3">
+<h3 class="anchored" data-anchor-id="changed-1">Changed</h3>
 <ul>
 <li><strong>Legacy config migration guidance:</strong> older run directories using the deprecated <code>infer_strandedness</code> flag or nested DiffEx option blocks should move to <code>use_infer_strandedness</code> and the shared top-level <code>diffex:</code> block before running on the current pipeline version.</li>
 <li><strong><code>diffex</code> container bumped <code>0.5.5</code> → <code>0.5.7</code>:</strong> required for the ERCC-corrected precursor matrices above (<a href="https://github.com/dremellab/DiffEx/issues/44">dremellab/DiffEx#44</a>); verified against a live run.</li>
@@ -567,8 +576,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Fail fast on a single-level batch column:</strong> when <code>diffex.use_batch</code> is <code>true</code>/<code>both</code>, HAROLD now validates at config-parse time (so <code>dryrun</code> catches it too) that <code>batch_column</code> has at least 2 distinct values — across all samples for <code>diffex_normalized_counts</code>, and among each contrast’s <code>group1</code>/<code>group2</code> samples specifically for <code>diffex_deg_gsea</code>. Previously a single-level batch factor only surfaced deep inside the <code>diffex</code> container, after the DAG had already spent compute on everything upstream, as an opaque limma <code>contrasts can be applied only to factors with 2 or more levels</code> error.</li>
 </ul>
 </section>
-<section id="changed-1" class="level3">
-<h3 class="anchored" data-anchor-id="changed-1">Changed</h3>
+<section id="changed-2" class="level3">
+<h3 class="anchored" data-anchor-id="changed-2">Changed</h3>
 <ul>
 <li>S3 namespace hierarchy — Updated <code>s3_transfer_harold.py</code> to include pipeline-name in S3 path hierarchy (<code>_HTS/HAROLD/sample_set/...</code>) for consistency with Chroma 2; added <code>s3_pipeline_name</code> config key (default: <code>HAROLD</code>)</li>
 <li>Repeats GTF configurability — Now a configurable reference, included in ref.gtf by default</li>
@@ -612,8 +621,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="section-3" class="level2">
 <h2 class="anchored" data-anchor-id="section-3">[1.2.1]</h2>
-<section id="changed-2" class="level3">
-<h3 class="anchored" data-anchor-id="changed-2">Changed</h3>
+<section id="changed-3" class="level3">
+<h3 class="anchored" data-anchor-id="changed-3">Changed</h3>
 <ul>
 <li><code>harold --help</code> now prints the Singularity/Apptainer environment variables.</li>
 </ul>
@@ -621,8 +630,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="section-4" class="level2">
 <h2 class="anchored" data-anchor-id="section-4">[1.2.0]</h2>
-<section id="changed-3" class="level3">
-<h3 class="anchored" data-anchor-id="changed-3">Changed</h3>
+<section id="changed-4" class="level3">
+<h3 class="anchored" data-anchor-id="changed-4">Changed</h3>
 <ul>
 <li>The HAROLD wrapper now defaults <code>--sifdir</code> to <code>/project/dremel_lab/workflows/singularity_images</code>, prepares per-user caches under <code>/scratch/$USER/singularity</code>, honors standard <code>SINGULARITY_*</code> environment overrides, exports a dedicated scratch pull directory (<code>/scratch/$USER/singularity/images</code> when using the shared tree), and emits warnings when shared images are missing so users understand when a Docker pull to scratch will occur.</li>
 <li><code>harold --runmode=init</code> now prints the cache directory (<code>--singcache</code>), the image directory (<code>--sifdir</code>), and the effective pull directory so users can confirm exactly where SIFs will be stored.</li>
@@ -641,8 +650,8 @@ ul.task-list li input[type="checkbox"] {
 <li>Quarto-based documentation site (<code>docs/</code>, <code>_quarto.yml</code>) that centralizes prerequisites, inputs/outputs, and run guidance for HAROLD.</li>
 </ul>
 </section>
-<section id="changed-4" class="level3">
-<h3 class="anchored" data-anchor-id="changed-4">Changed</h3>
+<section id="changed-5" class="level3">
+<h3 class="anchored" data-anchor-id="changed-5">Changed</h3>
 <ul>
 <li>Switched to the lab-hosted diffex and rseqc containers; exposed configuration knobs for diffex normalization (ERCC, batch, gene selection, host species).</li>
 <li>Improved Rivanna Apptainer usage by wiring scratch-based cache/tmp/image directories, exporting the runtime variables in both the wrapper and jobscript, introducing user-facing <code>--singcache</code> / <code>--sifdir</code> options, and setting <code>--account=dremel_lab</code> on Rivanna submissions.</li>
