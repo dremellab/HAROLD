@@ -62,6 +62,7 @@ Created during the first Snakemake run and reused across all subsequent runs in 
 | `ref/ref.fa` | **Combined reference FASTA** containing host genome, additives (ERCC, BAC16Insert, 4SU1), and all selected viral sequences. Single source of truth for all alignments. |
 | `ref/ref.gtf` | **Concatenated GTF** with annotations from host, viruses, and optional tRNA/repeats GTF files. |
 | `ref/ref.fixed.gtf` | **Cleaned GTF** with normalized formatting for Snakemake compatibility. |
+| `ref/ref.cds.gtf` | **GTF used for CDS-level counting** (only when `featurecounts_cds.run: true`). `ref.fixed.gtf` plus, for every additive/viral genome that has no CDS rows of its own, a CDS copy of each exon row, so those genes appear in `cds_counts_matrix.tsv`. Host rows are unchanged. Same convention as RIBOLD. |
 | `ref/ref.genes.bed12` | **BED12 format gene annotations** derived from GTF. Used by the RSeQC tools that still run directly (`geneBody_coverage.py`, `read_GC.py`) — `rustqc`'s modules (read distribution, TIN, junction detection) read the GTF directly instead. |
 | `ref/ref.genes.genepred` / `.genepred_w_geneid` | **GenePred format** used by RSeQC for transcript quantification (FPKM/TPM calculation). |
 | `ref/ref.fa.regions*` | **Metadata files** tracking which genomic regions belong to host vs. viruses. Used internally for splitting alignments. |
@@ -572,6 +573,48 @@ Interpretation: Sample A confidently forward-stranded (95% of pairs); Sample B a
 |---|---|---|
 | 1–6 | *Same as raw* | Metadata columns. |
 | 7+ | Float | **RPKM or TPM normalized** using same formulas as gene-level counts (normalize by transcript length). |
+
+#### CDS-Level Counts (for translation efficiency): `cds_counts_matrix.tsv`
+
+Only generated if `featurecounts_cds.run: true` in config (the default for new work directories).
+
+**Format:** Tab-separated text file
+**Tool:** featureCounts (Subread 2.0.6), run once per sample on `STAR/{sample}.Aligned.sortedByCoord.out.bam` against `ref/ref.cds.gtf`
+**Rows:** One row per gene in the GTF; genes with no CDS feature are absent
+**Columns:** `gene_id`, then one column per sample (in `samples.tsv` order)
+
+| Column Position | Column Name | Data Type | Description |
+|---|---|---|---|
+| 1 | `gene_id` | String | GTF `gene_id` (e.g. `ENSG00000111640.15`), without the `\|gene_name` suffix used in `counts_matrix.tsv`. |
+| 2+ | `{sample_name}` | Integer | Reads (single-end) or fragments (paired-end) overlapping the gene's annotated CDS. |
+
+**Purpose:** the RNA-seq half of a translation-efficiency (TE) calculation. The layout and counting settings match RIBOLD's Ribo-seq matrix (`results/counts/ribold_cds_counts.tsv`), so the two join directly on `gene_id`:
+
+```
+TE(gene, condition) = (Ribo-seq CDS count / Ribo-seq library size) / (RNA-seq CDS count / RNA-seq library size)
+```
+
+Both pipelines must be run with the same `host`, `additives` and `viruses` for the gene sets to match.
+
+**How reads are counted:**
+
+- `-t CDS -g gene_id` (`featurecounts_cds.feature_type` / `attribute_type`); UTR-only and intronic reads are not counted.
+- Strandedness (`-s 0/1/2`) is set per sample from the `used_strand` column of `sample_strandedness.tsv` (unstranded/forward/reverse), the same call that picks the STAR column for `counts_matrix.tsv`.
+- Paired-end samples are counted as fragments (`-p --countReadPairs`).
+- Multi-mapped reads are not counted, and a read overlapping the CDS of more than one gene is not counted (featureCounts defaults). The second matters for viral genomes with overlapping or nested ORFs; `featurecounts_cds.extra_args` can change it (e.g. `-O`), but use the same setting in RIBOLD's `counting.extra_args`.
+- Additive and viral genes whose GTF has no CDS rows are counted over their exons (see `ref/ref.cds.gtf`).
+
+This matrix is separate from `counts_matrix.tsv` (STAR `ReadsPerGene`, whole-exon counts), which remains the input for normalization and differential expression.
+
+**Related files:**
+
+| File | Description |
+|---|---|
+| `counts/cds_counts_matrix.featureCounts_summary.tsv` | featureCounts assignment summary: `Status` (`Assigned`, `Unassigned_NoFeatures`, `Unassigned_MultiMapping`, `Unassigned_Ambiguity`, ...) by sample. |
+| `{sample}/counts/{sample}.cds.featureCounts.tsv` | Per-sample featureCounts table as written by the tool, including each gene's CDS `Length` (useful for length-normalizing CDS counts). |
+| `{sample}/counts/{sample}.cds.featureCounts.summary.tsv` | Per-sample assignment summary. |
+
+---
 
 ### Alignment Quality Summary: `alignmentqc/alignment_summary.tsv`
 

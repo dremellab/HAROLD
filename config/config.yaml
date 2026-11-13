@@ -80,6 +80,18 @@ star_flanksize: 15
 deeptools_normalize: "CPM"
 deeptools_binSize: 10
 
+# CDS-level read counting with featureCounts, for translation-efficiency (TE)
+# calculations against RIBOLD's Ribo-seq CDS counts. Keep feature_type,
+# attribute_type and extra_args in step with RIBOLD's `counting:` block so both
+# matrices are counted the same way. Strandedness (-s) is set per sample from
+# counts/sample_strandedness.tsv; paired-end samples are counted as fragments.
+# Additive/viral GTFs without CDS rows get each exon copied as a CDS row.
+featurecounts_cds:
+  run: true # true or false
+  feature_type: "CDS" # -t; "exon" also counts UTR reads
+  attribute_type: "gene_id" # -g; e.g. "gene_name" for symbols
+  extra_args: "" # any other featureCounts flags, e.g. "-Q 10 -M --fraction"
+
 # ERCC / batch-correction / gene-selection settings shared by both the aggregate
 # normalized-counts step and the per-contrast DEG/GSEA step below, so the two
 # always agree on how the counts matrix was normalized.
@@ -126,6 +138,7 @@ containers:
   diffex: "docker://seqinfomics/diffex:0.5.7"
   # diffex: "docker://ghcr.io/dremellab/diffex:0.5.2"
   fastqvalidator: "docker://seqinfomics/fastqvalidator:0.1.1a"
+  featurecounts: "docker://seqinfomics/featurecounts:2.0.6"
   fastqc: "docker://nciccbr/ccrgb_qctools:v4.0"
   gffread: "docker://zavolab/gffread:0.11.7"
   gtfToGenePred: "docker://seqinfomics/gtftogenepred:latest"

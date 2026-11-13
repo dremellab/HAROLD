@@ -97,6 +97,7 @@ set-threads:
   rustqc_rna_combined_probe: 8
   rustqc_rna_combined: 8
   rustqc_rna_region: 4
+  featurecounts_cds: 8
 
 set-resources:
   create_index:
@@ -161,6 +162,12 @@ set-resources:
   rustqc_rna_region:
     # mem_mb is attempt-scaled -- base value lives in retry-base-resources above.
     runtime: 120 # 2 hours
+
+  featurecounts_cds:
+    mem_mb: 16384 # 16 GB -- same sizing as RIBOLD's count_matrix; featureCounts holds the
+                  # annotation plus, for paired-end BAMs, its name-sort buffers.
+    runtime: 120 # 2 hours
+    threads: 8
 
   kraken2:
     mem_mb: 245760

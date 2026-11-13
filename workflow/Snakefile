@@ -59,7 +59,8 @@ include: "rules/init.smk"
 # only starts once everything else has actually finished, instead of racing
 # ahead on a hand-picked subset of "key" outputs). Kept as a plain list (not a
 # function) since it's built from names -- SAMPLES, RESULTSDIR, CONTRASTS,
-# VARIANTS, METHODS, DIFFEX_DEG_GSEA, DIFFEX_NORMALIZED_COUNTS, HOST_VIRUSES --
+# VARIANTS, METHODS, DIFFEX_DEG_GSEA, DIFFEX_NORMALIZED_COUNTS, FEATURECOUNTS_CDS,
+# HOST_VIRUSES --
 # that are already fixed by the time init.smk finishes.
 PIPELINE_TARGETS = [
         # create ref index
@@ -94,6 +95,13 @@ PIPELINE_TARGETS = [
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.rpkm.tsv"),
         join(RESULTSDIR,"counts","counts_matrix.transcript_level.tpm.tsv"),
+
+        # CDS-level counts with featureCounts (for translation efficiency with RIBOLD)
+        *(expand(join(RESULTSDIR, "{sample}", "counts", "{sample}.cds.featureCounts.tsv")                  ,sample=SAMPLES)
+               if FEATURECOUNTS_CDS == "true" else []),
+        *([join(RESULTSDIR,"counts","cds_counts_matrix.tsv"),
+           join(RESULTSDIR,"counts","cds_counts_matrix.featureCounts_summary.tsv")]
+               if FEATURECOUNTS_CDS == "true" else []),
 
         # diffex normalized counts (limma/edgeR/DESeq2 matrices). The limma output is named
         # differently per ERCC axis: w_ercc_* variants produce limma_pseudo_rpkm_counts /

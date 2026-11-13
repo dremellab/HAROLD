@@ -477,6 +477,11 @@ if not os.path.exists(RESULTSDIR):
 
 DIFFEX_NORMALIZED_COUNTS = str(config.get('diffex_normalized_counts', {}).get('run', 'false')).lower()
 
+# CDS-level counting with featureCounts (RNA-seq side of translation-efficiency calculations
+# with RIBOLD). Defaults to off when the block is missing, so run directories whose config.yaml
+# predates it (and so has no `containers.featurecounts` entry either) keep working unchanged.
+FEATURECOUNTS_CDS = str(config.get('featurecounts_cds', {}).get('run', 'false')).lower()
+
 def _normalize_species_label(value):
     """Return DiffEx host label (Hs/Mm) from assorted config inputs."""
     if value is None:
